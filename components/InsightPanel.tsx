@@ -11,9 +11,9 @@ interface InsightPanelProps {
 export function InsightPanel({ combination }: InsightPanelProps) {
   if (!combination || combination.cards.length === 0) {
     return (
-      <Paper withBorder p="xl" radius="md" bg="gray.0">
+      <Paper withBorder p="xl" radius="md" bg="#25282A">
         <Stack align="center" gap="md" py="xl">
-          <Lightbulb size={48} color="gray" />
+          <Lightbulb size={48} color="#FFB81C" />
           <Text size="lg" c="dimmed" ta="center">
             Select cards to see combination insights
           </Text>
@@ -27,20 +27,20 @@ export function InsightPanel({ combination }: InsightPanelProps) {
 
   return (
     <Stack gap="md">
-      <Alert icon={<Zap size={20} />} title={combination.insight} color="blue" variant="light">
+      <Alert icon={<Zap size={20} />} title={combination.insight} color="accent" variant="light">
         <Text size="sm">{combination.synergy}</Text>
       </Alert>
 
-      <Paper withBorder p="lg" radius="md">
+      <Paper withBorder p="lg" radius="md" bg="#25282A">
         <Stack gap="md">
           <Group gap="xs">
-            <CheckCircle size={20} color="green" />
+            <CheckCircle size={20} color="#FFB81C" />
             <Text fw={600} size="lg">
               Benefits
             </Text>
           </Group>
 
-          <List spacing="sm" size="sm" center icon={<CheckCircle size={16} color="green" />}>
+          <List spacing="sm" size="sm" center icon={<CheckCircle size={16} color="#FFB81C" />}>
             {combination.benefits.map((benefit, index) => (
               <List.Item key={index}>{benefit}</List.Item>
             ))}
