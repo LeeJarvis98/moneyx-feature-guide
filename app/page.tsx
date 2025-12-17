@@ -6,6 +6,7 @@ import { Layers, Trash2 } from 'lucide-react';
 import { FeatureCard } from '@/components/FeatureCard';
 import { CoreCard } from '@/components/CoreCard';
 import { InsightPanel } from '@/components/InsightPanel';
+import { CardDetailModal } from '@/components/CardDetailModal';
 import { allCards } from '@/data';
 import { Card, CoreCombination } from '@/types';
 import { generateCombinationInsight } from '@/lib/combinations';
@@ -13,20 +14,38 @@ import { generateCombinationInsight } from '@/lib/combinations';
 export default function HomePage() {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [currentCombination, setCurrentCombination] = useState<CoreCombination | null>(null);
+  const [modalCard, setModalCard] = useState<Card | null>(null);
+  const [enabledCards, setEnabledCards] = useState<Set<string>>(new Set());
 
   const handleCardClick = (card: Card) => {
-    if (selectedCards.find((c) => c.id === card.id)) {
-      // Remove card
-      const newSelection = selectedCards.filter((c) => c.id !== card.id);
+    setModalCard(card);
+  };
+
+  const handleToggleCard = (cardId: string, enabled: boolean) => {
+    setEnabledCards((prev) => {
+      const next = new Set(prev);
+      if (enabled) {
+        next.add(cardId);
+      } else {
+        next.delete(cardId);
+      }
+      return next;
+    });
+
+    // Update selected cards for core
+    if (enabled) {
+      const card = allCards.find((c) => c.id === cardId);
+      if (card && !selectedCards.find((c) => c.id === cardId)) {
+        const newSelection = [...selectedCards, card];
+        setSelectedCards(newSelection);
+        setCurrentCombination(generateCombinationInsight(newSelection));
+      }
+    } else {
+      const newSelection = selectedCards.filter((c) => c.id !== cardId);
       setSelectedCards(newSelection);
       setCurrentCombination(
         newSelection.length > 0 ? generateCombinationInsight(newSelection) : null
       );
-    } else {
-      // Add card
-      const newSelection = [...selectedCards, card];
-      setSelectedCards(newSelection);
-      setCurrentCombination(generateCombinationInsight(newSelection));
     }
   };
 
@@ -67,11 +86,24 @@ export default function HomePage() {
                     <FeatureCard
                       card={card}
                       onClick={() => handleCardClick(card)}
-                      isSelected={!!selectedCards.find((c) => c.id === card.id)}
+                      isEnabled={enabledCards.has(card.id)}
+                      onToggle={(enabled) => handleToggleCard(card.id, enabled)}
                     />
                   </Grid.Col>
                 ))}
               </Grid>
+
+              <CardDetailModal
+                card={modalCard}
+                isOpen={modalCard !== null}
+                onClose={() => setModalCard(null)}
+                isEnabled={modalCard ? enabledCards.has(modalCard.id) : false}
+                onToggle={(enabled) => {
+                  if (modalCard) {
+                    handleToggleCard(modalCard.id, enabled);
+                  }
+                }}
+              />
             </Stack>
           </Grid.Col>
 
