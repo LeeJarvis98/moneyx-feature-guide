@@ -12,5 +12,5 @@ export const budgetingCard: Card = {
     complexity: 3,
     userFriendly: true,
   },
-  color: '#4CAF50',
+  color: '#FFB81C',
 };

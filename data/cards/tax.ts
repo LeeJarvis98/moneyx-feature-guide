@@ -12,5 +12,5 @@ export const taxCard: Card = {
     documentOrganization: 5,
     complianceCheck: true,
   },
-  color: '#607D8B',
+  color: '#FFB81C',
 };

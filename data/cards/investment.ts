@@ -12,5 +12,5 @@ export const investmentCard: Card = {
     diversification: 4,
     realTimeUpdates: true,
   },
-  color: '#2196F3',
+  color: '#FFB81C',
 };

@@ -12,5 +12,5 @@ export const analyticsCard: Card = {
     predictionAccuracy: 4,
     aiPowered: true,
   },
-  color: '#9C27B0',
+  color: '#FFB81C',
 };

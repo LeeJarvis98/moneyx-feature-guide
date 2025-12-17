@@ -12,5 +12,5 @@ export const savingsCard: Card = {
     progressTracking: 5,
     visualizations: true,
   },
-  color: '#FF9800',
+  color: '#FFB81C',
 };

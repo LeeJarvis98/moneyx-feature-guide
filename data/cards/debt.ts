@@ -12,5 +12,5 @@ export const debtCard: Card = {
     reminderFrequency: 'Monthly',
     optimizationLevel: 4,
   },
-  color: '#F44336',
+  color: '#FFB81C',
 };
