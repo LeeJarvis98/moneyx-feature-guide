@@ -1,7 +1,7 @@
 ---
 agent: "expert-react-frontend-engineer"
 description: "Write a coding standards document for a project using the coding styles from the file(s) and/or folder(s) passed as arguments in the prompt."
-tools: ['edit/createFile', 'edit/editFiles', 'fetch', 'githubRepo', 'search', 'testFailure']
+tools: ['edit/createFile', 'edit/editFiles', 'web/fetch', 'web/githubRepo', 'search', 'execute/testFailure']
 ---
 
 # Write Coding Standards From File
