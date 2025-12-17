@@ -1,8 +1,8 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Container, Title, Text, Grid, Stack, Paper, Group, Button, AppShell } from '@mantine/core';
-import { Layers, Trash2 } from 'lucide-react';
+import { Container, Title, Text, Grid, Stack, Paper, Group, Button, AppShell, useMantineTheme, ScrollArea } from '@mantine/core';
+import { Layers, Trash2, Lightbulb } from 'lucide-react';
 import { FeatureCard } from '@/components/FeatureCard';
 import { CoreCard } from '@/components/CoreCard';
 import { InsightPanel } from '@/components/InsightPanel';
@@ -69,16 +69,18 @@ export default function HomePage() {
     setEnabledCards(new Set());
   };
 
+  const theme = useMantineTheme();
+
   return (
     <AppShell header={{ height: 80 }} padding="md">
       <AppShell.Header>
         <Container size="xl" h="100%" style={{ display: 'flex', alignItems: 'center' }}>
           <div>
-            <Title order={1} size="h2">
+            <Title order={1} size="h2" c={theme.colors.accent[6]}>
               MoneyX Feature Guide
             </Title>
-            <Text size="sm" c="dimmed">
-              Select features to discover powerful combinations and insights
+            <Text size="sm" c={theme.white}>
+              Discover powerful financial feature combinations
             </Text>
           </div>
         </Container>
@@ -89,15 +91,15 @@ export default function HomePage() {
           <Grid gutter="lg">
             <Grid.Col span={{ base: 12, md: 8 }}>
               <Stack gap="md">
-                {/* Insights Section */}
+                {/* Insights Section - shown above Core when cards are selected */}
                 <InsightPanel combination={currentCombination} />
 
                 {/* Core Section */}
                 <Paper withBorder p="lg" radius="md">
                   <Group justify="space-between" mb="md">
                     <Group gap="xs">
-                      <Layers size={24} />
-                      <Title order={3} size="h4">
+                      <Layers size={24} color={theme.colors.accent[6]}/>
+                      <Title order={3} size="h4" c={theme.white}>
                         Core ({selectedCards.length})
                       </Title>
                     </Group>
@@ -115,9 +117,15 @@ export default function HomePage() {
                   </Group>
 
                   {selectedCards.length === 0 ? (
-                    <Text size="sm" c="dimmed" ta="center" py="xl">
-                      Click on features to add them to the core
-                    </Text>
+                    <Stack align="center" gap="md" py="xl">
+                      <Lightbulb size={48} color={theme.colors.accent[6]} />
+                      <Text size="lg" ta="center">
+                        Select features to discover powerful combinations
+                      </Text>
+                      <Text size="sm" c="dimmed" ta="center">
+                        Click on features to add them to the core and unlock synergies
+                      </Text>
+                    </Stack>
                   ) : (
                     <Stack gap="sm">
                       {selectedCards.map((card) => (
@@ -135,14 +143,10 @@ export default function HomePage() {
 
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Stack gap="md">
-                <Title order={2} size="h3">
+                <Title order={2} size="h3" c={theme.white}>
                   Available Features
                 </Title>
-                <div style={{ 
-                  maxHeight: 'calc(100vh - 200px)', 
-                  overflowY: 'auto',
-                  paddingRight: '8px'
-                }}>
+                <ScrollArea h="calc(100vh - 200px)" type="never" scrollbars="y">
                   <Grid>
                     {allCards.map((card) => (
                       <Grid.Col key={card.id} span={12}>
@@ -155,7 +159,7 @@ export default function HomePage() {
                       </Grid.Col>
                     ))}
                   </Grid>
-                </div>
+                </ScrollArea>
 
                 <CardDetailModal
                   card={modalCard}

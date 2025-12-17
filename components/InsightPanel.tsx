@@ -2,7 +2,7 @@
 
 import { CoreCombination } from '@/types';
 import { Paper, Text, Stack, List, Alert, Group } from '@mantine/core';
-import { Lightbulb, Zap, CheckCircle } from 'lucide-react';
+import { Zap, CheckCircle } from 'lucide-react';
 
 interface InsightPanelProps {
   combination: CoreCombination | null;
@@ -10,19 +10,7 @@ interface InsightPanelProps {
 
 export function InsightPanel({ combination }: InsightPanelProps) {
   if (!combination || combination.cards.length === 0) {
-    return (
-      <Paper withBorder p="xl" radius="md" bg="#25282A">
-        <Stack align="center" gap="md" py="xl">
-          <Lightbulb size={48} color="#FFB81C" />
-          <Text size="lg" c="dimmed" ta="center">
-            Select cards to see combination insights
-          </Text>
-          <Text size="sm" c="dimmed" ta="center">
-            Add multiple cards to the core to unlock powerful synergies
-          </Text>
-        </Stack>
-      </Paper>
-    );
+    return null;
   }
 
   return (
