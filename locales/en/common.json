@@ -1,0 +1,48 @@
+﻿{
+  "common": {
+    "appName": "MoneyX Feature Guide",
+    "appDescription": "Discover powerful financial feature combinations",
+    "about": "About",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "allRightsReserved": "All rights reserved",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "description": "Description",
+    "parameters": "Parameters",
+    "benefits": "Benefits",
+    "clearAll": "Clear All"
+  },
+  "tabs": {
+    "featureGuide": "Feature Guide",
+    "profitCalculator": "Profit Calculator"
+  },
+  "core": {
+    "title": "Core",
+    "emptyMessage": "Select features from below to see powerful combinations",
+    "hint": "Click the toggle or card to enable features"
+  },
+  "calculator": {
+    "title": "DCA Profit Calculator",
+    "accountBalance": "Account Balance",
+    "currencyPair": "Currency Pair",
+    "dcaType": "DCA Type",
+    "dcaDistance": "DCA Distance (pips)",
+    "initialLot": "Initial Lot",
+    "nextLot": "Next Lot",
+    "maxOrders": "Max Orders",
+    "maxOrdersNote": "(0 = Max orders)",
+    "calculate": "CALCULATE",
+    "results": {
+      "totalLot": "Total Lot",
+      "status": "Status",
+      "margin": "Margin",
+      "drawdownPrice": "Drawdown Price",
+      "totalOrders": "Total Orders"
+    },
+    "dcaTypes": {
+      "add": "Add",
+      "multiply": "Multiply"
+    }
+  }
+}

@@ -2,11 +2,16 @@
 import '@mantine/core/styles.css';
 import './globals.css';
 import type { Metadata } from 'next';
+import { routing } from '@/routing';
 
 export const metadata: Metadata = {
   title: 'MoneyX Feature Guide',
   description: 'Discover powerful financial feature combinations',
 };
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 const accentColor: MantineColorsTuple = [
   '#FFF8E6',
@@ -40,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <head>
         <ColorSchemeScript defaultColorScheme="dark" />
       </head>

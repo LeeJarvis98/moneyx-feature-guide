@@ -5,10 +5,14 @@ import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack }
 import { Compass, Calculator } from 'lucide-react';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<string | null>('feature-guide');
   const theme = useMantineTheme();
+  const t = useTranslations('common');
+  const tTabs = useTranslations('tabs');
 
   return (
     <AppShell transitionDuration={500}
@@ -19,24 +23,25 @@ export default function HomePage() {
             <Group justify="space-between" align="center">
               <div>
                 <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                  MoneyX Feature Guide
+                  {t('appName')}
                 </Title>
                 <Text size="sm" c="dimmed">
-                  Discover powerful financial feature combinations
+                  {t('appDescription')}
                 </Text>
               </div>
+              <LanguageSwitcher />
             </Group>
             <Tabs value={activeTab} onChange={setActiveTab} radius="md">
               <Tabs.List>
                 <Tabs.Tab
                   value="feature-guide"
                 >
-                  Feature Guide
+                  {tTabs('featureGuide')}
                 </Tabs.Tab>
                 <Tabs.Tab
                   value="profit-calculator"
                 >
-                  Profit Calculator
+                  {tTabs('profitCalculator')}
                 </Tabs.Tab>
               </Tabs.List>
             </Tabs>
@@ -60,17 +65,17 @@ export default function HomePage() {
         <Container size="xl" h="100%">
           <Group justify="space-between" align="center" h="100%">
             <Text size="sm" c="dimmed">
-              © {new Date().getFullYear()} MoneyX. All rights reserved.
+              © {new Date().getFullYear()} MoneyX. {t('allRightsReserved')}
             </Text>
             <Group gap="md">
               <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
-                About
+                {t('about')}
               </Text>
               <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
-                Privacy
+                {t('privacy')}
               </Text>
               <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
-                Terms
+                {t('terms')}
               </Text>
             </Group>
           </Group>

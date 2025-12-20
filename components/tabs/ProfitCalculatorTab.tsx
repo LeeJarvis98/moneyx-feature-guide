@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Container, Title, Paper, Stack, useMantineTheme, Grid, NumberInput, Select, Button, Group, Text } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 
 interface CurrencyPair {
   value: string;
@@ -27,6 +28,8 @@ interface CalculationResult {
 
 export function ProfitCalculatorTab() {
   const theme = useMantineTheme();
+  const t = useTranslations('calculator');
+  const tCommon = useTranslations('common');
 
   const [accountBalance, setAccountBalance] = useState<number>(10000);
   const [currencyPair, setCurrencyPair] = useState<string>('XAUUSD');
@@ -113,13 +116,13 @@ export function ProfitCalculatorTab() {
       <Paper withBorder p="xl" radius="md" style={{ background: '#1a1a1a' }}>
         <Stack gap="lg">
           <Title order={2} size="h2" c={theme.white} ta="center" mb="md">
-            DCA Profit Calculator
+            {t('title')}
           </Title>
 
           <Grid gutter="md">
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <NumberInput
-                label="Số dư tài khoản"
+                label={t('accountBalance')}
                 value={accountBalance}
                 onChange={(val) => setAccountBalance(Number(val) || 0)}
                 min={0}
@@ -134,7 +137,7 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <Select
-                label="Cặp tiền"
+                label={t('currencyPair')}
                 value={currencyPair}
                 onChange={(val) => setCurrencyPair(val || 'XAUUSD')}
                 data={CURRENCY_PAIRS.map(p => ({ value: p.value, label: p.label }))}
@@ -147,12 +150,12 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <Select
-                label="Loại DCA"
+                label={t('dcaType')}
                 value={dcaType}
                 onChange={(val) => setDcaType(val || 'add')}
                 data={[
-                  { value: 'add', label: 'Cộng' },
-                  { value: 'multiply', label: 'Nhân' },
+                  { value: 'add', label: t('dcaTypes.add') },
+                  { value: 'multiply', label: t('dcaTypes.multiply') },
                 ]}
                 styles={{
                   input: { backgroundColor: '#2a2a2a', color: 'white', borderColor: '#444' },
@@ -163,7 +166,7 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <NumberInput
-                label="Khoảng cách DCA (pips)"
+                label={t('dcaDistance')}
                 value={dcaDistance}
                 onChange={(val) => setDcaDistance(Number(val) || 0)}
                 min={1}
@@ -177,7 +180,7 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <NumberInput
-                label="Lot ban đầu"
+                label={t('initialLot')}
                 value={initialLot}
                 onChange={(val) => setInitialLot(Number(val) || 0)}
                 min={0.01}
@@ -192,7 +195,7 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
               <NumberInput
-                label="Lot tiếp theo"
+                label={t('nextLot')}
                 value={nextLot}
                 onChange={(val) => setNextLot(Number(val) || 0)}
                 min={0.01}
@@ -207,8 +210,8 @@ export function ProfitCalculatorTab() {
 
             <Grid.Col span={{ base: 12, md: 6 }}>
               <NumberInput
-                label="Tính đến số lệnh"
-                description="(0 = Max lệnh)"
+                label={t('maxOrders')}
+                description={t('maxOrdersNote')}
                 value={maxOrders}
                 onChange={(val) => setMaxOrders(Number(val) || 0)}
                 min={0}
@@ -236,7 +239,7 @@ export function ProfitCalculatorTab() {
               },
             }}
           >
-            TÍNH TOÁN
+            {t('calculate')}
           </Button>
 
           {result && (
@@ -244,14 +247,14 @@ export function ProfitCalculatorTab() {
               <Grid gutter="md">
                 <Grid.Col span={{ base: 6, sm: 4 }}>
                   <Stack gap={4} align="center">
-                    <Text size="sm" c="dimmed">Tổng Lot</Text>
+                    <Text size="sm" c="dimmed">{t('results.totalLot')}</Text>
                     <Text size="xl" fw={700} c="white">{result.totalLot}</Text>
                   </Stack>
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 6, sm: 4 }}>
                   <Stack gap={4} align="center">
-                    <Text size="sm" c="dimmed">Trạng thái</Text>
+                    <Text size="sm" c="dimmed">{t('results.status')}</Text>
                     <Text 
                       size="xl" 
                       fw={700} 
@@ -264,14 +267,14 @@ export function ProfitCalculatorTab() {
 
                 <Grid.Col span={{ base: 6, sm: 4 }}>
                   <Stack gap={4} align="center">
-                    <Text size="sm" c="dimmed">Biên sóng</Text>
+                    <Text size="sm" c="dimmed">{t('results.margin')}</Text>
                     <Text size="xl" fw={700} c="white">{result.margin}</Text>
                   </Stack>
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 6, sm: 4 }}>
                   <Stack gap={4} align="center">
-                    <Text size="sm" c="dimmed">Giá chịu tải</Text>
+                    <Text size="sm" c="dimmed">{t('results.drawdownPrice')}</Text>
                     <Text 
                       size="xl" 
                       fw={700} 
@@ -284,7 +287,7 @@ export function ProfitCalculatorTab() {
 
                 <Grid.Col span={{ base: 6, sm: 4 }}>
                   <Stack gap={4} align="center">
-                    <Text size="sm" c="dimmed">Tổng lệnh</Text>
+                    <Text size="sm" c="dimmed">{t('results.totalOrders')}</Text>
                     <Text size="xl" fw={700} c="white">{result.totalOrders}</Text>
                   </Stack>
                 </Grid.Col>

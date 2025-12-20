@@ -10,12 +10,15 @@ import { CardDetailModal } from '@/components/CardDetailModal';
 import { allCards } from '@/data';
 import { Card, CoreCombination } from '@/types';
 import { generateCombinationInsight } from '@/lib/combinations';
+import { useTranslations } from 'next-intl';
 
 export function FeatureGuideTab() {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [currentCombination, setCurrentCombination] = useState<CoreCombination | null>(null);
   const [modalCard, setModalCard] = useState<Card | null>(null);
   const [enabledCards, setEnabledCards] = useState<Set<string>>(new Set());
+  const t = useTranslations('core');
+  const tCommon = useTranslations('common');
 
   const handleCardClick = (card: Card) => {
     setModalCard(card);
@@ -85,7 +88,7 @@ export function FeatureGuideTab() {
                 <Group gap="xs">
                   <Layers size={24} color={theme.colors.accent[6]}/>
                   <Title order={3} size="h4" c={theme.white}>
-                    Core ({selectedCards.length})
+                    {t('title')} ({selectedCards.length})
                   </Title>
                 </Group>
                 {selectedCards.length > 0 && (
@@ -96,7 +99,7 @@ export function FeatureGuideTab() {
                     leftSection={<Trash2 size={16} />}
                     onClick={handleClearAll}
                   >
-                    Clear All
+                    {tCommon('clearAll')}
                   </Button>
                 )}
               </Group>
@@ -105,10 +108,10 @@ export function FeatureGuideTab() {
                 <Stack align="center" gap="md" py="xl">
                   <Lightbulb size={48} color={theme.colors.accent[6]} />
                   <Text size="lg" ta="center">
-                    Select features to discover powerful combinations
+                    {t('emptyMessage')}
                   </Text>
                   <Text size="sm" c="dimmed" ta="center">
-                    Click on features to add them to the core and unlock synergies
+                    {t('hint')}
                   </Text>
                 </Stack>
               ) : (

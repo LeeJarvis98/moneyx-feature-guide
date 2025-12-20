@@ -1,0 +1,48 @@
+﻿{
+  "common": {
+    "appName": "Hướng Dẫn Tính Năng MoneyX",
+    "appDescription": "Khám phá các kết hợp tính năng tài chính mạnh mẽ",
+    "about": "Giới thiệu",
+    "privacy": "Bảo mật",
+    "terms": "Điều khoản",
+    "allRightsReserved": "Bảo lưu mọi quyền",
+    "enabled": "Đã bật",
+    "disabled": "Đã tắt",
+    "description": "Mô tả",
+    "parameters": "Tham số",
+    "benefits": "Lợi ích",
+    "clearAll": "Xóa tất cả"
+  },
+  "tabs": {
+    "featureGuide": "Hướng Dẫn Tính Năng",
+    "profitCalculator": "Máy Tính Lợi Nhuận"
+  },
+  "core": {
+    "title": "Lõi",
+    "emptyMessage": "Chọn tính năng bên dưới để xem các kết hợp mạnh mẽ",
+    "hint": "Nhấp vào công tắc hoặc thẻ để bật tính năng"
+  },
+  "calculator": {
+    "title": "Máy Tính Lợi Nhuận DCA",
+    "accountBalance": "Số dư tài khoản",
+    "currencyPair": "Cặp tiền",
+    "dcaType": "Loại DCA",
+    "dcaDistance": "Khoảng cách DCA (pips)",
+    "initialLot": "Lot ban đầu",
+    "nextLot": "Lot tiếp theo",
+    "maxOrders": "Tính đến số lệnh",
+    "maxOrdersNote": "(0 = Max lệnh)",
+    "calculate": "TÍNH TOÁN",
+    "results": {
+      "totalLot": "Tổng Lot",
+      "status": "Trạng thái",
+      "margin": "Biên sóng",
+      "drawdownPrice": "Giá chịu tải",
+      "totalOrders": "Tổng lệnh"
+    },
+    "dcaTypes": {
+      "add": "Cộng",
+      "multiply": "Nhân"
+    }
+  }
+}
