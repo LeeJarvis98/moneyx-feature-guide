@@ -11,7 +11,8 @@ export default function HomePage() {
   const theme = useMantineTheme();
 
   return (
-    <AppShell header={{ height: 100 }} padding="md">
+    <AppShell transitionDuration={500}
+      transitionTimingFunction="ease" header={{ height: 100 }} footer={{ height: 60 }} padding="md">
       <AppShell.Header>
         <Container size="xl" h="100%">
           <Stack gap="xs" justify="center" h="100%">
@@ -27,12 +28,12 @@ export default function HomePage() {
             </Group>
             <Tabs value={activeTab} onChange={setActiveTab} radius="md">
               <Tabs.List>
-                <Tabs.Tab 
+                <Tabs.Tab
                   value="feature-guide"
                 >
                   Feature Guide
                 </Tabs.Tab>
-                <Tabs.Tab 
+                <Tabs.Tab
                   value="profit-calculator"
                 >
                   Profit Calculator
@@ -54,6 +55,27 @@ export default function HomePage() {
           </Tabs.Panel>
         </Tabs>
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <Container size="xl" h="100%">
+          <Group justify="space-between" align="center" h="100%">
+            <Text size="sm" c="dimmed">
+              © {new Date().getFullYear()} MoneyX. All rights reserved.
+            </Text>
+            <Group gap="md">
+              <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
+                About
+              </Text>
+              <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
+                Privacy
+              </Text>
+              <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
+                Terms
+              </Text>
+            </Group>
+          </Group>
+        </Container>
+      </AppShell.Footer>
     </AppShell>
   );
 }
