@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Title, Paper, Stack, useMantineTheme, Grid, NumberInput, Select, Button, Group, Text } from '@mantine/core';
+import { FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { OrderSimulationModal } from '@/components/OrderSimulationModal';
+import type { SavedResult } from '@/components/SavedResultsAside';
 
 interface CurrencyPair {
   value: string;
@@ -26,7 +29,20 @@ interface CalculationResult {
   totalOrders: number;
 }
 
-export function ProfitCalculatorTab() {
+interface ProfitCalculatorTabProps {
+  onSimulationUpdate?: (data: {
+    initialLot: number;
+    nextLot: number;
+    dcaType: 'add' | 'multiply';
+    maxOrders: number;
+    dcaDistance: number;
+    currencyPair: string;
+  }) => void;
+  onSaveResult?: (result: SavedResult) => void;
+  selectedResult?: SavedResult | null;
+}
+
+export function ProfitCalculatorTab({ onSimulationUpdate, onSaveResult, selectedResult }: ProfitCalculatorTabProps) {
   const theme = useMantineTheme();
   const t = useTranslations('calculator');
   const tCommon = useTranslations('common');
@@ -39,10 +55,37 @@ export function ProfitCalculatorTab() {
   const [nextLot, setNextLot] = useState<number>(0.02);
   const [maxOrders, setMaxOrders] = useState<number>(30);
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Load selected result into form
+  useEffect(() => {
+    if (selectedResult) {
+      setAccountBalance(selectedResult.accountBalance);
+      setCurrencyPair(selectedResult.currencyPair);
+      setDcaType(selectedResult.dcaType);
+      setDcaDistance(selectedResult.dcaDistance);
+      setInitialLot(selectedResult.initialLot);
+      setNextLot(selectedResult.nextLot);
+      setMaxOrders(selectedResult.maxOrders);
+      setResult(selectedResult.result);
+    }
+  }, [selectedResult]);
 
   const calculateDCA = () => {
     const pair = CURRENCY_PAIRS.find(p => p.value === currencyPair);
     if (!pair) return;
+
+    // Update simulation table with current parameters
+    if (onSimulationUpdate) {
+      onSimulationUpdate({
+        initialLot,
+        nextLot,
+        dcaType: dcaType as 'add' | 'multiply',
+        maxOrders,
+        dcaDistance,
+        currencyPair,
+      });
+    }
 
     let totalLot = 0;
     let currentLot = initialLot;
@@ -66,7 +109,7 @@ export function ProfitCalculatorTab() {
         orderCount++;
         
         if (dcaType === 'add') {
-          tempLot += (nextLot - initialLot);
+          tempLot += nextLot;
         } else {
           tempLot *= (nextLot / initialLot);
         }
@@ -83,16 +126,20 @@ export function ProfitCalculatorTab() {
       
       if (i < actualMaxOrders - 1) {
         if (dcaType === 'add') {
-          currentLot += (nextLot - initialLot);
+          currentLot += nextLot;
         } else {
           currentLot *= (nextLot / initialLot);
         }
       }
     }
 
-    // Calculate margin (simplified)
-    const pricePerUnit = currencyPair === 'XAUUSD' ? 2500 : 1.1;
-    const margin = (totalLot * pair.contractSize * pricePerUnit) / 100; // Assuming 1:100 leverage
+    // Calculate margin using the sum of all individual order margins
+    // Margin for each order = (maxOrders - orderNumber + 1) * (dcaDistance / 100)
+    let totalMargin = 0;
+    for (let i = 1; i <= actualMaxOrders; i++) {
+      totalMargin += (actualMaxOrders - i + 1) * (dcaDistance / 100);
+    }
+    const margin = totalMargin;
 
     // Calculate status percentage
     const statusPercent = ((margin / accountBalance) * 100) - 100;
@@ -102,13 +149,32 @@ export function ProfitCalculatorTab() {
     const drawdownInPips = totalPipMovement;
     const drawdownPrice = -(totalLot * drawdownInPips * (currencyPair === 'XAUUSD' ? 0.1 : 1));
 
-    setResult({
+    const calculationResult = {
       totalLot: parseFloat(totalLot.toFixed(2)),
       statusPercent: parseFloat(statusPercent.toFixed(0)),
       margin: parseFloat(margin.toFixed(0)),
       drawdownPrice: parseFloat(drawdownPrice.toFixed(3)),
       totalOrders: actualMaxOrders,
-    });
+    };
+
+    setResult(calculationResult);
+
+    // Save result to history
+    if (onSaveResult) {
+      const savedResult: SavedResult = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        accountBalance,
+        currencyPair,
+        dcaType: dcaType as 'add' | 'multiply',
+        dcaDistance,
+        initialLot,
+        nextLot,
+        maxOrders: actualMaxOrders,
+        result: calculationResult,
+      };
+      onSaveResult(savedResult);
+    }
   };
 
   return (
@@ -292,8 +358,33 @@ export function ProfitCalculatorTab() {
                   </Stack>
                 </Grid.Col>
               </Grid>
+
+              <Button
+                onClick={() => setShowDetailModal(true)}
+                size="md"
+                fullWidth
+                mt="md"
+                leftSection={<FileText size={20} />}
+                variant="light"
+                color="accent"
+              >
+                {t('results.orderSimulation')}
+              </Button>
             </Paper>
           )}
+
+          <OrderSimulationModal
+            isOpen={showDetailModal}
+            onClose={() => setShowDetailModal(false)}
+            simulationData={{
+              initialLot,
+              nextLot,
+              dcaType: dcaType as 'add' | 'multiply',
+              maxOrders,
+              dcaDistance,
+              currencyPair,
+            }}
+          />
         </Stack>
       </Paper>
     </Container>

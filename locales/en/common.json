@@ -19,7 +19,7 @@
   },
   "core": {
     "title": "Core",
-    "emptyMessage": "Select features from below to see powerful combinations",
+    "emptyMessage": "Select features from the right side to see powerful combinations for MoneyX bot",
     "hint": "Click the toggle or card to enable features"
   },
   "calculator": {
@@ -29,7 +29,7 @@
     "dcaType": "DCA Type",
     "dcaDistance": "DCA Distance (pips)",
     "initialLot": "Initial Lot",
-    "nextLot": "Next Lot",
+    "nextLot": "Lot Increment",
     "maxOrders": "Max Orders",
     "maxOrdersNote": "(0 = Max orders)",
     "calculate": "CALCULATE",
@@ -38,11 +38,27 @@
       "status": "Status",
       "margin": "Margin",
       "drawdownPrice": "Drawdown Price",
-      "totalOrders": "Total Orders"
+      "totalOrders": "Total Orders",
+      "orderSimulation": "Order Simulation"
     },
     "dcaTypes": {
       "add": "Add",
       "multiply": "Multiply"
     }
+  },
+  "simulation": {
+    "title": "Order Simulation",
+    "description": "This table shows how your orders will execute with lot increments and profit for each order.",
+    "setMaxOrders": "Set max orders to see simulation",
+    "orderNo": "Order #",
+    "lot": "Lot Size",
+    "margin": "Margin",
+    "profit": "Profit/Order",
+    "cumProfit": "Total Profit",
+    "orders": "Orders"
+  },
+  "savedResults": {
+    "title": "Saved Results",
+    "description": "No saved results yet. Calculate to save your first result."
   }
 }

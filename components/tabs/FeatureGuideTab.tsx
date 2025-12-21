@@ -1,18 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { Container, Title, Text, Grid, Stack, Paper, Group, Button, useMantineTheme, ScrollArea } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { Container, Title, Text, Grid, Stack, Paper, Group, Button, useMantineTheme } from '@mantine/core';
 import { Layers, Trash2, Lightbulb } from 'lucide-react';
-import { FeatureCard } from '@/components/FeatureCard';
 import { CoreCard } from '@/components/CoreCard';
 import { InsightPanel } from '@/components/InsightPanel';
-import { CardDetailModal } from '@/components/CardDetailModal';
+import { AvailableFeaturesAside } from '@/components/AvailableFeaturesAside';
 import { allCards } from '@/data';
 import { Card, CoreCombination } from '@/types';
 import { generateCombinationInsight } from '@/lib/combinations';
 import { useTranslations } from 'next-intl';
 
-export function FeatureGuideTab() {
+interface FeatureGuideTabProps {
+  onAsideContentChange?: (content: React.ReactNode) => void;
+}
+
+export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [currentCombination, setCurrentCombination] = useState<CoreCombination | null>(null);
   const [modalCard, setModalCard] = useState<Card | null>(null);
@@ -74,10 +77,25 @@ export function FeatureGuideTab() {
 
   const theme = useMantineTheme();
 
+  // Update aside content whenever cards or modal state changes
+  useEffect(() => {
+    if (onAsideContentChange) {
+      onAsideContentChange(
+        <AvailableFeaturesAside
+          enabledCards={enabledCards}
+          onCardClick={handleCardClick}
+          onToggleCard={handleToggleCard}
+          modalCard={modalCard}
+          onCloseModal={() => setModalCard(null)}
+        />
+      );
+    }
+  }, [enabledCards, modalCard, onAsideContentChange]);
+
   return (
     <Container size="xl">
       <Grid gutter="lg">
-        <Grid.Col span={{ base: 12, md: 8 }}>
+        <Grid.Col span={12}>
           <Stack gap="md">
             {/* Insights Section - shown above Core when cards are selected */}
             <InsightPanel combination={currentCombination} />
@@ -86,7 +104,7 @@ export function FeatureGuideTab() {
             <Paper withBorder p="lg" radius="md">
               <Group justify="space-between" mb="md">
                 <Group gap="xs">
-                  <Layers size={24} color={theme.colors.accent[6]}/>
+                  <Layers size={24} color={theme.colors.accent[6]} />
                   <Title order={3} size="h4" c={theme.white}>
                     {t('title')} ({selectedCards.length})
                   </Title>
@@ -126,40 +144,6 @@ export function FeatureGuideTab() {
                 </Stack>
               )}
             </Paper>
-          </Stack>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Stack gap="md">
-            <Title order={2} size="h3" c={theme.white}>
-              Available Features
-            </Title>
-            <ScrollArea h="calc(100vh - 200px)" type="never" scrollbars="y">
-              <Grid>
-                {allCards.map((card) => (
-                  <Grid.Col key={card.id} span={12}>
-                    <FeatureCard
-                      card={card}
-                      onClick={() => handleCardClick(card)}
-                      isEnabled={enabledCards.has(card.id)}
-                      onToggle={(enabled) => handleToggleCard(card.id, enabled)}
-                    />
-                  </Grid.Col>
-                ))}
-              </Grid>
-            </ScrollArea>
-
-            <CardDetailModal
-              card={modalCard}
-              isOpen={modalCard !== null}
-              onClose={() => setModalCard(null)}
-              isEnabled={modalCard ? enabledCards.has(modalCard.id) : false}
-              onToggle={(enabled) => {
-                if (modalCard) {
-                  handleToggleCard(modalCard.id, enabled);
-                }
-              }}
-            />
           </Stack>
         </Grid.Col>
       </Grid>
