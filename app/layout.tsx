@@ -2,6 +2,13 @@
 import '@mantine/core/styles.css';
 import './globals.css';
 import { routing } from '@/routing';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -28,6 +35,7 @@ const theme = createTheme({
   black: '#000000',
   white: '#FFFFFF',
   defaultRadius: 'md',
+  fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
   other: {
     mainColor: '#25282A',
   },
@@ -39,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html suppressHydrationWarning className={inter.variable}>
       <head>
         <ColorSchemeScript defaultColorScheme="dark" ></ColorSchemeScript>
       </head>

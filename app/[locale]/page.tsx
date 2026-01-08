@@ -1,8 +1,9 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea } from '@mantine/core';
-import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, ChevronRight } from 'lucide-react';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, Burger, ActionIcon, Affix, Transition } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, ChevronRight, PanelRight } from 'lucide-react';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
@@ -14,6 +15,8 @@ import { useTranslations } from 'next-intl';
 type NavigationSection = 'features' | 'learn';
 
 export default function HomePage() {
+  const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
+  const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('features');
   const [activeTab, setActiveTab] = useState<string | null>('feature-guide');
   const [simulationData, setSimulationData] = useState({
@@ -58,7 +61,23 @@ export default function HomePage() {
     } else if (value === 'learn') {
       setActiveTab('step-by-step');
     }
+    // Close mobile menus when switching sections
+    closeMobileNav();
+    closeMobileAside();
   };
+
+  // Close mobile menus when changing tabs
+  const handleTabChange = (value: string | null) => {
+    setActiveTab(value);
+    closeMobileNav();
+    closeMobileAside();
+  };
+
+  // Determine if navbar should be shown
+  const shouldShowNavbar = navigationSection === 'learn' && activeTab === 'step-by-step';
+  
+  // Determine if aside should be shown
+  const shouldShowAside = navigationSection === 'features' && (activeTab === 'profit-calculator' || activeTab === 'feature-guide');
 
   return (
     <AppShell
@@ -69,12 +88,12 @@ export default function HomePage() {
       navbar={{
         width: 300,
         breakpoint: 'sm',
-        collapsed: { mobile: true, desktop: navigationSection !== 'learn' || activeTab !== 'step-by-step' }
+        collapsed: { mobile: !mobileNavOpened, desktop: !shouldShowNavbar }
       }}
       aside={{
         width: 400,
         breakpoint: 'md',
-        collapsed: { mobile: true, desktop: navigationSection === 'learn' }
+        collapsed: { mobile: !mobileAsideOpened, desktop: !shouldShowAside }
       }}
       padding="md"
     >
@@ -87,19 +106,32 @@ export default function HomePage() {
         <Container size="100%" h="100%">
           <Stack gap="md" justify="end" h="100%">
             <Group justify="space-between" align="center">
-              <div>
-                <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                  {t('appName')}
-                </Title>
-                <Text size="sm" c="dimmed">
-                  {t('appDescription')}
-                </Text>
-              </div>
+              <Group>
+                {/* Burger menu for mobile - shows when navbar should be visible */}
+                {shouldShowNavbar && (
+                  <Burger
+                    opened={mobileNavOpened}
+                    onClick={toggleMobileNav}
+                    hiddenFrom="sm"
+                    size="sm"
+                    aria-label="Toggle navigation menu"
+                  />
+                )}
+                <div>
+                  <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                    {t('appName')}
+                  </Title>
+                  <Text size="sm" c="dimmed">
+                    {t('appDescription')}
+                  </Text>
+                </div>
+              </Group>
               <Group gap="md">
                 <Button
                   variant={navigationSection === 'features' ? 'filled' : 'subtle'}
                   leftSection={<Compass size={18} />}
                   onClick={() => handleNavigationChange('features')}
+                  visibleFrom="sm"
                 >
                   {tNav('features')}
                 </Button>
@@ -107,13 +139,14 @@ export default function HomePage() {
                   variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
                   leftSection={<GraduationCap size={18} />}
                   onClick={() => handleNavigationChange('learn')}
+                  visibleFrom="sm"
                 >
                   {tNav('learn')}
                 </Button>
                 <LanguageSwitcher />
               </Group>
             </Group>
-            <Tabs value={activeTab} onChange={setActiveTab} radius="md">
+            <Tabs value={activeTab} onChange={handleTabChange} radius="md">
               <Tabs.List>
                 {navigationSection === 'features' && (
                   <>
@@ -153,6 +186,25 @@ export default function HomePage() {
                 )}
               </Tabs.List>
             </Tabs>
+            {/* Mobile navigation buttons */}
+            <Group gap="xs" hiddenFrom="sm" justify="center">
+              <Button
+                variant={navigationSection === 'features' ? 'filled' : 'subtle'}
+                leftSection={<Compass size={16} />}
+                onClick={() => handleNavigationChange('features')}
+                size="xs"
+              >
+                {tNav('features')}
+              </Button>
+              <Button
+                variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
+                leftSection={<GraduationCap size={16} />}
+                onClick={() => handleNavigationChange('learn')}
+                size="xs"
+              >
+                {tNav('learn')}
+              </Button>
+            </Group>
           </Stack>
         </Container>
       </AppShell.Header>
@@ -161,22 +213,27 @@ export default function HomePage() {
         {navigationSection === 'learn' && activeTab === 'step-by-step' && (
           <ScrollArea h="100%" type="auto" offsetScrollbars>
             <Stack gap="xs">
-              <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs">
+              <Text size="xs" fw={700} c="blue" tt="uppercase" mb="xs">
                 Lessons
               </Text>
             
             <NavLink
               label="Lesson 1: Info & Definitions"
               description="Tìm hiểu các khái niệm và định nghĩa cơ bản"
-              leftSection={<BookOpen size={16} color={theme.colors.accent[6]} />}
+              leftSection={<BookOpen size={16} color="#307fffff" />}
               active={selectedArticle === 'lesson-1'}
-              onClick={() => setSelectedArticle('lesson-1')}
+              fw={selectedArticle === 'lesson-1' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('lesson-1');
+                closeMobileNav();
+              }}
+              color="blue"
             />
             
             <NavLink
               label="Lesson 2"
               description="Tìm hiểu về các bảng thông tin quan trọng"
-              leftSection={<BookOpen size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<BookOpen size={16} color="#307fffff" />}
               rightSection={<ChevronRight size={16} />}
               opened={lesson2Opened}
               onClick={() => setLesson2Opened(!lesson2Opened)}
@@ -185,86 +242,136 @@ export default function HomePage() {
                 label="Lesson 2.1: DCA info panel"
                 description="Tìm hiểu về các thông số DCA trong bảng thông tin"
                 active={selectedArticle === 'lesson-2-1'}
-                onClick={() => setSelectedArticle('lesson-2-1')}
+                fw={selectedArticle === 'lesson-2-1' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('lesson-2-1');
+                  closeMobileNav();
+                }}
+                color="blue"
               />
               <NavLink
                 label="Lesson 2.2: Manual trade support panel"
                 description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
                 active={selectedArticle === 'lesson-2-2'}
-                onClick={() => setSelectedArticle('lesson-2-2')}
+                fw={selectedArticle === 'lesson-2-2' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('lesson-2-2');
+                  closeMobileNav();
+                }}
+                color="blue"
               />
             </NavLink>
             
             <NavLink
               label="Lesson 3: Inputs guide (Auto DCA mode)"
               description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
-              leftSection={<BookOpen size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<BookOpen size={16} color="#307fffff"/>}
               active={selectedArticle === 'lesson-3'}
-              onClick={() => setSelectedArticle('lesson-3')}
+              fw={selectedArticle === 'lesson-3' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('lesson-3');
+                closeMobileNav();
+              }}
+              color="blue"
             />
 
-            <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs" mt="md">
+            <Text size="xs" fw={700} c="violet" tt="uppercase" mb="xs" mt="md">
               Strategy
             </Text>
             
             <NavLink
               label="Strategy 1: CHỈ BUY VÀNG"
               description="Gồng được 1000 giá vàng, vẫn lợi nhuận 10%/ tháng"
-              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<TrendingUp size={16} color="violet"/>}
               active={selectedArticle === 'strategy-1'}
-              onClick={() => setSelectedArticle('strategy-1')}
+              fw={selectedArticle === 'strategy-1' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('strategy-1');
+                closeMobileNav();
+              }}
+              color="violet"
             />
             
             <NavLink
               label="Strategy 2: FULL MARGIN"
               description="Đánh lỗi đòn bẩy sàn, X2 tài khoản sau 1 cây nến 1 phút"
-              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<TrendingUp size={16} color="violet"/>}
               active={selectedArticle === 'strategy-2'}
-              onClick={() => setSelectedArticle('strategy-2')}
+              fw={selectedArticle === 'strategy-2' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('strategy-2');
+                closeMobileNav();
+              }}
+              color="violet"
             />
             
             <NavLink
               label="Strategy 3: NHÂN & TỔNG"
               description="Siêu lợi nhuận cắt chuỗi, giống con MF ( hợp XAUUSD )"
-              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<TrendingUp size={16} color="violet"/>}
               active={selectedArticle === 'strategy-3'}
-              onClick={() => setSelectedArticle('strategy-3')}
+              fw={selectedArticle === 'strategy-3' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('strategy-3');
+                closeMobileNav();
+              }}
+              color="violet"
             />
             
             <NavLink
               label="Strategy 4: CỘNG & TỈA"
               description="Siêu an toàn, tốt hơn đầu tư ngân hàng, giống con MG ( hợp AUDCAD )"
-              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<TrendingUp size={16} color="violet"/>}
               active={selectedArticle === 'strategy-4'}
-              onClick={() => setSelectedArticle('strategy-4')}
+              fw={selectedArticle === 'strategy-4' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('strategy-4');
+                closeMobileNav();
+              }}
+              color="violet"
             />
             
             <NavLink
               label="Strategy 5: CỘNG & TỔNG"
               description="Vượt 700 pips AUDCAD, sóng lớn nhất lịch sử"
-              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<TrendingUp size={16} color="violet"/>}
               active={selectedArticle === 'strategy-5'}
-              onClick={() => setSelectedArticle('strategy-5')}
+              fw={selectedArticle === 'strategy-5' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('strategy-5');
+                closeMobileNav();
+              }}
+              color="violet"
             />
 
-            <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs" mt="md">
+            <Text size="xs" fw={700} c="green" tt="uppercase" mb="xs" mt="md">
               Guide
             </Text>
             
             <NavLink
               label="Guide 1: Hướng dẫn add bot và add bản quyền"
               description="Hướng dẫn chi tiết cách thêm bot và kích hoạt bản quyền"
-              leftSection={<FileText size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<FileText size={16} color="green"/>}
               active={selectedArticle === 'guide-1'}
-              onClick={() => setSelectedArticle('guide-1')}
+              fw={selectedArticle === 'guide-1' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('guide-1');
+                closeMobileNav();
+              }}
+              color="lime"
             />
             
             <NavLink
               label="Guide 2: Hướng dẫn cách mở Backtest"
               description="Hướng dẫn chi tiết cách mở chế độ Backtest trên MT4/MT5"
-              leftSection={<FileText size={16} color={theme.colors.accent[6]}/>}
+              leftSection={<FileText size={16} color="green"/>}
               active={selectedArticle === 'guide-2'}
-              onClick={() => setSelectedArticle('guide-2')}
+              fw={selectedArticle === 'guide-2' ? 700 : undefined}
+              onClick={() => {
+                setSelectedArticle('guide-2');
+                closeMobileNav();
+              }}
+              color="lime"
             />
           </Stack>
           </ScrollArea>
@@ -272,7 +379,7 @@ export default function HomePage() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
           {/* Features Section Tabs */}
           {navigationSection === 'features' && (
             <>
@@ -345,6 +452,30 @@ export default function HomePage() {
           </Group>
         </Container>
       </AppShell.Footer>
+
+      {/* Floating action button for Aside panel */}
+      <Affix position={{ bottom: 80, right: 20 }}>
+        <Transition transition="slide-up" mounted={shouldShowAside}>
+          {(transitionStyles) => (
+            <ActionIcon
+              size="xl"
+              radius="xl"
+              variant="filled"
+              color={theme.colors.accent[6]}
+              onClick={toggleMobileAside}
+              style={{
+                ...transitionStyles,
+                boxShadow: theme.shadows.lg,
+                width: 56,
+                height: 56,
+              }}
+              aria-label="Toggle side panel"
+            >
+              <PanelRight size={24} />
+            </ActionIcon>
+          )}
+        </Transition>
+      </Affix>
     </AppShell >
   );
 }

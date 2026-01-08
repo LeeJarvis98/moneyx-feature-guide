@@ -1,15 +1,9 @@
 import { getRequestConfig } from 'next-intl/server';
-
-// Can be imported from a shared config
-const locales = ['en', 'vi'];
+import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
-
-  // Validate that the incoming 'locale' parameter is valid
-  if (!locale || !locales.includes(locale)) {
-    locale = 'en';
-  }
+  // Support for static export - get locale from requestLocale or default
+  const locale = (await requestLocale) || routing.defaultLocale;
 
   return {
     locale,

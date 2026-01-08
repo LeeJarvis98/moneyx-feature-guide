@@ -101,7 +101,7 @@ export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) 
             <InsightPanel combination={currentCombination} />
 
             {/* Core Section */}
-            <Paper withBorder p="lg" radius="md">
+            <Paper withBorder p="lg" radius="md" style={{ background: '#1a1a1a' }}>
               <Group justify="space-between" mb="md">
                 <Group gap="xs">
                   <Layers size={24} color={theme.colors.accent[6]} />

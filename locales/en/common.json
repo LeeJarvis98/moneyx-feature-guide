@@ -1,6 +1,6 @@
 ﻿{
   "metadata": {
-    "title": "MoneyX Feature Guide",
+    "title": "Vietnam High-Quality Bot",
     "description": "Discover powerful financial feature combinations"
   },
   "common": {
@@ -25,7 +25,13 @@
     "featureGuide": "Feature Guide",
     "profitCalculator": "Profit Calculator",
     "stepByStep": "Step-by-Step Guide",
-    "courses": "All Courses"
+    "courses": "All Courses",
+    "coursesDescription": "Comprehensive courses to help you become a profitable trader with Vietnam High-Quality Bot",
+    "searchPlaceholder": "Search courses by title...",
+    "all": "All",
+    "noCoursesFound": "No courses found",
+    "adjustFilters": "Try adjusting your search or filters",
+    "students": "students"
   },
   "core": {
     "title": "Core",

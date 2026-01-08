@@ -1,6 +1,6 @@
 ﻿{
   "metadata": {
-    "title": "Hướng Dẫn Tính Năng MoneyX",
+    "title": "Việt Nam Chất Lượng Cao",
     "description": "Khám phá các kết hợp tính năng tài chính mạnh mẽ"
   },
   "common": {
@@ -25,7 +25,13 @@
     "featureGuide": "Hướng Dẫn Tính Năng",
     "profitCalculator": "Máy Tính Lợi Nhuận",
     "stepByStep": "Hướng Dẫn Từng Bước",
-    "courses": "Tất Cả Khóa Học"
+    "courses": "Tất Cả Khóa Học",
+    "coursesDescription": "Các khóa học toàn diện giúp bạn trở thành nhà giao dịch có lợi nhuận với bot Việt Nam Chất Lượng Cao",
+    "searchPlaceholder": "Tìm kiếm khóa học theo tiêu đề...",
+    "all": "Tất cả",
+    "noCoursesFound": "Không tìm thấy khóa học",
+    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc của bạn",
+    "students": "học viên"
   },
   "core": {
     "title": "Lõi",
