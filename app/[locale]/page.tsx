@@ -117,20 +117,36 @@ export default function HomePage() {
               <Tabs.List>
                 {navigationSection === 'features' && (
                   <>
-                    <Tabs.Tab value="feature-guide">
+                    <Tabs.Tab 
+                      value="feature-guide"
+                      c={activeTab === 'feature-guide' ? theme.white : undefined}
+                      fw={activeTab === 'feature-guide' ? 700 : undefined}
+                    >
                       {tTabs('featureGuide')}
                     </Tabs.Tab>
-                    <Tabs.Tab value="profit-calculator">
+                    <Tabs.Tab 
+                      value="profit-calculator"
+                      c={activeTab === 'profit-calculator' ? theme.white : undefined}
+                      fw={activeTab === 'profit-calculator' ? 700 : undefined}
+                    >
                       {tTabs('profitCalculator')}
                     </Tabs.Tab>
                   </>
                 )}
                 {navigationSection === 'learn' && (
                   <>
-                    <Tabs.Tab value="step-by-step">
+                    <Tabs.Tab 
+                      value="step-by-step"
+                      c={activeTab === 'step-by-step' ? theme.white : undefined}
+                      fw={activeTab === 'step-by-step' ? 700 : undefined}
+                    >
                       {tTabs('stepByStep')}
                     </Tabs.Tab>
-                    <Tabs.Tab value="courses">
+                    <Tabs.Tab 
+                      value="courses"
+                      c={activeTab === 'courses' ? theme.white : undefined}
+                      fw={activeTab === 'courses' ? 700 : undefined}
+                    >
                       {tTabs('courses')}
                     </Tabs.Tab>
                   </>
