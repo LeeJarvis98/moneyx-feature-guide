@@ -78,7 +78,12 @@ export default function HomePage() {
       }}
       padding="md"
     >
-      <AppShell.Header>
+      <AppShell.Header
+        style={{
+          backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
+          backdropFilter: 'blur(5px)',
+        }}
+      >
         <Container size="100%" h="100%">
           <Stack gap="md" justify="end" h="100%">
             <Group justify="space-between" align="center">
@@ -301,7 +306,10 @@ export default function HomePage() {
         )}
       </AppShell.Aside>
 
-      <AppShell.Footer>
+      <AppShell.Footer style={{
+          backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
+          backdropFilter: 'blur(5px)',
+        }}>
         <Container size="100%" h="100%">
           <Group justify="space-between" align="center" h="100%">
             <Text size="sm" c="dimmed">
