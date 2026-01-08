@@ -1,34 +1,48 @@
 'use client';
 
-import { Title, Text, Stack, Box, AspectRatio } from '@mantine/core';
-import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { Box, TypographyStylesProvider, Loader, Center } from '@mantine/core';
 
-export function StepByStepTab() {
-  const t = useTranslations('tabs');
+interface StepByStepTabProps {
+  selectedArticle: string;
+}
+
+export function StepByStepTab({ selectedArticle }: StepByStepTabProps) {
+  const [htmlContent, setHtmlContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/articles/${selectedArticle}.html`)
+      .then((response) => response.text())
+      .then((html) => {
+        // Extract body content from HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        setHtmlContent(bodyContent);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error loading article:', error);
+        setHtmlContent('<p>Error loading article content.</p>');
+        setLoading(false);
+      });
+  }, [selectedArticle]);
+
+  if (loading) {
+    return (
+      <Center style={{ height: '400px' }}>
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
   return (
-    <Box>
-      <Stack gap="xl" mb="xl" px="md">
-        <div>
-          <Title order={2} mb="xs">
-            {t('stepByStep')}
-          </Title>
-          <Text c="dimmed">
-            Follow these steps to master the MoneyX Bot and maximize your trading potential
-          </Text>
-        </div>
-      </Stack>
-
-      <Box px="md">
-        <AspectRatio ratio={16 / 9}>
-          <iframe
-            src="https://drive.google.com/file/d/1RcLshg0XdRidk5DBoQc9xqZHHWc0Vxsj/preview"
-            title="Step by Step Guide"
-            style={{ border: 'none', borderRadius: '8px' }}
-            allow="autoplay"
-          />
-        </AspectRatio>
-      </Box>
+    <Box style={{ width: '100%', padding: '2rem' }}>
+      <TypographyStylesProvider>
+        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      </TypographyStylesProvider>
     </Box>
   );
 }

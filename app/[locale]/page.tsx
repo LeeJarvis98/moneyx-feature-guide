@@ -1,8 +1,8 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button } from '@mantine/core';
-import { Compass, Calculator, BookOpen, GraduationCap } from 'lucide-react';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea } from '@mantine/core';
+import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, ChevronRight } from 'lucide-react';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
@@ -27,6 +27,8 @@ export default function HomePage() {
   const [savedResults, setSavedResults] = useState<SavedResult[]>([]);
   const [selectedResult, setSelectedResult] = useState<SavedResult | null>(null);
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
+  const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
+  const [lesson2Opened, setLesson2Opened] = useState(false);
   const theme = useMantineTheme();
   const t = useTranslations('common');
   const tTabs = useTranslations('tabs');
@@ -64,6 +66,11 @@ export default function HomePage() {
       transitionTimingFunction="ease"
       header={{ height: 120 }}
       footer={{ height: 60 }}
+      navbar={{
+        width: 300,
+        breakpoint: 'sm',
+        collapsed: { mobile: true, desktop: navigationSection !== 'learn' || activeTab !== 'step-by-step' }
+      }}
       aside={{
         width: 400,
         breakpoint: 'md',
@@ -129,6 +136,120 @@ export default function HomePage() {
         </Container>
       </AppShell.Header>
 
+      <AppShell.Navbar p="md">
+        {navigationSection === 'learn' && activeTab === 'step-by-step' && (
+          <ScrollArea h="100%" type="auto" offsetScrollbars>
+            <Stack gap="xs">
+              <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs">
+                Lessons
+              </Text>
+            
+            <NavLink
+              label="Lesson 1: Info & Definitions"
+              description="Tìm hiểu các khái niệm và định nghĩa cơ bản"
+              leftSection={<BookOpen size={16} color={theme.colors.accent[6]} />}
+              active={selectedArticle === 'lesson-1'}
+              onClick={() => setSelectedArticle('lesson-1')}
+            />
+            
+            <NavLink
+              label="Lesson 2"
+              description="Tìm hiểu về các bảng thông tin quan trọng"
+              leftSection={<BookOpen size={16} color={theme.colors.accent[6]}/>}
+              rightSection={<ChevronRight size={16} />}
+              opened={lesson2Opened}
+              onClick={() => setLesson2Opened(!lesson2Opened)}
+            >
+              <NavLink
+                label="Lesson 2.1: DCA info panel"
+                description="Tìm hiểu về các thông số DCA trong bảng thông tin"
+                active={selectedArticle === 'lesson-2-1'}
+                onClick={() => setSelectedArticle('lesson-2-1')}
+              />
+              <NavLink
+                label="Lesson 2.2: Manual trade support panel"
+                description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
+                active={selectedArticle === 'lesson-2-2'}
+                onClick={() => setSelectedArticle('lesson-2-2')}
+              />
+            </NavLink>
+            
+            <NavLink
+              label="Lesson 3: Inputs guide (Auto DCA mode)"
+              description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
+              leftSection={<BookOpen size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'lesson-3'}
+              onClick={() => setSelectedArticle('lesson-3')}
+            />
+
+            <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs" mt="md">
+              Strategy
+            </Text>
+            
+            <NavLink
+              label="Strategy 1: CHỈ BUY VÀNG"
+              description="Gồng được 1000 giá vàng, vẫn lợi nhuận 10%/ tháng"
+              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'strategy-1'}
+              onClick={() => setSelectedArticle('strategy-1')}
+            />
+            
+            <NavLink
+              label="Strategy 2: FULL MARGIN"
+              description="Đánh lỗi đòn bẩy sàn, X2 tài khoản sau 1 cây nến 1 phút"
+              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'strategy-2'}
+              onClick={() => setSelectedArticle('strategy-2')}
+            />
+            
+            <NavLink
+              label="Strategy 3: NHÂN & TỔNG"
+              description="Siêu lợi nhuận cắt chuỗi, giống con MF ( hợp XAUUSD )"
+              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'strategy-3'}
+              onClick={() => setSelectedArticle('strategy-3')}
+            />
+            
+            <NavLink
+              label="Strategy 4: CỘNG & TỈA"
+              description="Siêu an toàn, tốt hơn đầu tư ngân hàng, giống con MG ( hợp AUDCAD )"
+              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'strategy-4'}
+              onClick={() => setSelectedArticle('strategy-4')}
+            />
+            
+            <NavLink
+              label="Strategy 5: CỘNG & TỔNG"
+              description="Vượt 700 pips AUDCAD, sóng lớn nhất lịch sử"
+              leftSection={<TrendingUp size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'strategy-5'}
+              onClick={() => setSelectedArticle('strategy-5')}
+            />
+
+            <Text size="xs" fw={700} c={theme.white} tt="uppercase" mb="xs" mt="md">
+              Guide
+            </Text>
+            
+            <NavLink
+              label="Guide 1: Hướng dẫn add bot và add bản quyền"
+              description="Hướng dẫn chi tiết cách thêm bot và kích hoạt bản quyền"
+              leftSection={<FileText size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'guide-1'}
+              onClick={() => setSelectedArticle('guide-1')}
+            />
+            
+            <NavLink
+              label="Guide 2: Hướng dẫn cách mở Backtest"
+              description="Hướng dẫn chi tiết cách mở chế độ Backtest trên MT4/MT5"
+              leftSection={<FileText size={16} color={theme.colors.accent[6]}/>}
+              active={selectedArticle === 'guide-2'}
+              onClick={() => setSelectedArticle('guide-2')}
+            />
+          </Stack>
+          </ScrollArea>
+        )}
+      </AppShell.Navbar>
+
       <AppShell.Main>
         <Tabs value={activeTab} onChange={setActiveTab}>
           {/* Features Section Tabs */}
@@ -152,7 +273,7 @@ export default function HomePage() {
           {navigationSection === 'learn' && (
             <>
               <Tabs.Panel value="step-by-step">
-                <StepByStepTab />
+                <StepByStepTab selectedArticle={selectedArticle} />
               </Tabs.Panel>
 
               <Tabs.Panel value="courses">

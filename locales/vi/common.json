@@ -1,4 +1,8 @@
 ﻿{
+  "metadata": {
+    "title": "Hướng Dẫn Tính Năng MoneyX",
+    "description": "Khám phá các kết hợp tính năng tài chính mạnh mẽ"
+  },
   "common": {
     "appName": "Việt Nam Chất Lượng Cao",
     "appDescription": "Khám phá các kết hợp tính năng tài chính mạnh mẽ",
@@ -15,7 +19,7 @@
   },
   "navigation": {
     "features": "Tính năng",
-    "learn": "Học tập"
+    "learn": "Hướng dẫn"
   },
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",

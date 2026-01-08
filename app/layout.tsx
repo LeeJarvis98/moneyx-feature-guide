@@ -1,13 +1,7 @@
 ﻿import { MantineProvider, ColorSchemeScript, createTheme, MantineColorsTuple } from '@mantine/core';
 import '@mantine/core/styles.css';
 import './globals.css';
-import type { Metadata } from 'next';
 import { routing } from '@/routing';
-
-export const metadata: Metadata = {
-  title: 'MoneyX Feature Guide',
-  description: 'Discover powerful financial feature combinations',
-};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -47,7 +41,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <head>
-        <ColorSchemeScript defaultColorScheme="dark" />
+        <ColorSchemeScript defaultColorScheme="dark" ></ColorSchemeScript>
       </head>
       <body>
         <MantineProvider theme={theme} defaultColorScheme="dark">{children}</MantineProvider>
