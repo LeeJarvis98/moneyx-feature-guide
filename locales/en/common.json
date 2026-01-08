@@ -1,6 +1,6 @@
 ﻿{
   "common": {
-    "appName": "MoneyX Feature Guide",
+    "appName": "Vietnam High-Quality Bot",
     "appDescription": "Discover powerful financial feature combinations",
     "about": "About",
     "privacy": "Privacy",
@@ -13,9 +13,15 @@
     "benefits": "Benefits",
     "clearAll": "Clear All"
   },
+  "navigation": {
+    "features": "Features",
+    "learn": "Learn"
+  },
   "tabs": {
     "featureGuide": "Feature Guide",
-    "profitCalculator": "Profit Calculator"
+    "profitCalculator": "Profit Calculator",
+    "stepByStep": "Step-by-Step Guide",
+    "courses": "All Courses"
   },
   "core": {
     "title": "Core",

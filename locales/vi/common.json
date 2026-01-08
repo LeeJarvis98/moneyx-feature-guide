@@ -1,6 +1,6 @@
 ﻿{
   "common": {
-    "appName": "Hướng Dẫn Tính Năng MoneyX",
+    "appName": "Việt Nam Chất Lượng Cao",
     "appDescription": "Khám phá các kết hợp tính năng tài chính mạnh mẽ",
     "about": "Giới thiệu",
     "privacy": "Bảo mật",
@@ -13,9 +13,15 @@
     "benefits": "Lợi ích",
     "clearAll": "Xóa tất cả"
   },
+  "navigation": {
+    "features": "Tính năng",
+    "learn": "Học tập"
+  },
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",
-    "profitCalculator": "Máy Tính Lợi Nhuận"
+    "profitCalculator": "Máy Tính Lợi Nhuận",
+    "stepByStep": "Hướng Dẫn Từng Bước",
+    "courses": "Tất Cả Khóa Học"
   },
   "core": {
     "title": "Lõi",
