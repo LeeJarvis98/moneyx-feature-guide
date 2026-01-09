@@ -3,19 +3,20 @@
 import { useState } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, Burger, ActionIcon, Affix, Transition } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, PanelRight } from 'lucide-react';
+import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
-import { NewsTab } from '@/components/tabs/NewsTab';
 import { SavedResultsAside, SavedResult } from '@/components/SavedResultsAside';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { HeroSection } from '@/components/HeroSection';
 import { useTranslations } from 'next-intl';
 
-type NavigationSection = 'features' | 'learn' | 'news';
+type NavigationSection = 'features' | 'learn';
 
 export default function HomePage() {
+  const [showHero, setShowHero] = useState(true);
   const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
@@ -60,8 +61,6 @@ export default function HomePage() {
       setActiveTab('feature-guide');
     } else if (value === 'learn') {
       setActiveTab('step-by-step');
-    } else if (value === 'news') {
-      setActiveTab('courses');
     }
     // Close mobile menus when switching sections
     closeMobileNav();
@@ -80,6 +79,16 @@ export default function HomePage() {
 
   // Determine if aside should be shown
   const shouldShowAside = (navigationSection === 'features' && activeTab === 'feature-guide') || (navigationSection === 'learn' && activeTab === 'profit-calculator');
+
+  // Handle hero "Get Started" action
+  const handleGetStarted = () => {
+    setShowHero(false);
+  };
+
+  // Show hero on first visit
+  if (showHero) {
+    return <HeroSection onGetStarted={handleGetStarted} />;
+  }
 
   return (
     <AppShell
@@ -151,14 +160,6 @@ export default function HomePage() {
                 >
                   {tNav('learn')}
                 </Button>
-                <Button
-                  variant={navigationSection === 'news' ? 'filled' : 'subtle'}
-                  leftSection={<BookOpen size={18} />}
-                  onClick={() => handleNavigationChange('news')}
-                  visibleFrom="sm"
-                >
-                  News & Resources
-                </Button>
                 {/* <LanguageSwitcher /> */}
               </Group>
             </Group>
@@ -193,17 +194,6 @@ export default function HomePage() {
                     </Tabs.Tab>
                   </>
                 )}
-                {navigationSection === 'news' && (
-                  <>
-                    <Tabs.Tab
-                      value="courses"
-                      c={activeTab === 'courses' ? theme.white : undefined}
-                      fw={activeTab === 'courses' ? 700 : undefined}
-                    >
-                      {tTabs('courses')}
-                    </Tabs.Tab>
-                  </>
-                )}
               </Tabs.List>
             </Tabs>
             {/* Mobile navigation buttons */}
@@ -223,14 +213,6 @@ export default function HomePage() {
                 size="xs"
               >
                 {tNav('learn')}
-              </Button>
-              <Button
-                variant={navigationSection === 'news' ? 'filled' : 'subtle'}
-                leftSection={<BookOpen size={16} />}
-                onClick={() => handleNavigationChange('news')}
-                size="xs"
-              >
-                News
               </Button>
             </Group>
           </Stack>
@@ -424,15 +406,6 @@ export default function HomePage() {
                   onSaveResult={handleSaveResult}
                   selectedResult={selectedResult}
                 />
-              </Tabs.Panel>
-            </>
-          )}
-
-          {/* News Section Tabs */}
-          {navigationSection === 'news' && (
-            <>
-              <Tabs.Panel value="courses">
-                <NewsTab />
               </Tabs.Panel>
             </>
           )}

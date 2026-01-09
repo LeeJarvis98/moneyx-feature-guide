@@ -1,11 +1,11 @@
 ﻿{
   "metadata": {
     "title": "Việt Nam Chất Lượng Cao",
-    "description": "Khám phá các kết hợp tính năng tài chính mạnh mẽ"
+    "description": "Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất"
   },
   "common": {
     "appName": "Việt Nam Chất Lượng Cao",
-    "appDescription": "Khám phá các kết hợp tính năng tài chính mạnh mẽ",
+    "appDescription": "Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất",
     "about": "Giới thiệu",
     "privacy": "Bảo mật",
     "terms": "Điều khoản",
@@ -24,18 +24,9 @@
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",
     "profitCalculator": "Máy Tính Lợi Nhuận",
-    "stepByStep": "Hướng Dẫn Từng Bước",
-    "courses": "Tin Tức",
-    "coursesDescription": "Các khóa học toàn diện giúp bạn trở thành nhà giao dịch có lợi nhuận với bot Việt Nam Chất Lượng Cao",
-    "newsDescription": "Cập nhật tin tức tài chính mới nhất, xu hướng thị trường và thông tin đầu tư",
-    "searchPlaceholder": "Tìm kiếm khóa học...",
-    "searchNewsPlaceholder": "Tìm kiếm tin tức...",
+    "stepByStep": "Thư viện",
     "all": "Tất Cả",
-    "noCoursesFound": "Không tìm thấy khóa học",
-    "noNewsFound": "Không tìm thấy tin tức",
-    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc",
-    "students": "học viên",
-    "views": "lượt xem"
+    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc"
   },
   "core": {
     "title": "Lõi",
