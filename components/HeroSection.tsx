@@ -6,11 +6,12 @@ import classes from './HeroSection.module.css';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
+  isExiting?: boolean;
 }
 
-export function HeroSection({ onGetStarted }: HeroSectionProps) {
+export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProps) {
   return (
-    <div className={classes.root}>
+    <div className={`${classes.root} ${isExiting ? classes.exiting : ''}`}>
       {/* Video Background */}
       <video
         autoPlay

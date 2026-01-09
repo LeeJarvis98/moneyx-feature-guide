@@ -21,3 +21,13 @@
   --color-accent: #FFB81C;
   --color-main: #25282A;
 }
+
+/* Fade in animation for main content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

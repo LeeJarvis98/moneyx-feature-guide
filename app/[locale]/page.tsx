@@ -12,11 +12,13 @@ import { SavedResultsAside, SavedResult } from '@/components/SavedResultsAside';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { HeroSection } from '@/components/HeroSection';
 import { useTranslations } from 'next-intl';
+import styles from './HomePage.module.css';
 
 type NavigationSection = 'features' | 'learn';
 
 export default function HomePage() {
   const [showHero, setShowHero] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
@@ -82,15 +84,29 @@ export default function HomePage() {
 
   // Handle hero "Get Started" action
   const handleGetStarted = () => {
-    setShowHero(false);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setShowHero(false);
+      setIsTransitioning(false);
+    }, 500);
+  };
+
+  // Handle logo click to return to hero
+  const handleLogoClick = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setShowHero(true);
+      setIsTransitioning(false);
+    }, 300);
   };
 
   // Show hero on first visit
   if (showHero) {
-    return <HeroSection onGetStarted={handleGetStarted} />;
+    return <HeroSection onGetStarted={handleGetStarted} isExiting={isTransitioning} />;
   }
 
   return (
+    <div className={`${styles.mainWrapper} ${isTransitioning ? styles.transitioning : ''}`}>
     <AppShell
       transitionDuration={500}
       transitionTimingFunction="ease"
@@ -128,7 +144,7 @@ export default function HomePage() {
                     aria-label="Toggle navigation menu"
                   />
                 )}
-                <Group gap="md">
+                <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
                   <Image
                     src="/vnclc-logo.png"
                     alt="VNCLC Logo"
@@ -482,6 +498,7 @@ export default function HomePage() {
           )}
         </Transition>
       </Affix>
-    </AppShell >
+    </AppShell>
+    </div>
   );
 }
