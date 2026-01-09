@@ -17,8 +17,8 @@ type NavigationSection = 'features' | 'learn';
 export default function HomePage() {
   const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
-  const [navigationSection, setNavigationSection] = useState<NavigationSection>('features');
-  const [activeTab, setActiveTab] = useState<string | null>('feature-guide');
+  const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
+  const [activeTab, setActiveTab] = useState<string | null>('step-by-step');
   const [simulationData, setSimulationData] = useState({
     initialLot: 0.01,
     nextLot: 0.02,
@@ -75,9 +75,9 @@ export default function HomePage() {
 
   // Determine if navbar should be shown
   const shouldShowNavbar = navigationSection === 'learn' && activeTab === 'step-by-step';
-  
+
   // Determine if aside should be shown
-  const shouldShowAside = navigationSection === 'features' && (activeTab === 'profit-calculator' || activeTab === 'feature-guide');
+  const shouldShowAside = (navigationSection === 'features' && activeTab === 'feature-guide') || (navigationSection === 'learn' && activeTab === 'profit-calculator');
 
   return (
     <AppShell
@@ -150,37 +150,37 @@ export default function HomePage() {
               <Tabs.List>
                 {navigationSection === 'features' && (
                   <>
-                    <Tabs.Tab 
+                    <Tabs.Tab
                       value="feature-guide"
                       c={activeTab === 'feature-guide' ? theme.white : undefined}
                       fw={activeTab === 'feature-guide' ? 700 : undefined}
                     >
                       {tTabs('featureGuide')}
                     </Tabs.Tab>
-                    <Tabs.Tab 
-                      value="profit-calculator"
-                      c={activeTab === 'profit-calculator' ? theme.white : undefined}
-                      fw={activeTab === 'profit-calculator' ? 700 : undefined}
-                    >
-                      {tTabs('profitCalculator')}
-                    </Tabs.Tab>
                   </>
                 )}
                 {navigationSection === 'learn' && (
                   <>
-                    <Tabs.Tab 
+                    <Tabs.Tab
                       value="step-by-step"
                       c={activeTab === 'step-by-step' ? theme.white : undefined}
                       fw={activeTab === 'step-by-step' ? 700 : undefined}
                     >
                       {tTabs('stepByStep')}
                     </Tabs.Tab>
-                    <Tabs.Tab 
+                    <Tabs.Tab
                       value="courses"
                       c={activeTab === 'courses' ? theme.white : undefined}
                       fw={activeTab === 'courses' ? 700 : undefined}
                     >
                       {tTabs('courses')}
+                    </Tabs.Tab>
+                    <Tabs.Tab
+                      value="profit-calculator"
+                      c={activeTab === 'profit-calculator' ? theme.white : undefined}
+                      fw={activeTab === 'profit-calculator' ? 700 : undefined}
+                    >
+                      {tTabs('profitCalculator')}
                     </Tabs.Tab>
                   </>
                 )}
@@ -216,164 +216,164 @@ export default function HomePage() {
               <Text size="xs" fw={700} c="blue" tt="uppercase" mb="xs">
                 Lessons
               </Text>
-            
-            <NavLink
-              label="Lesson 1: Info & Definitions"
-              description="Tìm hiểu các khái niệm và định nghĩa cơ bản"
-              leftSection={<BookOpen size={16} color="#307fffff" />}
-              active={selectedArticle === 'lesson-1'}
-              fw={selectedArticle === 'lesson-1' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('lesson-1');
-                closeMobileNav();
-              }}
-              color="blue"
-            />
-            
-            <NavLink
-              label="Lesson 2"
-              description="Tìm hiểu về các bảng thông tin quan trọng"
-              leftSection={<BookOpen size={16} color="#307fffff" />}
-              rightSection={<ChevronRight size={16} />}
-              opened={lesson2Opened}
-              onClick={() => setLesson2Opened(!lesson2Opened)}
-            >
+
               <NavLink
-                label="Lesson 2.1: DCA info panel"
-                description="Tìm hiểu về các thông số DCA trong bảng thông tin"
-                active={selectedArticle === 'lesson-2-1'}
-                fw={selectedArticle === 'lesson-2-1' ? 700 : undefined}
+                label="Lesson 1: Info & Definitions"
+                description="Tìm hiểu các khái niệm và định nghĩa cơ bản"
+                leftSection={<BookOpen size={16} color="#307fffff" />}
+                active={selectedArticle === 'lesson-1'}
+                fw={selectedArticle === 'lesson-1' ? 700 : undefined}
                 onClick={() => {
-                  setSelectedArticle('lesson-2-1');
+                  setSelectedArticle('lesson-1');
                   closeMobileNav();
                 }}
                 color="blue"
               />
+
               <NavLink
-                label="Lesson 2.2: Manual trade support panel"
-                description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
-                active={selectedArticle === 'lesson-2-2'}
-                fw={selectedArticle === 'lesson-2-2' ? 700 : undefined}
+                label="Lesson 2"
+                description="Tìm hiểu về các bảng thông tin quan trọng"
+                leftSection={<BookOpen size={16} color="#307fffff" />}
+                rightSection={<ChevronRight size={16} />}
+                opened={lesson2Opened}
+                onClick={() => setLesson2Opened(!lesson2Opened)}
+              >
+                <NavLink
+                  label="Lesson 2.1: DCA info panel"
+                  description="Tìm hiểu về các thông số DCA trong bảng thông tin"
+                  active={selectedArticle === 'lesson-2-1'}
+                  fw={selectedArticle === 'lesson-2-1' ? 700 : undefined}
+                  onClick={() => {
+                    setSelectedArticle('lesson-2-1');
+                    closeMobileNav();
+                  }}
+                  color="blue"
+                />
+                <NavLink
+                  label="Lesson 2.2: Manual trade support panel"
+                  description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
+                  active={selectedArticle === 'lesson-2-2'}
+                  fw={selectedArticle === 'lesson-2-2' ? 700 : undefined}
+                  onClick={() => {
+                    setSelectedArticle('lesson-2-2');
+                    closeMobileNav();
+                  }}
+                  color="blue"
+                />
+              </NavLink>
+
+              <NavLink
+                label="Lesson 3: Inputs guide (Auto DCA mode)"
+                description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
+                leftSection={<BookOpen size={16} color="#307fffff" />}
+                active={selectedArticle === 'lesson-3'}
+                fw={selectedArticle === 'lesson-3' ? 700 : undefined}
                 onClick={() => {
-                  setSelectedArticle('lesson-2-2');
+                  setSelectedArticle('lesson-3');
                   closeMobileNav();
                 }}
                 color="blue"
               />
-            </NavLink>
-            
-            <NavLink
-              label="Lesson 3: Inputs guide (Auto DCA mode)"
-              description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
-              leftSection={<BookOpen size={16} color="#307fffff"/>}
-              active={selectedArticle === 'lesson-3'}
-              fw={selectedArticle === 'lesson-3' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('lesson-3');
-                closeMobileNav();
-              }}
-              color="blue"
-            />
 
-            <Text size="xs" fw={700} c="violet" tt="uppercase" mb="xs" mt="md">
-              Strategy
-            </Text>
-            
-            <NavLink
-              label="Strategy 1: CHỈ BUY VÀNG"
-              description="Gồng được 1000 giá vàng, vẫn lợi nhuận 10%/ tháng"
-              leftSection={<TrendingUp size={16} color="violet"/>}
-              active={selectedArticle === 'strategy-1'}
-              fw={selectedArticle === 'strategy-1' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('strategy-1');
-                closeMobileNav();
-              }}
-              color="violet"
-            />
-            
-            <NavLink
-              label="Strategy 2: FULL MARGIN"
-              description="Đánh lỗi đòn bẩy sàn, X2 tài khoản sau 1 cây nến 1 phút"
-              leftSection={<TrendingUp size={16} color="violet"/>}
-              active={selectedArticle === 'strategy-2'}
-              fw={selectedArticle === 'strategy-2' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('strategy-2');
-                closeMobileNav();
-              }}
-              color="violet"
-            />
-            
-            <NavLink
-              label="Strategy 3: NHÂN & TỔNG"
-              description="Siêu lợi nhuận cắt chuỗi, giống con MF ( hợp XAUUSD )"
-              leftSection={<TrendingUp size={16} color="violet"/>}
-              active={selectedArticle === 'strategy-3'}
-              fw={selectedArticle === 'strategy-3' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('strategy-3');
-                closeMobileNav();
-              }}
-              color="violet"
-            />
-            
-            <NavLink
-              label="Strategy 4: CỘNG & TỈA"
-              description="Siêu an toàn, tốt hơn đầu tư ngân hàng, giống con MG ( hợp AUDCAD )"
-              leftSection={<TrendingUp size={16} color="violet"/>}
-              active={selectedArticle === 'strategy-4'}
-              fw={selectedArticle === 'strategy-4' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('strategy-4');
-                closeMobileNav();
-              }}
-              color="violet"
-            />
-            
-            <NavLink
-              label="Strategy 5: CỘNG & TỔNG"
-              description="Vượt 700 pips AUDCAD, sóng lớn nhất lịch sử"
-              leftSection={<TrendingUp size={16} color="violet"/>}
-              active={selectedArticle === 'strategy-5'}
-              fw={selectedArticle === 'strategy-5' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('strategy-5');
-                closeMobileNav();
-              }}
-              color="violet"
-            />
+              <Text size="xs" fw={700} c="violet" tt="uppercase" mb="xs" mt="md">
+                Strategy
+              </Text>
 
-            <Text size="xs" fw={700} c="green" tt="uppercase" mb="xs" mt="md">
-              Guide
-            </Text>
-            
-            <NavLink
-              label="Guide 1: Hướng dẫn add bot và add bản quyền"
-              description="Hướng dẫn chi tiết cách thêm bot và kích hoạt bản quyền"
-              leftSection={<FileText size={16} color="green"/>}
-              active={selectedArticle === 'guide-1'}
-              fw={selectedArticle === 'guide-1' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('guide-1');
-                closeMobileNav();
-              }}
-              color="lime"
-            />
-            
-            <NavLink
-              label="Guide 2: Hướng dẫn cách mở Backtest"
-              description="Hướng dẫn chi tiết cách mở chế độ Backtest trên MT4/MT5"
-              leftSection={<FileText size={16} color="green"/>}
-              active={selectedArticle === 'guide-2'}
-              fw={selectedArticle === 'guide-2' ? 700 : undefined}
-              onClick={() => {
-                setSelectedArticle('guide-2');
-                closeMobileNav();
-              }}
-              color="lime"
-            />
-          </Stack>
+              <NavLink
+                label="Strategy 1: CHỈ BUY VÀNG"
+                description="Gồng được 1000 giá vàng, vẫn lợi nhuận 10%/ tháng"
+                leftSection={<TrendingUp size={16} color="violet" />}
+                active={selectedArticle === 'strategy-1'}
+                fw={selectedArticle === 'strategy-1' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('strategy-1');
+                  closeMobileNav();
+                }}
+                color="violet"
+              />
+
+              <NavLink
+                label="Strategy 2: FULL MARGIN"
+                description="Đánh lỗi đòn bẩy sàn, X2 tài khoản sau 1 cây nến 1 phút"
+                leftSection={<TrendingUp size={16} color="violet" />}
+                active={selectedArticle === 'strategy-2'}
+                fw={selectedArticle === 'strategy-2' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('strategy-2');
+                  closeMobileNav();
+                }}
+                color="violet"
+              />
+
+              <NavLink
+                label="Strategy 3: NHÂN & TỔNG"
+                description="Siêu lợi nhuận cắt chuỗi, giống con MF ( hợp XAUUSD )"
+                leftSection={<TrendingUp size={16} color="violet" />}
+                active={selectedArticle === 'strategy-3'}
+                fw={selectedArticle === 'strategy-3' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('strategy-3');
+                  closeMobileNav();
+                }}
+                color="violet"
+              />
+
+              <NavLink
+                label="Strategy 4: CỘNG & TỈA"
+                description="Siêu an toàn, tốt hơn đầu tư ngân hàng, giống con MG ( hợp AUDCAD )"
+                leftSection={<TrendingUp size={16} color="violet" />}
+                active={selectedArticle === 'strategy-4'}
+                fw={selectedArticle === 'strategy-4' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('strategy-4');
+                  closeMobileNav();
+                }}
+                color="violet"
+              />
+
+              <NavLink
+                label="Strategy 5: CỘNG & TỔNG"
+                description="Vượt 700 pips AUDCAD, sóng lớn nhất lịch sử"
+                leftSection={<TrendingUp size={16} color="violet" />}
+                active={selectedArticle === 'strategy-5'}
+                fw={selectedArticle === 'strategy-5' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('strategy-5');
+                  closeMobileNav();
+                }}
+                color="violet"
+              />
+
+              <Text size="xs" fw={700} c="green" tt="uppercase" mb="xs" mt="md">
+                Guide
+              </Text>
+
+              <NavLink
+                label="Guide 1: Hướng dẫn add bot và add bản quyền"
+                description="Hướng dẫn chi tiết cách thêm bot và kích hoạt bản quyền"
+                leftSection={<FileText size={16} color="green" />}
+                active={selectedArticle === 'guide-1'}
+                fw={selectedArticle === 'guide-1' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('guide-1');
+                  closeMobileNav();
+                }}
+                color="lime"
+              />
+
+              <NavLink
+                label="Guide 2: Hướng dẫn cách mở Backtest"
+                description="Hướng dẫn chi tiết cách mở chế độ Backtest trên MT4/MT5"
+                leftSection={<FileText size={16} color="green" />}
+                active={selectedArticle === 'guide-2'}
+                fw={selectedArticle === 'guide-2' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('guide-2');
+                  closeMobileNav();
+                }}
+                color="lime"
+              />
+            </Stack>
           </ScrollArea>
         )}
       </AppShell.Navbar>
@@ -385,14 +385,6 @@ export default function HomePage() {
             <>
               <Tabs.Panel value="feature-guide">
                 <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
-              </Tabs.Panel>
-
-              <Tabs.Panel value="profit-calculator">
-                <ProfitCalculatorTab
-                  onSimulationUpdate={setSimulationData}
-                  onSaveResult={handleSaveResult}
-                  selectedResult={selectedResult}
-                />
               </Tabs.Panel>
             </>
           )}
@@ -407,32 +399,37 @@ export default function HomePage() {
               <Tabs.Panel value="courses">
                 <CoursesTab />
               </Tabs.Panel>
+
+              <Tabs.Panel value="profit-calculator">
+                <ProfitCalculatorTab
+                  onSimulationUpdate={setSimulationData}
+                  onSaveResult={handleSaveResult}
+                  selectedResult={selectedResult}
+                />
+              </Tabs.Panel>
             </>
           )}
         </Tabs>
       </AppShell.Main>
 
       <AppShell.Aside p="md">
-        {navigationSection === 'features' && (
-          <>
-            {activeTab === 'profit-calculator' ? (
-              <SavedResultsAside
-                savedResults={savedResults}
-                onSelectResult={handleSelectResult}
-                onDeleteResult={handleDeleteResult}
-                selectedResultId={selectedResult?.id}
-              />
-            ) : activeTab === 'feature-guide' ? (
-              featureGuideAside
-            ) : null}
-          </>
+        {navigationSection === 'features' && activeTab === 'feature-guide' && (
+          featureGuideAside
+        )}
+        {navigationSection === 'learn' && activeTab === 'profit-calculator' && (
+          <SavedResultsAside
+            savedResults={savedResults}
+            onSelectResult={handleSelectResult}
+            onDeleteResult={handleDeleteResult}
+            selectedResultId={selectedResult?.id}
+          />
         )}
       </AppShell.Aside>
 
       <AppShell.Footer style={{
-          backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
-          backdropFilter: 'blur(5px)',
-        }}>
+        backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
+        backdropFilter: 'blur(5px)',
+      }}>
         <Container size="100%" h="100%">
           <Group justify="space-between" align="center" h="100%">
             <Text size="sm" c="dimmed">
