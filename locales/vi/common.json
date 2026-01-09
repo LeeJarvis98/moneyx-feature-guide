@@ -19,14 +19,12 @@
   },
   "navigation": {
     "features": "Tính năng",
-    "learn": "Hướng dẫn"
+    "learn": "Thư viện"
   },
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",
     "profitCalculator": "Máy Tính Lợi Nhuận",
-    "stepByStep": "Thư viện",
-    "all": "Tất Cả",
-    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc"
+    "stepByStep": "Tài liệu"
   },
   "core": {
     "title": "Lõi",

@@ -31,34 +31,32 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
         <div className={classes.inner}>
           <div className={classes.content}>
             <Title className={classes.title}>
-              A{' '}
               <Text
-                component="span"
-                inherit
-                variant="gradient"
-                gradient={{ from: 'pink', to: 'yellow' }}
+               component="span"
+               inherit
+               variant="gradient"
+               gradient={{ from: '#ff0000', to: 'orange', deg: 90 }}
               >
-                fully featured
-              </Text>{' '}
-              Trading Education Platform
+               Việt Nam
+              </Text>
+              <br />
+              Chất Lượng Cao
             </Title>
 
             <Text className={classes.description} mt={30}>
-              Master the art of trading with our comprehensive guides, profit calculators, and 
-              step-by-step lessons. Whether you're a beginner or an experienced trader, we've 
-              got you covered with all the tools and knowledge you need to succeed.
+              Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất!
             </Text>
 
             <Button
               variant="gradient"
-              gradient={{ from: 'pink', to: 'yellow' }}
+              gradient={{ from: 'red', to: 'yellow', deg: -90 }}
               size="xl"
               className={classes.control}
               mt={40}
               rightSection={<ArrowRight size={20} />}
               onClick={onGetStarted}
             >
-              Get started
+              Khám phá Ngay
             </Button>
           </div>
         </div>

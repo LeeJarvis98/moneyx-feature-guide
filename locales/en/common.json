@@ -19,14 +19,12 @@
   },
   "navigation": {
     "features": "Features",
-    "learn": "Learn"
+    "learn": "Library"
   },
   "tabs": {
     "featureGuide": "Feature Guide",
     "profitCalculator": "Profit Calculator",
-    "stepByStep": "Step-by-Step Guide",
-    "all": "All",
-    "adjustFilters": "Try adjusting your search or filters"
+    "stepByStep": "Documents"
   },
   "core": {
     "title": "Core",
