@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, Burger, ActionIcon, Affix, Transition } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, ChevronRight, PanelRight } from 'lucide-react';
+import { Compass, Calculator, BookOpen, GraduationCap, TrendingUp, FileText, PanelRight } from 'lucide-react';
+import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
-import { CoursesTab } from '@/components/tabs/CoursesTab';
+import { NewsTab } from '@/components/tabs/NewsTab';
 import { SavedResultsAside, SavedResult } from '@/components/SavedResultsAside';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 
-type NavigationSection = 'features' | 'learn';
+type NavigationSection = 'features' | 'learn' | 'news';
 
 export default function HomePage() {
   const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
@@ -31,7 +32,6 @@ export default function HomePage() {
   const [selectedResult, setSelectedResult] = useState<SavedResult | null>(null);
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
-  const [lesson2Opened, setLesson2Opened] = useState(false);
   const theme = useMantineTheme();
   const t = useTranslations('common');
   const tTabs = useTranslations('tabs');
@@ -60,6 +60,8 @@ export default function HomePage() {
       setActiveTab('feature-guide');
     } else if (value === 'learn') {
       setActiveTab('step-by-step');
+    } else if (value === 'news') {
+      setActiveTab('courses');
     }
     // Close mobile menus when switching sections
     closeMobileNav();
@@ -83,7 +85,7 @@ export default function HomePage() {
     <AppShell
       transitionDuration={500}
       transitionTimingFunction="ease"
-      header={{ height: 120 }}
+      header={{ height: 100 }}
       footer={{ height: 60 }}
       navbar={{
         width: 300,
@@ -117,14 +119,20 @@ export default function HomePage() {
                     aria-label="Toggle navigation menu"
                   />
                 )}
-                <div>
-                  <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                    {t('appName')}
-                  </Title>
-                  <Text size="sm" c="dimmed">
-                    {t('appDescription')}
-                  </Text>
-                </div>
+                <Group gap="md">
+                  <Image
+                    src="/vnclc-logo.png"
+                    alt="VNCLC Logo"
+                    width={90.53}
+                    height={20}
+                    priority
+                  />
+                  <div>
+                    <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                      {t('appName')}
+                    </Title>
+                  </div>
+                </Group>
               </Group>
               <Group gap="md">
                 <Button
@@ -143,7 +151,15 @@ export default function HomePage() {
                 >
                   {tNav('learn')}
                 </Button>
-                <LanguageSwitcher />
+                <Button
+                  variant={navigationSection === 'news' ? 'filled' : 'subtle'}
+                  leftSection={<BookOpen size={18} />}
+                  onClick={() => handleNavigationChange('news')}
+                  visibleFrom="sm"
+                >
+                  News & Resources
+                </Button>
+                {/* <LanguageSwitcher /> */}
               </Group>
             </Group>
             <Tabs value={activeTab} onChange={handleTabChange} radius="md">
@@ -169,18 +185,22 @@ export default function HomePage() {
                       {tTabs('stepByStep')}
                     </Tabs.Tab>
                     <Tabs.Tab
-                      value="courses"
-                      c={activeTab === 'courses' ? theme.white : undefined}
-                      fw={activeTab === 'courses' ? 700 : undefined}
-                    >
-                      {tTabs('courses')}
-                    </Tabs.Tab>
-                    <Tabs.Tab
                       value="profit-calculator"
                       c={activeTab === 'profit-calculator' ? theme.white : undefined}
                       fw={activeTab === 'profit-calculator' ? 700 : undefined}
                     >
                       {tTabs('profitCalculator')}
+                    </Tabs.Tab>
+                  </>
+                )}
+                {navigationSection === 'news' && (
+                  <>
+                    <Tabs.Tab
+                      value="courses"
+                      c={activeTab === 'courses' ? theme.white : undefined}
+                      fw={activeTab === 'courses' ? 700 : undefined}
+                    >
+                      {tTabs('courses')}
                     </Tabs.Tab>
                   </>
                 )}
@@ -204,6 +224,14 @@ export default function HomePage() {
               >
                 {tNav('learn')}
               </Button>
+              <Button
+                variant={navigationSection === 'news' ? 'filled' : 'subtle'}
+                leftSection={<BookOpen size={16} />}
+                onClick={() => handleNavigationChange('news')}
+                size="xs"
+              >
+                News
+              </Button>
             </Group>
           </Stack>
         </Container>
@@ -218,7 +246,7 @@ export default function HomePage() {
               </Text>
 
               <NavLink
-                label="Lesson 1: Info & Definitions"
+                label="Lesson 1: Thông tin và ý nghĩa của Bot"
                 description="Tìm hiểu các khái niệm và định nghĩa cơ bản"
                 leftSection={<BookOpen size={16} color="#307fffff" />}
                 active={selectedArticle === 'lesson-1'}
@@ -231,45 +259,39 @@ export default function HomePage() {
               />
 
               <NavLink
-                label="Lesson 2"
-                description="Tìm hiểu về các bảng thông tin quan trọng"
+                label="Lesson 2: Bảng thông tin DCA"
+                description="Tìm hiểu về các thông số trong bảng thông tin DCA"
                 leftSection={<BookOpen size={16} color="#307fffff" />}
-                rightSection={<ChevronRight size={16} />}
-                opened={lesson2Opened}
-                onClick={() => setLesson2Opened(!lesson2Opened)}
-              >
-                <NavLink
-                  label="Lesson 2.1: DCA info panel"
-                  description="Tìm hiểu về các thông số DCA trong bảng thông tin"
-                  active={selectedArticle === 'lesson-2-1'}
-                  fw={selectedArticle === 'lesson-2-1' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-2-1');
-                    closeMobileNav();
-                  }}
-                  color="blue"
-                />
-                <NavLink
-                  label="Lesson 2.2: Manual trade support panel"
-                  description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
-                  active={selectedArticle === 'lesson-2-2'}
-                  fw={selectedArticle === 'lesson-2-2' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-2-2');
-                    closeMobileNav();
-                  }}
-                  color="blue"
-                />
-              </NavLink>
+                active={selectedArticle === 'lesson-2'}
+                fw={selectedArticle === 'lesson-2' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('lesson-2');
+                  closeMobileNav();
+                }}
+                color="blue"
+              />
 
               <NavLink
-                label="Lesson 3: Inputs guide (Auto DCA mode)"
-                description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
+                label="Lesson 3: Hướng dẫn bảng hỗ trợ Trade Tay"
+                description="Hướng dẫn sử dụng bảng hỗ trợ giao dịch thủ công"
                 leftSection={<BookOpen size={16} color="#307fffff" />}
                 active={selectedArticle === 'lesson-3'}
                 fw={selectedArticle === 'lesson-3' ? 700 : undefined}
                 onClick={() => {
                   setSelectedArticle('lesson-3');
+                  closeMobileNav();
+                }}
+                color="blue"
+              />
+
+              <NavLink
+                label="Lesson 4: Hướng dẫn Input (chế độ Auto DCA)"
+                description="Hướng dẫn cài đặt các thông số đầu vào cho chế độ Auto DCA"
+                leftSection={<BookOpen size={16} color="#307fffff" />}
+                active={selectedArticle === 'lesson-4'}
+                fw={selectedArticle === 'lesson-4' ? 700 : undefined}
+                onClick={() => {
+                  setSelectedArticle('lesson-4');
                   closeMobileNav();
                 }}
                 color="blue"
@@ -396,16 +418,21 @@ export default function HomePage() {
                 <StepByStepTab selectedArticle={selectedArticle} />
               </Tabs.Panel>
 
-              <Tabs.Panel value="courses">
-                <CoursesTab />
-              </Tabs.Panel>
-
               <Tabs.Panel value="profit-calculator">
                 <ProfitCalculatorTab
                   onSimulationUpdate={setSimulationData}
                   onSaveResult={handleSaveResult}
                   selectedResult={selectedResult}
                 />
+              </Tabs.Panel>
+            </>
+          )}
+
+          {/* News Section Tabs */}
+          {navigationSection === 'news' && (
+            <>
+              <Tabs.Panel value="courses">
+                <NewsTab />
               </Tabs.Panel>
             </>
           )}
@@ -432,9 +459,18 @@ export default function HomePage() {
       }}>
         <Container size="100%" h="100%">
           <Group justify="space-between" align="center" h="100%">
-            <Text size="sm" c="dimmed">
-              © {new Date().getFullYear()} Tradi. {t('allRightsReserved')}
-            </Text>
+            <Group gap="xs" align="center">
+              <Image 
+                src="/tradi-logo.png" 
+                alt="Tradi Logo" 
+                width={30} 
+                height={30}
+                style={{ objectFit: 'contain' }}
+              />
+              <Text size="sm" c="dimmed">
+                © {new Date().getFullYear()} Tradi. {t('allRightsReserved')}
+              </Text>
+            </Group>
             <Group gap="md">
               <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
                 {t('about')}

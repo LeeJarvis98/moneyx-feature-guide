@@ -27,11 +27,15 @@
     "stepByStep": "Step-by-Step Guide",
     "courses": "All Courses",
     "coursesDescription": "Comprehensive courses to help you become a profitable trader with Vietnam High-Quality Bot",
+    "newsDescription": "Stay updated with the latest financial news, market trends, and investment insights",
     "searchPlaceholder": "Search courses by title...",
+    "searchNewsPlaceholder": "Search news articles...",
     "all": "All",
     "noCoursesFound": "No courses found",
+    "noNewsFound": "No news articles found",
     "adjustFilters": "Try adjusting your search or filters",
-    "students": "students"
+    "students": "students",
+    "views": "views"
   },
   "core": {
     "title": "Core",

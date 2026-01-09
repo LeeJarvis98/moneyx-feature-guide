@@ -26,6 +26,11 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
+    icons: {
+      icon: '/vnclc-small-logo.png',
+      shortcut: '/vnclc-small-logo.png',
+      apple: '/vnclc-small-logo.png',
+    },
   };
 }
 

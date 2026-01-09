@@ -25,13 +25,17 @@
     "featureGuide": "Hướng Dẫn Tính Năng",
     "profitCalculator": "Máy Tính Lợi Nhuận",
     "stepByStep": "Hướng Dẫn Từng Bước",
-    "courses": "Tất Cả Khóa Học",
+    "courses": "Tin Tức",
     "coursesDescription": "Các khóa học toàn diện giúp bạn trở thành nhà giao dịch có lợi nhuận với bot Việt Nam Chất Lượng Cao",
-    "searchPlaceholder": "Tìm kiếm khóa học theo tiêu đề...",
-    "all": "Tất cả",
+    "newsDescription": "Cập nhật tin tức tài chính mới nhất, xu hướng thị trường và thông tin đầu tư",
+    "searchPlaceholder": "Tìm kiếm khóa học...",
+    "searchNewsPlaceholder": "Tìm kiếm tin tức...",
+    "all": "Tất Cả",
     "noCoursesFound": "Không tìm thấy khóa học",
-    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc của bạn",
-    "students": "học viên"
+    "noNewsFound": "Không tìm thấy tin tức",
+    "adjustFilters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc",
+    "students": "học viên",
+    "views": "lượt xem"
   },
   "core": {
     "title": "Lõi",
