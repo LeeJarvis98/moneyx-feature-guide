@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, Burger, ActionIcon, Affix, Transition, Badge } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
@@ -21,7 +21,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showHero, setShowHero] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [mobileNavOpened, { toggle: toggleMobileNav, close: closeMobileNav }] = useDisclosure(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
   const [activeTab, setActiveTab] = useState<string | null>('step-by-step');
@@ -67,14 +66,12 @@ export default function HomePage() {
       setActiveTab('step-by-step');
     }
     // Close mobile menus when switching sections
-    closeMobileNav();
     closeMobileAside();
   };
 
   // Close mobile menus when changing tabs
   const handleTabChange = (value: string | null) => {
     setActiveTab(value);
-    closeMobileNav();
     closeMobileAside();
   };
 
@@ -127,7 +124,7 @@ export default function HomePage() {
         navbar={{
           width: 300,
           breakpoint: 'sm',
-          collapsed: { mobile: !mobileNavOpened, desktop: !shouldShowNavbar }
+          collapsed: { mobile: !shouldShowNavbar, desktop: !shouldShowNavbar }
         }}
         aside={{
           width: 400,
@@ -146,16 +143,6 @@ export default function HomePage() {
             <Stack gap="md" justify="end" h="100%">
               <Group justify="space-between" align="center">
                 <Group>
-                  {/* Burger menu for mobile - shows when navbar should be visible */}
-                  {shouldShowNavbar && (
-                    <Burger
-                      opened={mobileNavOpened}
-                      onClick={toggleMobileNav}
-                      hiddenFrom="sm"
-                      size="sm"
-                      aria-label="Toggle navigation menu"
-                    />
-                  )}
                   <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
                     <Image
                       src="/vnclc-logo.png"
@@ -263,10 +250,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-1'}
                   fw={selectedArticle === 'lesson-1' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-1');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('lesson-1')}
                   color="blue"
                 />
 
@@ -275,10 +259,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-2'}
                   fw={selectedArticle === 'lesson-2' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-2');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('lesson-2')}
                   color="blue"
                 />
 
@@ -287,10 +268,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-3'}
                   fw={selectedArticle === 'lesson-3' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-3');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('lesson-3')}
                   color="blue"
                 />
 
@@ -299,10 +277,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-4'}
                   fw={selectedArticle === 'lesson-4' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('lesson-4');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('lesson-4')}
                   color="blue"
                 />
 
@@ -311,10 +286,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'guide-1'}
                   fw={selectedArticle === 'guide-1' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('guide-1');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('guide-1')}
                   color="blue"
                 />
 
@@ -323,10 +295,7 @@ export default function HomePage() {
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'guide-2'}
                   fw={selectedArticle === 'guide-2' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('guide-2');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('guide-2')}
                   color="blue"
                 />
 
@@ -342,10 +311,7 @@ export default function HomePage() {
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-1'}
                   fw={selectedArticle === 'strategy-1' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('strategy-1');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('strategy-1')}
                   color="violet"
                 />
 
@@ -354,10 +320,7 @@ export default function HomePage() {
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-2'}
                   fw={selectedArticle === 'strategy-2' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('strategy-2');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('strategy-2')}
                   color="violet"
                 />
 
@@ -366,10 +329,7 @@ export default function HomePage() {
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-3'}
                   fw={selectedArticle === 'strategy-3' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('strategy-3');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('strategy-3')}
                   color="violet"
                 />
 
@@ -378,10 +338,7 @@ export default function HomePage() {
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-4'}
                   fw={selectedArticle === 'strategy-4' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('strategy-4');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('strategy-4')}
                   color="violet"
                 />
 
@@ -390,10 +347,7 @@ export default function HomePage() {
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-5'}
                   fw={selectedArticle === 'strategy-5' ? 700 : undefined}
-                  onClick={() => {
-                    setSelectedArticle('strategy-5');
-                    closeMobileNav();
-                  }}
+                  onClick={() => setSelectedArticle('strategy-5')}
                   color="violet"
                 />
 
@@ -481,7 +435,7 @@ export default function HomePage() {
         </AppShell.Footer>
 
         {/* Floating action button for Aside panel */}
-        <Affix position={{ bottom: 80, right: 20 }}>
+        <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="md">
           <Transition transition="slide-up" mounted={shouldShowAside}>
             {(transitionStyles) => (
               <ActionIcon
