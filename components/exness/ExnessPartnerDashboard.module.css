@@ -10,21 +10,21 @@
   align-items: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid rgba(255, 184, 28, 0.3);
 }
 
 .title {
   font-size: 32px;
   font-weight: 700;
-  color: #1a202c;
+  color: #FFFFFF;
   margin: 0;
 }
 
 .logoutButton {
   padding: 10px 20px;
-  background-color: #e53e3e;
-  color: white;
-  border: none;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -33,7 +33,8 @@
 }
 
 .logoutButton:hover {
-  background-color: #c53030;
+  background-color: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
 }
 
 .tabs {
@@ -46,46 +47,48 @@
 
 .tab {
   padding: 12px 24px;
-  background-color: #f7fafc;
-  border: 2px solid #e2e8f0;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #4a5568;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .tab:hover {
-  background-color: #edf2f7;
-  border-color: #cbd5e0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 .activeTab {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #FFB81C;
+  color: #000000;
   border-color: transparent;
 }
 
 .activeTab:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #653a8c 100%);
+  background: #ffc94d;
 }
 
 .error {
   padding: 16px;
-  background-color: #fff5f5;
-  border: 2px solid #fc8181;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.5);
   border-radius: 8px;
-  color: #c53030;
+  color: #fca5a5;
   font-size: 14px;
   margin-bottom: 24px;
 }
 
 .content {
-  background: white;
+  background: #25282A;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 184, 28, 0.2);
   padding: 32px;
 }
 
@@ -104,14 +107,14 @@
 .sectionHeader h2 {
   font-size: 24px;
   font-weight: 700;
-  color: #1a202c;
+  color: #FFFFFF;
   margin: 0;
 }
 
 .fetchButton {
   padding: 10px 20px;
-  background-color: #667eea;
-  color: white;
+  background-color: #FFB81C;
+  color: #000000;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -121,7 +124,8 @@
 }
 
 .fetchButton:hover:not(:disabled) {
-  background-color: #5568d3;
+  background-color: #ffc94d;
+  box-shadow: 0 4px 12px rgba(255, 184, 28, 0.3);
 }
 
 .fetchButton:disabled {
@@ -145,32 +149,35 @@
 .inputGroup label {
   font-size: 14px;
   font-weight: 600;
-  color: #2d3748;
+  color: #FFFFFF;
 }
 
 .input {
   padding: 12px 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-size: 16px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #FFFFFF;
   transition: all 0.2s;
 }
 
 .input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #FFB81C;
+  box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.1);
 }
 
 .input:disabled {
-  background-color: #f7fafc;
+  background-color: rgba(255, 255, 255, 0.05);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .submitButton {
   padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #FFB81C;
+  color: #000000;
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -181,7 +188,8 @@
 
 .submitButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 16px rgba(255, 184, 28, 0.4);
+  background: #ffc94d;
 }
 
 .submitButton:disabled {
@@ -199,28 +207,31 @@
 .result h3 {
   margin: 0 0 12px 0;
   font-size: 18px;
+  color: inherit;
 }
 
 .result p {
   margin: 4px 0;
   font-size: 14px;
+  color: inherit;
 }
 
 .affiliated {
-  background-color: #f0fff4;
-  border: 2px solid #68d391;
-  color: #2f855a;
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 2px solid rgba(34, 197, 94, 0.5);
+  color: #86efac;
 }
 
 .notAffiliated {
-  background-color: #fffaf0;
-  border: 2px solid #f6ad55;
-  color: #c05621;
+  background-color: rgba(251, 146, 60, 0.1);
+  border: 2px solid rgba(251, 146, 60, 0.5);
+  color: #fdba74;
 }
 
 .defaultLink,
 .linksList {
-  background-color: #f7fafc;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 20px;
 }
@@ -229,7 +240,7 @@
 .linksList h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #2d3748;
+  color: #FFFFFF;
 }
 
 .linkItem {
@@ -237,20 +248,20 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   margin-bottom: 12px;
 }
 
 .linkName {
   font-weight: 600;
-  color: #2d3748;
+  color: #FFFFFF;
   font-size: 16px;
 }
 
 .linkUrl {
-  color: #667eea;
+  color: #FFB81C;
   font-size: 14px;
   text-decoration: none;
   word-break: break-all;
@@ -258,11 +269,12 @@
 
 .linkUrl:hover {
   text-decoration: underline;
+  color: #ffc94d;
 }
 
 .linkDate {
   font-size: 12px;
-  color: #a0aec0;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .walletInfo {
@@ -280,15 +292,15 @@
 }
 
 .available {
-  background-color: #f0fff4;
-  color: #2f855a;
-  border: 2px solid #68d391;
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  border: 2px solid rgba(34, 197, 94, 0.5);
 }
 
 .unavailable {
-  background-color: #fff5f5;
-  color: #c53030;
-  border: 2px solid #fc8181;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 2px solid rgba(239, 68, 68, 0.5);
 }
 
 .currencyList {
@@ -302,11 +314,12 @@
 
 .currencyList li {
   padding: 8px 16px;
-  background-color: #edf2f7;
+  background-color: rgba(255, 184, 28, 0.1);
+  border: 1px solid rgba(255, 184, 28, 0.3);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #2d3748;
+  color: #FFB81C;
 }
 
 .table {
@@ -319,7 +332,7 @@
 }
 
 .table thead {
-  background-color: #f7fafc;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .table th {
@@ -327,19 +340,19 @@
   text-align: left;
   font-size: 14px;
   font-weight: 700;
-  color: #2d3748;
-  border-bottom: 2px solid #e2e8f0;
+  color: #FFB81C;
+  border-bottom: 2px solid rgba(255, 184, 28, 0.3);
 }
 
 .table td {
   padding: 12px 16px;
   font-size: 14px;
-  color: #4a5568;
-  border-bottom: 1px solid #e2e8f0;
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .table tr:hover {
-  background-color: #f7fafc;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .badge {
@@ -353,19 +366,22 @@
 
 .badge.active,
 .badge.verified {
-  background-color: #c6f6d5;
-  color: #22543d;
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.5);
 }
 
 .badge.blocked,
 .badge.rejected {
-  background-color: #fed7d7;
-  color: #742a2a;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .badge.pending {
-  background-color: #feebc8;
-  color: #7c2d12;
+  background-color: rgba(251, 146, 60, 0.2);
+  color: #fdba74;
+  border: 1px solid rgba(251, 146, 60, 0.5);
 }
 
 @media (max-width: 768px) {
