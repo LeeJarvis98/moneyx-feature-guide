@@ -71,18 +71,11 @@
   justify-content: center;
 }
 
-.inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 2rem;
-}
-
 .content {
   max-width: 800px;
   text-align: center;
   animation: fadeInUp 1s ease-out;
+  padding: 2rem;
 }
 
 @keyframes fadeInUp {
@@ -141,7 +134,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .inner {
+  .content {
     padding: 1rem;
   }
 
