@@ -6,7 +6,8 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
-  output: 'export',
+  // Temporarily disable static export to enable API routes
+  // output: 'export',
   images: {
     unoptimized: true
   },

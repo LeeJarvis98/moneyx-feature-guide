@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import ExnessApp from '@/components/exness/ExnessApp';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useTranslations } from 'next-intl';
@@ -161,6 +162,13 @@ export default function HomePage() {
                         fw={activeTab === 'feature-guide' ? 700 : undefined}
                       >
                         {tTabs('featureGuide')}
+                      </Tabs.Tab>
+                      <Tabs.Tab
+                        value="exness"
+                        c={activeTab === 'exness' ? theme.white : undefined}
+                        fw={activeTab === 'exness' ? 700 : undefined}
+                      >
+                        Exness Partner
                       </Tabs.Tab>
                     </>
                   )}
@@ -330,6 +338,9 @@ export default function HomePage() {
               <>
                 <Tabs.Panel value="feature-guide">
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
+                </Tabs.Panel>
+                <Tabs.Panel value="exness">
+                  <ExnessApp />
                 </Tabs.Panel>
               </>
             )}
