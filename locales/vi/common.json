@@ -5,11 +5,11 @@
   },
   "common": {
     "appName": "Việt Nam Chất Lượng Cao",
-    "appDescription": "Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất",
+    "appDescription": "Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất",
     "about": "Giới thiệu",
     "privacy": "Bảo mật",
     "terms": "Điều khoản",
-    "allRightsReserved": "Bảo lưu mọi quyền",
+    "allRightsReserved": "Bảo lưu mọi quyền.",
     "enabled": "Đã bật",
     "disabled": "Đã tắt",
     "description": "Mô tả",
@@ -24,5 +24,10 @@
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",
     "stepByStep": "Tài liệu"
+  },
+  "core": {
+    "title": "Cốt lõi",
+    "emptyMessage": "Chọn các tính năng để xem các kết hợp ưu việt cho bot Việt Nam Chất Lượng Cao",
+    "hint": "Nhấp vào công tắc của các thẻ phía bên phải để bật tính năng"
   }
 }

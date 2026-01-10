@@ -5,11 +5,11 @@
   },
   "common": {
     "appName": "Vietnam High-Quality Bot",
-    "appDescription": "A powerful bot combining the best financial features",
+    "appDescription": "A powerful AI bot combining the best financial features",
     "about": "About",
     "privacy": "Privacy",
     "terms": "Terms",
-    "allRightsReserved": "All rights reserved",
+    "allRightsReserved": "All rights reserved.",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "description": "Description",
@@ -24,5 +24,10 @@
   "tabs": {
     "featureGuide": "Feature Guide",
     "stepByStep": "Documents"
+  },
+  "core": {
+    "title": "Core",
+    "emptyMessage": "Select features to see powerful combinations for Vietnam High-Quality Bot",
+    "hint": "Toggle the cards at the right side to enable features"
   }
 }
