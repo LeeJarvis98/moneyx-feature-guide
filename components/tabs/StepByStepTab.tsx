@@ -39,7 +39,7 @@ export function StepByStepTab({ selectedArticle }: StepByStepTabProps) {
   }
 
   return (
-    <Box style={{ width: '100%', padding: '2rem' }}>
+    <Box style={{ width: '100%' }}>
       <TypographyStylesProvider>
         <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
       </TypographyStylesProvider>

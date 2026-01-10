@@ -43,7 +43,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
             Chất Lượng Cao
           </Title>
 
-          <Text className={classes.description} mt={30}>
+          <Text className={classes.description} mt={15}>
             Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất!
           </Text>
 
@@ -52,12 +52,13 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
             gradient={{ from: 'red', to: 'yellow', deg: -90 }}
             size="xl"
             className={classes.control}
-            mt={40}
+            mt={20}
             rightSection={<ArrowRight size={20} />}
             onClick={onGetStarted}
           >
             Khám phá Ngay
           </Button>
+          <br />
           <ImageCarousel />
         </div>
       </Container>

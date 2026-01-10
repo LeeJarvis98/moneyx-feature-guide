@@ -48,7 +48,7 @@ export function ImageCarousel() {
             data-pos={item.pos}
             className={classes.galleryItem}
             style={{
-              transform: `translateX(${(item.pos - 2) * 180}px) scale(${getScale(item.pos)})`,
+              transform: `translateX(calc(var(--item-spacing) * ${item.pos - 2})) scale(${getScale(item.pos)})`,
               backgroundImage: `url(${item.url})`,
             }}
             onClick={() => shuffle(item)}

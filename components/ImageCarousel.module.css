@@ -9,6 +9,7 @@
 }
 
 .gallery {
+  --item-spacing: 180px;
   position: relative;
   width: 100%;
   max-width: 800px;
@@ -75,6 +76,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .gallery {
+    --item-spacing: 140px;
     height: 150px;
     max-width: 600px;
   }
@@ -94,8 +96,9 @@
 
 @media (max-width: 480px) {
   .gallery {
-    height: 120px;
-    max-width: 400px;
+    --item-spacing: 110px;
+    height: 150px;
+    max-width: 450px;
   }
   
   .galleryItem {

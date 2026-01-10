@@ -246,7 +246,7 @@ export default function HomePage() {
                 </Badge>
 
                 <NavLink
-                  label="Hướng dẫn 1: Thông tin và ý nghĩa của Bot"
+                  label="1. Thông tin và ý nghĩa Bot"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-1'}
                   fw={selectedArticle === 'lesson-1' ? 700 : undefined}
@@ -255,7 +255,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Hướng dẫn 2: Bảng thông tin DCA"
+                  label="2. Bảng thông tin"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-2'}
                   fw={selectedArticle === 'lesson-2' ? 700 : undefined}
@@ -264,7 +264,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Hướng dẫn 3: Hướng dẫn bảng hỗ trợ Trade Tay"
+                  label="3. Bảng hỗ trợ Trade Tay"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-3'}
                   fw={selectedArticle === 'lesson-3' ? 700 : undefined}
@@ -273,7 +273,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Hướng dẫn 4: Hướng dẫn Input (chế độ Auto DCA)"
+                  label="4. Input chế độ DCA"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'lesson-4'}
                   fw={selectedArticle === 'lesson-4' ? 700 : undefined}
@@ -282,7 +282,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Hướng dẫn 5: Hướng dẫn add bot và add bản quyền"
+                  label="5. Thêm Bot + bản quyền"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'guide-1'}
                   fw={selectedArticle === 'guide-1' ? 700 : undefined}
@@ -291,7 +291,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Hướng dẫn 6: Hướng dẫn cách mở Backtest"
+                  label="6. Mở Backtest"
                   leftSection={<BookOpen size={16} color="#307fffff" />}
                   active={selectedArticle === 'guide-2'}
                   fw={selectedArticle === 'guide-2' ? 700 : undefined}
@@ -307,7 +307,7 @@ export default function HomePage() {
                 </Badge>
 
                 <NavLink
-                  label="Chiến lược 1: CHỈ BUY VÀNG"
+                  label="1. CHỈ BUY VÀNG"
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-1'}
                   fw={selectedArticle === 'strategy-1' ? 700 : undefined}
@@ -316,7 +316,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Chiến lược 2: FULL MARGIN"
+                  label="2. FULL MARGIN"
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-2'}
                   fw={selectedArticle === 'strategy-2' ? 700 : undefined}
@@ -325,7 +325,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Chiến lược 3: NHÂN & TỔNG"
+                  label="3. NHÂN & TỔNG"
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-3'}
                   fw={selectedArticle === 'strategy-3' ? 700 : undefined}
@@ -334,7 +334,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Chiến lược 4: CỘNG & TỈA"
+                  label="4. CỘNG & TỈA"
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-4'}
                   fw={selectedArticle === 'strategy-4' ? 700 : undefined}
@@ -343,7 +343,7 @@ export default function HomePage() {
                 />
 
                 <NavLink
-                  label="Chiến lược 5: CỘNG & TỔNG"
+                  label="5. CỘNG & TỔNG"
                   leftSection={<TrendingUp size={16} color="violet" />}
                   active={selectedArticle === 'strategy-5'}
                   fw={selectedArticle === 'strategy-5' ? 700 : undefined}
