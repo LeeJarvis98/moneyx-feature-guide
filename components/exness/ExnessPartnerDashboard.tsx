@@ -253,15 +253,22 @@ export default function ExnessPartnerDashboard() {
             </form>
 
             {affiliationResult && (
-              <div className={` ${affiliationResult.is_affiliated ? styles.affiliated : styles.notAffiliated}`}>
+              <div className={` ${affiliationResult.affiliation ? styles.affiliated : styles.notAffiliated}`}>
                 <h3>
-                  {affiliationResult.is_affiliated ? 'Client is Affiliated' : 'Client is Not Affiliated'}
+                  {affiliationResult.affiliation ? 'Client is Affiliated' : 'Client is Not Affiliated'}
                 </h3>
-                {affiliationResult.client_id && (
-                  <p>Client ID: {affiliationResult.client_id}</p>
+                {affiliationResult.client_uid && (
+                  <p>Client UID: {affiliationResult.client_uid}</p>
                 )}
-                {affiliationResult.partner_id && (
-                  <p>Partner ID: {affiliationResult.partner_id}</p>
+                {affiliationResult.accounts.length > 0 && (
+                  <div>
+                    <p>Accounts:</p>
+                    <ul>
+                      {affiliationResult.accounts.map((account, index) => (
+                        <li key={index}>{account}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             )}

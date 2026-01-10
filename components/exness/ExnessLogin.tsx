@@ -12,24 +12,9 @@ interface ExnessLoginProps {
 export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [captchaKey, setCaptchaKey] = useState('');
-  const [captchaImage, setCaptchaImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Load CAPTCHA
-  const loadCaptcha = async () => {
-    try {
-      setError(null);
-      const captcha = await exnessApi.generateCaptcha();
-      setCaptchaKey(captcha.key);
-      setCaptchaImage(captcha.image);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Failed to load CAPTCHA');
-    }
-  };
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
@@ -41,7 +26,6 @@ export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
       await exnessApi.login({
         login,
         password,
-        captcha_key: captchaKey || undefined,
       });
 
       setSuccess(true);
@@ -51,10 +35,6 @@ export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
     } catch (err) {
       const error = err as ExnessApiError;
       setError(error.message || 'Login failed. Please check your credentials.');
-      // Reload CAPTCHA on error
-      if (captchaImage) {
-        loadCaptcha();
-      }
     } finally {
       setLoading(false);
     }
@@ -102,34 +82,6 @@ export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
               disabled={loading || success}
             />
           </div>
-
-          {/* CAPTCHA Section */}
-          {captchaImage ? (
-            <div className={styles.captchaSection}>
-              <img
-                src={captchaImage}
-                alt="CAPTCHA"
-                className={styles.captchaImage}
-              />
-              <button
-                type="button"
-                onClick={loadCaptcha}
-                className={styles.refreshButton}
-                disabled={loading}
-              >
-                Refresh
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={loadCaptcha}
-              className={styles.loadCaptchaButton}
-              disabled={loading}
-            >
-              Load CAPTCHA
-            </button>
-          )}
 
           {/* Error Message */}
           {error && (

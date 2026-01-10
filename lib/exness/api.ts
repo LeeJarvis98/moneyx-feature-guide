@@ -132,11 +132,6 @@ class ExnessApiClient {
     }
   }
 
-  // Generate CAPTCHA (POST /api/auth/captcha/)
-  async generateCaptcha(): Promise<{ key: string; image: string }> {
-    return this.request('/api/auth/captcha/', { method: 'POST' });
-  }
-
   // === PARTNER ENDPOINTS ===
 
   // Check affiliation (POST /api/partner/affiliation/)

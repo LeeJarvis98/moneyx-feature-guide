@@ -2,7 +2,6 @@
 export interface ExnessAuthCredentials {
   login: string;
   password: string;
-  captcha_key?: string;
 }
 
 export interface ExnessAuthResponse {
@@ -57,9 +56,9 @@ export interface AffiliationRequest {
 }
 
 export interface AffiliationResponse {
-  is_affiliated: boolean;
-  client_id?: string;
-  partner_id?: string;
+  affiliation: boolean;
+  accounts: string[];
+  client_uid: string;
 }
 
 export interface CryptoWalletInfo {
