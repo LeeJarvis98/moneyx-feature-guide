@@ -6,9 +6,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
-import { ProfitCalculatorTab } from '@/components/tabs/ProfitCalculatorTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
-import { SavedResultsAside, SavedResult } from '@/components/SavedResultsAside';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
@@ -24,37 +22,12 @@ export default function HomePage() {
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
   const [activeTab, setActiveTab] = useState<string | null>('step-by-step');
-  const [simulationData, setSimulationData] = useState({
-    initialLot: 0.01,
-    nextLot: 0.02,
-    dcaType: 'add' as 'add' | 'multiply',
-    maxOrders: 30,
-    dcaDistance: 300,
-    currencyPair: 'XAUUSD',
-  });
-  const [savedResults, setSavedResults] = useState<SavedResult[]>([]);
-  const [selectedResult, setSelectedResult] = useState<SavedResult | null>(null);
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
   const theme = useMantineTheme();
   const t = useTranslations('common');
   const tTabs = useTranslations('tabs');
   const tNav = useTranslations('navigation');
-
-  const handleSaveResult = (result: SavedResult) => {
-    setSavedResults(prev => [result, ...prev]);
-  };
-
-  const handleSelectResult = (result: SavedResult) => {
-    setSelectedResult(result);
-  };
-
-  const handleDeleteResult = (id: string) => {
-    setSavedResults(prev => prev.filter(r => r.id !== id));
-    if (selectedResult?.id === id) {
-      setSelectedResult(null);
-    }
-  };
 
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
@@ -79,7 +52,7 @@ export default function HomePage() {
   const shouldShowNavbar = navigationSection === 'learn' && activeTab === 'step-by-step';
 
   // Determine if aside should be shown
-  const shouldShowAside = (navigationSection === 'features' && activeTab === 'feature-guide') || (navigationSection === 'learn' && activeTab === 'profit-calculator');
+  const shouldShowAside = (navigationSection === 'features' && activeTab === 'feature-guide');
 
   // Handle loading completion
   const handleLoadingComplete = () => {
@@ -199,13 +172,6 @@ export default function HomePage() {
                         fw={activeTab === 'step-by-step' ? 700 : undefined}
                       >
                         {tTabs('stepByStep')}
-                      </Tabs.Tab>
-                      <Tabs.Tab
-                        value="profit-calculator"
-                        c={activeTab === 'profit-calculator' ? theme.white : undefined}
-                        fw={activeTab === 'profit-calculator' ? 700 : undefined}
-                      >
-                        {tTabs('profitCalculator')}
                       </Tabs.Tab>
                     </>
                   )}
@@ -374,14 +340,6 @@ export default function HomePage() {
                 <Tabs.Panel value="step-by-step">
                   <StepByStepTab selectedArticle={selectedArticle} />
                 </Tabs.Panel>
-
-                <Tabs.Panel value="profit-calculator">
-                  <ProfitCalculatorTab
-                    onSimulationUpdate={setSimulationData}
-                    onSaveResult={handleSaveResult}
-                    selectedResult={selectedResult}
-                  />
-                </Tabs.Panel>
               </>
             )}
           </Tabs>
@@ -390,14 +348,6 @@ export default function HomePage() {
         <AppShell.Aside p="md">
           {navigationSection === 'features' && activeTab === 'feature-guide' && (
             featureGuideAside
-          )}
-          {navigationSection === 'learn' && activeTab === 'profit-calculator' && (
-            <SavedResultsAside
-              savedResults={savedResults}
-              onSelectResult={handleSelectResult}
-              onDeleteResult={handleDeleteResult}
-              selectedResultId={selectedResult?.id}
-            />
           )}
         </AppShell.Aside>
 

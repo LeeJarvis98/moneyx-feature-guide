@@ -23,51 +23,6 @@
   },
   "tabs": {
     "featureGuide": "Hướng Dẫn Tính Năng",
-    "profitCalculator": "Máy Tính Lợi Nhuận",
     "stepByStep": "Tài liệu"
-  },
-  "core": {
-    "title": "Lõi",
-    "emptyMessage": "Chọn tính năng bên phải để xem các kết hợp mạnh mẽ cho bot MoneyX",
-    "hint": "Nhấp vào công tắc hoặc thẻ để bật tính năng"
-  },
-  "calculator": {
-    "title": "Máy Tính Lợi Nhuận DCA",
-    "accountBalance": "Số dư tài khoản",
-    "currencyPair": "Cặp tiền",
-    "dcaType": "Loại DCA",
-    "dcaDistance": "Khoảng cách DCA (pips)",
-    "initialLot": "Lot ban đầu",
-    "nextLot": "Bước Tăng Lot",
-    "maxOrders": "Tính đến số lệnh",
-    "maxOrdersNote": "(0 = Max lệnh)",
-    "calculate": "TÍNH TOÁN",
-    "results": {
-      "totalLot": "Tổng Lot",
-      "status": "Trạng thái",
-      "margin": "Biên sóng",
-      "drawdownPrice": "Giá chịu tải",
-      "totalOrders": "Tổng lệnh",
-      "orderSimulation": "Giả lập lệnh"
-    },
-    "dcaTypes": {
-      "add": "Cộng",
-      "multiply": "Nhân"
-    }
-  },
-  "simulation": {
-    "title": "Mô Phỏng Lệnh",
-    "description": "Bảng này hiển thị cách các lệnh của bạn sẽ được thực hiện với số lot tăng dần và lợi nhuận cho mỗi lệnh.",
-    "setMaxOrders": "Đặt số lệnh tối đa để xem mô phỏng",
-    "orderNo": "Lệnh #",
-    "lot": "Khối Lượng",
-    "margin": "Biên sóng",
-    "profit": "Lợi Nhuận/Lệnh",
-    "cumProfit": "Tổng Lợi Nhuận",
-    "orders": "Lệnh"
-  },
-  "savedResults": {
-    "title": "Kết Quả Đã Lưu",
-    "description": "Chưa có kết quả nào được lưu. Hãy tính toán để lưu kết quả đầu tiên của bạn."
   }
 }
