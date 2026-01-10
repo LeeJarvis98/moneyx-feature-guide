@@ -2,7 +2,6 @@
 
 import { Button, Container, Text, Title } from '@mantine/core';
 import { ArrowRight } from 'lucide-react';
-import Image from 'next/image';
 import classes from './HeroSection.module.css';
 import { ImageCarousel } from './ImageCarousel';
 
@@ -31,23 +30,12 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
       {/* Content */}
       <Container size="lg" className={classes.container}>
         <div className={classes.content}>
-          <div className={classes.logoWrapper}>
-            <Image
-              src="/vnclc-logo.png"
-              alt="VNCLC Logo"
-              width={120}
-              height={120}
-              className={classes.logo}
-              priority
-            />
-          </div>
-
           <Title className={classes.title}>
             <Text
              component="span"
              inherit
              variant="gradient"
-             gradient={{ from: '#ff0000', to: 'orange', deg: 90 }}
+             gradient={{ from: '#ff0000', to: '#ff9100', deg: 90 }}
             >
              Việt Nam
             </Text>
@@ -68,7 +56,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
             rightSection={<ArrowRight size={20} />}
             onClick={onGetStarted}
           >
-            Khám phá Ngay
+            KHÁM PHÁ NGAY
           </Button>
           <br />
           <ImageCarousel />

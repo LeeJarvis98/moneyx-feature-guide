@@ -1,7 +1,7 @@
 ﻿{
   "metadata": {
     "title": "Việt Nam Chất Lượng Cao",
-    "description": "Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất"
+    "description": "Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất"
   },
   "common": {
     "appName": "Việt Nam Chất Lượng Cao",
@@ -26,8 +26,8 @@
     "stepByStep": "Tài liệu"
   },
   "core": {
-    "title": "Cốt lõi",
-    "emptyMessage": "Chọn các tính năng để xem các kết hợp ưu việt cho bot Việt Nam Chất Lượng Cao",
+    "title": "Tính năng áp dụng",
+    "emptyMessage": "Kết hợp các tính năng để bot Việt Nam Chất Lượng Cao cho ra kết quả ưu việt nhất",
     "hint": "Nhấp vào công tắc của các thẻ phía bên phải để bật tính năng"
   }
 }
