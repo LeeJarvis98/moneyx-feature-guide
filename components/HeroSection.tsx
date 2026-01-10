@@ -2,6 +2,7 @@
 
 import { Button, Container, Text, Title } from '@mantine/core';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import classes from './HeroSection.module.css';
 import { ImageCarousel } from './ImageCarousel';
 
@@ -30,6 +31,17 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
       {/* Content */}
       <Container size="lg" className={classes.container}>
         <div className={classes.content}>
+          <div className={classes.logoWrapper}>
+            <Image
+              src="/vnclc-logo.png"
+              alt="VNCLC Logo"
+              width={120}
+              height={120}
+              className={classes.logo}
+              priority
+            />
+          </div>
+
           <Title className={classes.title}>
             <Text
              component="span"

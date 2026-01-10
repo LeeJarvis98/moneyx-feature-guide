@@ -78,6 +78,28 @@
   padding: 2rem;
 }
 
+.logoWrapper {
+  display: flex;
+  justify-content: center;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -136,6 +158,15 @@
 @media (max-width: 768px) {
   .content {
     padding: 1rem;
+  }
+
+  .logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logoWrapper {
+    margin-bottom: 1.5rem;
   }
 
   .control {

@@ -369,7 +369,7 @@ export default function HomePage() {
                   © {new Date().getFullYear()} Tradi. {t('allRightsReserved')}
                 </Text>
               </Group>
-              <Group gap="md">
+              {/* <Group gap="md">
                 <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
                   {t('about')}
                 </Text>
@@ -379,7 +379,7 @@ export default function HomePage() {
                 <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
                   {t('terms')}
                 </Text>
-              </Group>
+              </Group> */}
             </Group>
           </Container>
         </AppShell.Footer>
