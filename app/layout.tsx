@@ -23,8 +23,8 @@ const accentColor: MantineColorsTuple = [
   '#FFB81C',
   '#E6A619',
   '#CC9416',
-  '#B38213',
-  '#997010',
+  '#FFB81C',
+  '#FFC82E',
 ];
 
 const theme = createTheme({

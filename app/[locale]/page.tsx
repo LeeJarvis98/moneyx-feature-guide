@@ -7,7 +7,7 @@ import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, B
 import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
-import { LayBotTab } from '@/components/tabs/LayBotTab';
+import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import ExnessApp from '@/components/exness/ExnessApp';
 import { HeroSection } from '@/components/HeroSection';
@@ -136,6 +136,7 @@ export default function HomePage() {
                 <Group gap="md">
                   <Button
                     variant={navigationSection === 'features' ? 'filled' : 'subtle'}
+                    c={navigationSection === 'features' ? 'black' : undefined}
                     leftSection={<Compass size={18} />}
                     onClick={() => handleNavigationChange('features')}
                     visibleFrom="sm"
@@ -145,6 +146,7 @@ export default function HomePage() {
                   </Button>
                   <Button
                     variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
+                    c={navigationSection === 'learn' ? 'black' : undefined}
                     leftSection={<GraduationCap size={18} />}
                     onClick={() => handleNavigationChange('learn')}
                     visibleFrom="sm"
@@ -199,6 +201,7 @@ export default function HomePage() {
               <Group gap="xs" hiddenFrom="sm" justify="center">
                 <Button
                   variant={navigationSection === 'features' ? 'filled' : 'subtle'}
+                  c={navigationSection === 'features' ? 'black' : undefined}
                   leftSection={<Compass size={16} />}
                   onClick={() => handleNavigationChange('features')}
                   size="xs"
@@ -208,6 +211,7 @@ export default function HomePage() {
                 </Button>
                 <Button
                   variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
+                  c={navigationSection === 'learn' ? 'black' : undefined}
                   leftSection={<GraduationCap size={16} />}
                   onClick={() => handleNavigationChange('learn')}
                   size="xs"
@@ -352,7 +356,7 @@ export default function HomePage() {
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
                 </Tabs.Panel>
                 <Tabs.Panel value="lay-bot">
-                  <LayBotTab />
+                  <GetBotTab />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
                   <ExnessApp />

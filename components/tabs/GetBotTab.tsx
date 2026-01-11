@@ -25,7 +25,7 @@ import { Download, CheckCircle, AlertCircle, Play } from 'lucide-react';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
 
-export function LayBotTab() {
+export function GetBotTab() {
   const [active, setActive] = useState(0);
   const [accountId, setAccountId] = useState('');
   const [platform, setPlatform] = useState<string | null>(null);
@@ -84,15 +84,6 @@ export function LayBotTab() {
   return (
     <Container size="xl" py="xl">
       <Stack gap="xl">
-        <Box>
-          <Title order={2} mb="md" ta="center">
-            Lấy Bot Trading
-          </Title>
-          <Text c="dimmed" ta="center" mb="xl">
-            Làm theo 3 bước đơn giản để nhận và cài đặt bot trading
-          </Text>
-        </Box>
-
         <Stepper active={active} onStepClick={setActive}>
           {/* Step 1: Tạo tài khoản sàn */}
           <Stepper.Step
