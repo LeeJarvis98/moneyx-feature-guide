@@ -11,8 +11,10 @@
   TrafficSource,
 } from '@/types/exness';
 
-// Use our own API proxy to avoid CORS issues
-const PROXY_URL = '/api/exness';
+// Use Firebase Cloud Function as proxy
+const PROXY_URL = typeof window !== 'undefined' 
+  ? 'https://us-central1-vnclc-2d2d1.cloudfunctions.net/exnessProxy'
+  : '';
 
 class ExnessApiClient {
   private token: string | null = null;

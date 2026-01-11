@@ -12,9 +12,9 @@ interface CarouselItem {
 export function ImageCarousel() {
   const [items, setItems] = useState<CarouselItem[]>([
     { id: 0, pos: 0, url: '/hero_section/carousel/pic1.jpg' },
-    { id: 1, pos: 1, url: '/hero_section/carousel/pic2.jpg' },
+    { id: 1, pos: 1, url: '/hero_section/carousel/picc2.jpg' },
     { id: 2, pos: 2, url: '/hero_section/carousel/pic3.jpg' },
-    { id: 3, pos: 3, url: '/hero_section/carousel/pic4.jpg' },
+    { id: 3, pos: 3, url: '/hero_section/carousel/picc4.jpg' },
     { id: 4, pos: 4, url: '/hero_section/carousel/pic5.jpg' },
   ]);
 
