@@ -1,0 +1,92 @@
+.platformCard {
+  height: 200px;
+  width: 200px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  overflow: hidden;
+}
+
+.platformCard:hover {
+  transform: translateY(-4px);
+}
+
+.platformCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  z-index: 1;
+}
+
+.cardContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.platformTitle {
+  font-family: Outfit, var(--mantine-font-family);
+  font-weight: 600;
+  color: var(--mantine-color-white);
+  line-height: 1.2;
+  font-size: 28px;
+  margin-top: var(--mantine-spacing-xs);
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  width: 100%;
+}
+
+.cardDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cardDisabled:hover {
+  transform: none;
+}
+
+.selectedCard {
+  border: 3px solid #FFB81C;
+  box-shadow: 0 0 20px rgba(255, 184, 28, 0.5);
+}
+
+/* Glow effect for buttons */
+.glowButton {
+  transition: all 0.3s ease;
+}
+
+.glowButton:hover {
+  box-shadow: 0 6px 16px rgba(255, 184, 28, 0.5);
+  transform: translateY(-1px);
+}
+
+.glowButton:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(255, 184, 28, 0.3);
+}
+
+/* Glow effect for input fields on focus */
+.glowInput:focus,
+.glowInput:focus-within {
+  box-shadow: 0 0 0 2px rgba(255, 184, 28, 0.2), 0 4px 12px rgba(255, 184, 28, 0.4);
+  border-color: #FFB81C;
+  transition: all 0.3s ease;
+}

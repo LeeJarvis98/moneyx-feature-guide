@@ -20,10 +20,18 @@ import {
   Badge,
   ActionIcon,
   Modal,
+  Table,
+  Checkbox,
 } from '@mantine/core';
-import { Download, CheckCircle, AlertCircle, Play } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video } from 'lucide-react';
+import classes from './GetBotTab.module.css';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
+
+interface AccountRow {
+  id: string;
+  status: 'licensed' | 'unlicensed';
+}
 
 export function GetBotTab() {
   const [active, setActive] = useState(0);
@@ -35,6 +43,8 @@ export function GetBotTab() {
     accounts: string[];
     client_uid: string;
   } | null>(null);
+  const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
@@ -45,7 +55,9 @@ export function GetBotTab() {
     setAccountStatus('checking');
     setErrorMessage('');
     setAccountData(null);
-    
+    setAccountRows([]);
+    setSelectedAccounts([]);
+
     try {
       const response = await fetch('https://rainbowy-clarine-presumingly.ngrok-free.dev/api/lookup', {
         method: 'POST',
@@ -54,15 +66,21 @@ export function GetBotTab() {
         },
         body: JSON.stringify({ email }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.data.affiliation) {
         setAccountData(result.data);
+        // Convert accounts array to table rows with default status
+        const rows: AccountRow[] = result.data.accounts.map((accountId: string) => ({
+          id: accountId,
+          status: 'unlicensed' as const, // Default status - can be updated based on API response
+        }));
+        setAccountRows(rows);
         setAccountStatus('authorized');
       } else {
         setAccountStatus('unauthorized');
@@ -72,6 +90,22 @@ export function GetBotTab() {
       setAccountStatus('unauthorized');
       setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
       console.error('API Error:', error);
+    }
+  };
+
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccounts((prev) =>
+      prev.includes(accountId)
+        ? prev.filter((id) => id !== accountId)
+        : [...prev, accountId]
+    );
+  };
+
+  const toggleAllAccounts = () => {
+    if (selectedAccounts.length === accountRows.length) {
+      setSelectedAccounts([]);
+    } else {
+      setSelectedAccounts(accountRows.map((row) => row.id));
     }
   };
 
@@ -96,11 +130,86 @@ export function GetBotTab() {
   ];
 
   const tradingPlatforms = [
-    { value: 'mt5', label: 'MetaTrader 5 (MT5)', disabled: true },
-    { value: 'mt4', label: 'MetaTrader 4 (MT4)', disabled: true },
-    { value: 'exness', label: 'Exness', disabled: false },
-    { value: 'xm', label: 'XM Trading', disabled: true },
-    { value: 'fbs', label: 'FBS', disabled: true },
+    {
+      value: 'exness',
+      label: 'Exness',
+      disabled: false,
+      image: '/getbot_section/exness.png',
+      tutorialVideo: 'https://example.com/exness-tutorial',
+      platformUrl: 'https://one.exnessonelink.com/a/ojl5148a7y'
+    },
+    {
+      value: 'binance',
+      label: 'Binance',
+      disabled: true,
+      image: '/getbot_section/binance.png',
+      tutorialVideo: 'https://example.com/binance-tutorial',
+      platformUrl: 'https://www.binance.com/'
+    },
+    {
+      value: 'bingx',
+      label: 'BingX',
+      disabled: true,
+      image: '/getbot_section/bingx.png',
+      tutorialVideo: 'https://example.com/bingx-tutorial',
+      platformUrl: 'https://bingx.com/'
+    },
+    {
+      value: 'bitget',
+      label: 'BitGet',
+      disabled: true,
+      image: '/getbot_section/bitget.png',
+      tutorialVideo: 'https://example.com/bitget-tutorial',
+      platformUrl: 'https://www.bitget.com/'
+    },
+    {
+      value: 'bybit',
+      label: 'Bybit',
+      disabled: true,
+      image: '/getbot_section/bybit.png',
+      tutorialVideo: 'https://example.com/bybit-tutorial',
+      platformUrl: 'https://www.bybit.com/'
+    },
+    {
+      value: 'gate',
+      label: 'Gate.io',
+      disabled: true,
+      image: '/getbot_section/gate.png',
+      tutorialVideo: 'https://example.com/gate-tutorial',
+      platformUrl: 'https://www.gate.io/'
+    },
+    {
+      value: 'mexc',
+      label: 'MEXC',
+      disabled: true,
+      image: '/getbot_section/mexc.png',
+      tutorialVideo: 'https://example.com/mexc-tutorial',
+      platformUrl: 'https://www.mexc.com/'
+    },
+    {
+      value: 'okx',
+      label: 'OKX',
+      disabled: true,
+      image: '/getbot_section/okx.png',
+      tutorialVideo: 'https://example.com/okx-tutorial',
+      platformUrl: 'https://www.okx.com/'
+    },
+    {
+      value: 'vantage',
+      label: 'Vantage',
+      disabled: true,
+      image: '/getbot_section/vantage.png',
+      tutorialVideo: 'https://example.com/vantage-tutorial',
+      platformUrl: 'https://www.vantagemarkets.com/'
+    },
+    {
+      value: 'xm',
+      label: 'XM',
+      disabled: true,
+      image: '/getbot_section/xm.png',
+      tutorialVideo: 'https://example.com/xm-tutorial',
+      platformUrl: 'https://www.xm.com/'
+    },
   ];
 
   return (
@@ -115,34 +224,38 @@ export function GetBotTab() {
           >
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
               <Stack gap="xl">
-                <Box>
-                  <Title order={3} mb="md">
-                    Chọn sàn giao dịch của bạn
-                  </Title>
-                  <Text c="dimmed" mb="lg">
-                    Vui lòng chọn sàn giao dịch bạn đang sử dụng hoặc muốn sử dụng. Hướng dẫn sẽ hiển thị bên dưới.
-                  </Text>
-                </Box>
+                <Group justify="space-between" align="flex-start">
+                  <Box style={{ flex: 1 }}>
+                    <Title order={3} mb="md">
+                      Chọn sàn giao dịch của bạn
+                    </Title>
+                    <Text c="dimmed">
+                      Vui lòng chọn sàn giao dịch bạn đang sử dụng hoặc muốn sử dụng. Hướng dẫn sẽ hiển thị bên dưới.
+                    </Text>
+                  </Box>
+                  <Button
+                    c="black"
+                    onClick={nextStep}
+                    size="lg"
+                    disabled={!selectedPlatform}
+                    className={classes.glowButton}
+                  >
+                    Tiếp theo
+                  </Button>
+                </Group>
 
-                <Grid gutter="md">
+                <Grid gutter="md" justify="center">
                   {tradingPlatforms.map((platformOption) => (
-                    <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 4 }}>
-                      <Card
-                        shadow="sm"
-                        padding="lg"
+                    <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 2.4 }}>
+                      <Paper
+                        shadow="md"
+                        p="xl"
                         radius="md"
-                        withBorder
+                        className={`${classes.platformCard} ${platformOption.disabled ? classes.cardDisabled : ''
+                          } ${selectedPlatform === platformOption.value ? classes.selectedCard : ''
+                          }`}
                         style={{
-                          cursor: platformOption.disabled ? 'not-allowed' : 'pointer',
-                          opacity: platformOption.disabled ? 0.5 : 1,
-                          border: selectedPlatform === platformOption.value 
-                            ? '2px solid var(--mantine-color-blue-6)' 
-                            : undefined,
-                          backgroundColor: selectedPlatform === platformOption.value
-                            ? 'var(--mantine-color-blue-0)'
-                            : platformOption.disabled
-                            ? 'var(--mantine-color-gray-1)'
-                            : undefined,
+                          backgroundImage: `url(${platformOption.image})`,
                         }}
                         onClick={() => {
                           if (!platformOption.disabled) {
@@ -151,132 +264,49 @@ export function GetBotTab() {
                           }
                         }}
                       >
-                        <Stack gap="sm" align="center">
-                          <Box
-                            style={{
-                              width: 60,
-                              height: 60,
-                              borderRadius: '50%',
-                              backgroundColor: selectedPlatform === platformOption.value
-                                ? 'var(--mantine-color-blue-6)'
-                                : 'var(--mantine-color-gray-2)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {selectedPlatform === platformOption.value && (
-                              <CheckCircle size={30} color="white" />
-                            )}
-                          </Box>
-                          <Text fw={500} ta="center">
+                        <div className={classes.cardContent} style={{ marginTop: '-20px' }}>
+                          <Title order={3} className={classes.platformTitle}>
                             {platformOption.label}
-                          </Text>
-                          {platformOption.disabled && (
-                            <Badge color="gray" variant="light">
-                              Sắp ra mắt
-                            </Badge>
-                          )}
-                          {selectedPlatform === platformOption.value && !platformOption.disabled && (
-                            <Badge color="blue" variant="filled">
-                              Đã chọn
-                            </Badge>
-                          )}
-                        </Stack>
-                      </Card>
+                          </Title>
+                        </div>
+
+                        {!platformOption.disabled && (
+                          <div className={`${classes.cardContent} ${classes.buttonGroup}`}>
+                            <Button
+                              variant="white"
+                              color="dark"
+                              leftSection={<Video size={18} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedVideo(platformOption.tutorialVideo);
+                                setVideoModalOpen(true);
+                              }}
+                              fullWidth
+                              className={classes.glowButton}
+                              size="xs"
+                            >
+                              Hướng dẫn
+                            </Button>
+                            <Button
+                              variant="light"
+                              color="green"
+                              leftSection={<ExternalLink size={18} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(platformOption.platformUrl, '_blank');
+                              }}
+                              fullWidth
+                              className={classes.glowButton}
+                              size="xs"
+                            >
+                              Đăng ký
+                            </Button>
+                          </div>
+                        )}
+                      </Paper>
                     </Grid.Col>
                   ))}
                 </Grid>
-
-                {selectedPlatform && (
-                  <>
-                    <Alert color="blue" radius="md">
-                      <Text size="sm">
-                        Bạn đã chọn sàn <strong>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>. 
-                        Xem hướng dẫn chi tiết bên dưới để tạo tài khoản.
-                      </Text>
-                    </Alert>
-
-                    {/* Guide Content - Changes based on selected platform */}
-                    <Box mt="xl">
-                      <Title order={3} mb="md">
-                        Hướng dẫn tạo tài khoản {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}
-                      </Title>
-
-                      {/* Video Guides */}
-                      <Box mt="xl">
-                        <Title order={4} mb="md">
-                          📹 Video hướng dẫn
-                        </Title>
-                        <Grid gutter="md">
-                          {guideVideos.map((video) => (
-                            <Grid.Col key={video.id} span={{ base: 12, sm: 6 }}>
-                              <Card
-                                shadow="sm"
-                                padding="lg"
-                                radius="md"
-                                withBorder
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => {
-                                  setSelectedVideo(video.url);
-                                  setVideoModalOpen(true);
-                                }}
-                              >
-                                <Card.Section>
-                                  <Image
-                                    src={video.thumbnail}
-                                    height={200}
-                                    alt={video.title}
-                                  />
-                                </Card.Section>
-                                <Group justify="space-between" mt="md" mb="xs">
-                                  <Text fw={500}>{video.title}</Text>
-                                  <ActionIcon variant="light" color="blue">
-                                    <Play size={16} />
-                                  </ActionIcon>
-                                </Group>
-                              </Card>
-                            </Grid.Col>
-                          ))}
-                        </Grid>
-                      </Box>
-
-                      {/* Image Guides */}
-                      <Box mt="xl">
-                        <Title order={4} mb="md">
-                          🖼️ Hướng dẫn bằng hình ảnh
-                        </Title>
-                        <Grid gutter="md">
-                          {guideImages.map((image) => (
-                            <Grid.Col key={image.id} span={{ base: 12, sm: 6, md: 4 }}>
-                              <Paper shadow="sm" p="md" radius="md" withBorder>
-                                <Image
-                                  src={image.src}
-                                  alt={image.title}
-                                  radius="sm"
-                                  mb="sm"
-                                />
-                                <Text size="sm" fw={500} ta="center">
-                                  {image.title}
-                                </Text>
-                              </Paper>
-                            </Grid.Col>
-                          ))}
-                        </Grid>
-                      </Box>
-                    </Box>
-                  </>
-                )}
-
-                <Group justify="flex-end" mt="xl">
-                  <Button 
-                    onClick={nextStep} 
-                    size="lg"
-                    disabled={!selectedPlatform}
-                  >
-                    Tiếp theo
-                  </Button>
-                </Group>
               </Stack>
             </Paper>
           </Stepper.Step>
@@ -288,87 +318,151 @@ export function GetBotTab() {
             allowStepSelect={accountStatus === 'authorized'}
           >
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
-              <Stack gap="xl">
-                <Box>
-                  <Title order={3} mb="md">
-                    Xác thực Email của bạn
-                  </Title>
-                  <Text c="dimmed" mb="lg">
-                    Nhập email đã đăng ký với {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label} để kiểm tra tình trạng liên kết
-                  </Text>
-                </Box>
-
-                <Stack gap="md">
-                  <Alert color="blue" radius="md">
-                    <Text size="sm">
-                      <strong>Sàn đã chọn:</strong> {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}
+              <Stack gap="xs">
+                <Group justify="space-between" align="flex-start">
+                  <Box style={{ flex: 1 }}>
+                    <Title order={3} mb="md">
+                      Xác thực Email của bạn
+                    </Title>
+                    <Text c="dimmed" mb="lg">
+                      Nhập email đã đăng ký với <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong> để kiểm tra tình trạng cùng hệ thống
                     </Text>
-                  </Alert>
+                  </Box>
 
-                  <TextInput
-                    label="Email"
-                    type="email"
-                    placeholder="client@example.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.currentTarget.value)}
-                    size="md"
-                    required
-                  />
+                  <Stack style={{ flex: 1 }} gap="md">
+                    <Group align="flex-end" gap="md">
+                      <TextInput
+                        type="email"
+                        placeholder="client@example.com"
+                        value={email}
+                        onChange={(event) => setEmail(event.currentTarget.value)}
+                        size="md"
+                        required
+                        classNames={{ input: classes.glowInput }}
+                        style={{ flex: 1 }}
+                      />
+                      <Button
+                        c="black"
+                        onClick={checkAccountStatus}
+                        loading={accountStatus === 'checking'}
+                        disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+                        size="md"
+                        className={classes.glowButton}
+                      >
+                        Kiểm tra
+                      </Button>
+                    </Group>
 
-                  <Button
-                    onClick={checkAccountStatus}
-                    loading={accountStatus === 'checking'}
-                    disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-                    size="lg"
-                    fullWidth
-                  >
-                    Kiểm tra
-                  </Button>
-                </Stack>
+                    {accountStatus === 'unauthorized' && (
+                      <Alert
+                        icon={<AlertCircle size={20} />}
+                        title="Xác thực thất bại"
+                        color="red"
+                        radius="md"
+                      >
+                        {errorMessage || 'Không thể xác thực email. Vui lòng kiểm tra lại email và sàn giao dịch.'}
+                      </Alert>
+                    )}
+
+                    {accountStatus === 'authorized' && accountData && (
+                      <Alert
+                        icon={<CheckCircle size={20} />}
+                        title="Xác thực thành công!"
+                        color="green"
+                        radius="md"
+                      >
+                        <Text size="sm">
+                          <strong>Client UID:</strong> {accountData.client_uid}
+                        </Text>
+                      </Alert>
+                    )}
+                  </Stack>
+                </Group>
 
                 {accountStatus === 'authorized' && accountData && (
-                  <Alert
-                    icon={<CheckCircle size={20} />}
-                    title="Xác thực thành công!"
-                    color="green"
-                    radius="md"
-                  >
-                    <Stack gap="xs">
-                      <Text size="sm">
-                        <strong>Client UID:</strong> {accountData.client_uid}
+                  <>
+                    <Box>
+                      <Text size="sm" fw={600} mb="xs">
+                        Danh sách tài khoản liên kết:
                       </Text>
-                      <Text size="sm">
-                        <strong>Tài khoản liên kết:</strong> {accountData.accounts.join(', ')}
-                      </Text>
-                      <Text size="sm" mt="xs">
-                        Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
-                      </Text>
-                    </Stack>
-                  </Alert>
+                      <Table
+                        striped
+                        highlightOnHover
+                        withTableBorder
+                        withColumnBorders
+                        style={{
+                          borderRadius: '8px',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th style={{ width: 60 }}>
+                              <Checkbox
+                                checked={selectedAccounts.length === accountRows.length && accountRows.length > 0}
+                                indeterminate={selectedAccounts.length > 0 && selectedAccounts.length < accountRows.length}
+                                onChange={toggleAllAccounts}
+                                aria-label="Chọn tất cả"
+                              />
+                            </Table.Th>
+                            <Table.Th>ID liên kết</Table.Th>
+                            <Table.Th>Trạng thái</Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {accountRows.map((row) => (
+                            <Table.Tr key={row.id}>
+                              <Table.Td>
+                                <Checkbox
+                                  checked={selectedAccounts.includes(row.id)}
+                                  onChange={() => toggleAccountSelection(row.id)}
+                                  aria-label={`Chọn ${row.id}`}
+                                />
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" ff="monospace">
+                                  {row.id}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge
+                                  color={row.status === 'licensed' ? 'green' : 'gray'}
+                                  variant="light"
+                                >
+                                  {row.status === 'licensed' ? 'Đã cấp bản quyền' : 'Chưa cấp bản quyền'}
+                                </Badge>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
+                      </Table>
+                    </Box>
+                  </>
                 )}
 
-                {accountStatus === 'unauthorized' && (
-                  <Alert
-                    icon={<AlertCircle size={20} />}
-                    title="Xác thực thất bại"
-                    color="red"
-                    radius="md"
-                  >
-                    {errorMessage || 'Không thể xác thực email. Vui lòng kiểm tra lại email và sàn giao dịch.'}
-                  </Alert>
-                )}
+
 
                 <Group justify="space-between" mt="xl">
-                  <Button variant="default" onClick={prevStep} size="lg">
+                  <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
                     Quay lại
                   </Button>
-                  <Button
-                    onClick={nextStep}
-                    disabled={accountStatus !== 'authorized'}
-                    size="lg"
-                  >
-                    Tiếp theo
-                  </Button>
+                  <Group gap="md" align="center">
+                    {accountStatus === 'authorized' && accountData && (
+                      <Text size="sm" c="dimmed">
+                        Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
+                      </Text>
+                    )}
+
+                    <Button
+                      c="black"
+                      onClick={nextStep}
+                      disabled={accountStatus !== 'authorized'}
+                      size="lg"
+                      className={classes.glowButton}
+                    >
+                      Cấp bản quyền
+                    </Button>
+                  </Group>
                 </Group>
               </Stack>
             </Paper>
@@ -381,80 +475,83 @@ export function GetBotTab() {
             allowStepSelect={accountStatus === 'authorized'}
           >
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
-              <Stack gap="xl" align="center">
-                <Box ta="center">
-                  <Badge size="xl" variant="gradient" gradient={{ from: 'teal', to: 'lime', deg: 105 }} mb="md">
-                    Hoàn tất
-                  </Badge>
-                  <Title order={3} mb="md">
-                    Tải xuống Bot Trading
-                  </Title>
-                  <Text c="dimmed" mb="lg">
-                    Tài khoản của bạn đã được xác thực. Bây giờ bạn có thể tải xuống file bot.
-                  </Text>
-                </Box>
-
-                <Paper withBorder p="xl" radius="md" style={{ width: '100%', maxWidth: 500 }}>
-                  <Stack gap="md" align="center">
-                    <Box
-                      style={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: '50%',
-                        backgroundColor: 'var(--mantine-color-teal-1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Download size={40} color="var(--mantine-color-teal-7)" />
+              <Grid gutter="xl">
+                <Grid.Col span={{ base: 12, md: 3 }}>
+                  <Stack gap="xl">
+                    <Box>
+                      <Badge size="xl" variant="gradient" gradient={{ from: 'teal', to: 'lime', deg: 105 }} mb="md">
+                        Hoàn tất
+                      </Badge>
+                      <Title order={3} mb="md">
+                        Tải Bot xuống
+                      </Title>
+                      <Text size="sm">
+                        <strong>Lưu ý:</strong> Sau khi tải xuống, vui lòng làm theo hướng dẫn
+                        bên phải.
+                      </Text>
                     </Box>
-                    
-                    <Text size="lg" fw={500}>
-                      VNCLC Trading Bot v1.0
-                    </Text>
-                    
-                    <Group gap="xs">
-                      <Badge color="blue">{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label} Compatible</Badge>
-                      <Badge color="green">Verified</Badge>
-                    </Group>
 
-                    <Text size="sm" c="dimmed" ta="center">
-                      File bot đã được tối ưu hóa cho tài khoản của bạn
-                    </Text>
+                    <Paper withBorder p="xl" radius="md">
+                      <Stack gap="md" align="center">
+                        <Box
+                          style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--mantine-color-teal-1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Download size={40} color="var(--mantine-color-teal-7)" />
+                        </Box>
 
-                    <Button
-                      size="lg"
-                      leftSection={<Download size={20} />}
-                      onClick={handleDownloadBot}
-                      fullWidth
-                      mt="md"
-                    >
-                      Tải xuống Bot
-                    </Button>
+                        <Text size="lg" fw={500}>
+                          VNCLC Trading Bot v1.0
+                        </Text>
+
+                        <Button
+                          c="black"
+                          size="lg"
+                          leftSection={<Download size={20} />}
+                          onClick={handleDownloadBot}
+                          fullWidth
+                          mt="md"
+                          className={classes.glowButton}
+                        >
+                          Tải Bot
+                        </Button>
+                      </Stack>
+                    </Paper>
                   </Stack>
-                </Paper>
+                </Grid.Col>
 
-                <Alert color="blue" radius="md" style={{ width: '100%', maxWidth: 500 }}>
-                  <Text size="sm">
-                    <strong>Lưu ý:</strong> Sau khi tải xuống, vui lòng làm theo hướng dẫn cài đặt
-                    trong tài liệu để cấu hình bot đúng cách.
-                  </Text>
-                </Alert>
+                <Grid.Col span={{ base: 12, md: 9 }}>
+                  <Paper withBorder radius="md" style={{ overflow: 'hidden', height: '100%', minHeight: 400 }}>
+                    <iframe
+                      src="https://drive.google.com/file/d/1ekRrm-JRk-dmMsINBCp3ZiCWStsVxZpM/preview"
+                      style={{ width: '100%', height: '100%', minHeight: 400, border: 'none' }}
+                      allow="autoplay"
+                      title="Video hướng dẫn tải Bot"
+                    />
+                  </Paper>
+                </Grid.Col>
+              </Grid>
 
-                <Group justify="space-between" mt="xl" style={{ width: '100%' }}>
-                  <Button variant="default" onClick={prevStep} size="lg">
-                    Quay lại
-                  </Button>
-                  <Button
-                    variant="light"
-                    onClick={() => setActive(0)}
-                    size="lg"
-                  >
-                    Bắt đầu lại
-                  </Button>
-                </Group>
-              </Stack>
+              <Group justify="space-between" mt="xl">
+                <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
+                  Quay lại
+                </Button>
+                <Button
+                  variant="light"
+                  onClick={() => setActive(0)}
+                  size="lg"
+                  className={classes.glowButton}
+                >
+                  Bắt đầu lại
+                </Button>
+              </Group>
             </Paper>
           </Stepper.Step>
         </Stepper>
