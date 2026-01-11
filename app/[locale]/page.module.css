@@ -1,0 +1,34 @@
+/* Main wrapper transition styles */
+.mainWrapper {
+  animation: fadeIn 0.5s ease-in;
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+
+.mainWrapper.transitioning {
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Glow effect for navigation buttons */
+.glowButton {
+  transition: all 0.3s ease;
+}
+
+.glowButton:hover {
+  box-shadow: 0 6px 16px rgba(255, 201, 85, 0.808);
+  transform: translateY(-1px);
+}
+
+.glowButton:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(255, 184, 28, 0.3);
+}

@@ -12,7 +12,7 @@ import ExnessApp from '@/components/exness/ExnessApp';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useTranslations } from 'next-intl';
-import styles from './HomePage.module.css';
+import classes from './page.module.css';
 
 type NavigationSection = 'features' | 'learn';
 
@@ -89,7 +89,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className={`${styles.mainWrapper} ${isTransitioning ? styles.transitioning : ''}`}>
+    <div className={`${classes.mainWrapper} ${isTransitioning ? classes.transitioning : ''}`}>
       <AppShell
         transitionDuration={500}
         transitionTimingFunction="ease"
@@ -138,6 +138,7 @@ export default function HomePage() {
                     leftSection={<Compass size={18} />}
                     onClick={() => handleNavigationChange('features')}
                     visibleFrom="sm"
+                    className={classes.glowButton}
                   >
                     {tNav('features')}
                   </Button>
@@ -146,6 +147,7 @@ export default function HomePage() {
                     leftSection={<GraduationCap size={18} />}
                     onClick={() => handleNavigationChange('learn')}
                     visibleFrom="sm"
+                    className={classes.glowButton}
                   >
                     {tNav('learn')}
                   </Button>
@@ -192,6 +194,7 @@ export default function HomePage() {
                   leftSection={<Compass size={16} />}
                   onClick={() => handleNavigationChange('features')}
                   size="xs"
+                  className={classes.glowButton}
                 >
                   {tNav('features')}
                 </Button>
@@ -200,6 +203,7 @@ export default function HomePage() {
                   leftSection={<GraduationCap size={16} />}
                   onClick={() => handleNavigationChange('learn')}
                   size="xs"
+                  className={classes.glowButton}
                 >
                   {tNav('learn')}
                 </Button>
