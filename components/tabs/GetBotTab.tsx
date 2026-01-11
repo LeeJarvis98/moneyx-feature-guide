@@ -27,29 +27,51 @@ type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
 
 export function GetBotTab() {
   const [active, setActive] = useState(0);
-  const [accountId, setAccountId] = useState('');
+  const [email, setEmail] = useState('');
   const [platform, setPlatform] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus>('idle');
+  const [accountData, setAccountData] = useState<{
+    affiliation: boolean;
+    accounts: string[];
+    client_uid: string;
+  } | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Mock function to check account status (replace with actual API call)
+  // Function to check account status via API
   const checkAccountStatus = async () => {
     setAccountStatus('checking');
+    setErrorMessage('');
+    setAccountData(null);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Mock validation - check if account ID is not empty and platform is selected
-    if (accountId && platform) {
-      // For demo purposes, accounts starting with "MT5" are authorized
-      if (accountId.toUpperCase().startsWith('MT5')) {
+    try {
+      const response = await fetch('https://rainbowy-clarine-presumingly.ngrok-free.dev/api/lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.data.affiliation) {
+        setAccountData(result.data);
         setAccountStatus('authorized');
       } else {
         setAccountStatus('unauthorized');
+        setErrorMessage('Tài khoản không có quyền truy cập hoặc chưa được liên kết.');
       }
-    } else {
+    } catch (error) {
       setAccountStatus('unauthorized');
+      setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      console.error('API Error:', error);
     }
   };
 
@@ -74,98 +96,184 @@ export function GetBotTab() {
   ];
 
   const tradingPlatforms = [
-    { value: 'mt5', label: 'MetaTrader 5 (MT5)' },
-    { value: 'mt4', label: 'MetaTrader 4 (MT4)' },
-    { value: 'exness', label: 'Exness' },
-    { value: 'xm', label: 'XM Trading' },
-    { value: 'fbs', label: 'FBS' },
+    { value: 'mt5', label: 'MetaTrader 5 (MT5)', disabled: true },
+    { value: 'mt4', label: 'MetaTrader 4 (MT4)', disabled: true },
+    { value: 'exness', label: 'Exness', disabled: false },
+    { value: 'xm', label: 'XM Trading', disabled: true },
+    { value: 'fbs', label: 'FBS', disabled: true },
   ];
 
   return (
     <Container size="xl" py="xl">
       <Stack gap="xl">
         <Stepper active={active} onStepClick={setActive}>
-          {/* Step 1: Tạo tài khoản sàn */}
+          {/* Step 1: Chọn sàn giao dịch & Hướng dẫn */}
           <Stepper.Step
             label="Bước 1"
-            description="Tạo tài khoản sàn"
+            description="Chọn sàn & Hướng dẫn"
             allowStepSelect={true}
           >
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
               <Stack gap="xl">
                 <Box>
                   <Title order={3} mb="md">
-                    Tạo tài khoản sàn giao dịch
+                    Chọn sàn giao dịch của bạn
                   </Title>
                   <Text c="dimmed" mb="lg">
-                    Xem video và hình ảnh hướng dẫn để tạo tài khoản trên sàn giao dịch
+                    Vui lòng chọn sàn giao dịch bạn đang sử dụng hoặc muốn sử dụng. Hướng dẫn sẽ hiển thị bên dưới.
                   </Text>
                 </Box>
 
-                {/* Video Guides */}
-                <Box>
-                  <Title order={4} mb="md">
-                    📹 Video hướng dẫn
-                  </Title>
-                  <Grid gutter="md">
-                    {guideVideos.map((video) => (
-                      <Grid.Col key={video.id} span={{ base: 12, sm: 6 }}>
-                        <Card
-                          shadow="sm"
-                          padding="lg"
-                          radius="md"
-                          withBorder
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => {
-                            setSelectedVideo(video.url);
-                            setVideoModalOpen(true);
-                          }}
-                        >
-                          <Card.Section>
-                            <Image
-                              src={video.thumbnail}
-                              height={200}
-                              alt={video.title}
-                            />
-                          </Card.Section>
-                          <Group justify="space-between" mt="md" mb="xs">
-                            <Text fw={500}>{video.title}</Text>
-                            <ActionIcon variant="light" color="blue">
-                              <Play size={16} />
-                            </ActionIcon>
-                          </Group>
-                        </Card>
-                      </Grid.Col>
-                    ))}
-                  </Grid>
-                </Box>
-
-                {/* Image Guides */}
-                <Box>
-                  <Title order={4} mb="md">
-                    🖼️ Hướng dẫn bằng hình ảnh
-                  </Title>
-                  <Grid gutter="md">
-                    {guideImages.map((image) => (
-                      <Grid.Col key={image.id} span={{ base: 12, sm: 6, md: 4 }}>
-                        <Paper shadow="sm" p="md" radius="md" withBorder>
-                          <Image
-                            src={image.src}
-                            alt={image.title}
-                            radius="sm"
-                            mb="sm"
-                          />
-                          <Text size="sm" fw={500} ta="center">
-                            {image.title}
+                <Grid gutter="md">
+                  {tradingPlatforms.map((platformOption) => (
+                    <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 4 }}>
+                      <Card
+                        shadow="sm"
+                        padding="lg"
+                        radius="md"
+                        withBorder
+                        style={{
+                          cursor: platformOption.disabled ? 'not-allowed' : 'pointer',
+                          opacity: platformOption.disabled ? 0.5 : 1,
+                          border: selectedPlatform === platformOption.value 
+                            ? '2px solid var(--mantine-color-blue-6)' 
+                            : undefined,
+                          backgroundColor: selectedPlatform === platformOption.value
+                            ? 'var(--mantine-color-blue-0)'
+                            : platformOption.disabled
+                            ? 'var(--mantine-color-gray-1)'
+                            : undefined,
+                        }}
+                        onClick={() => {
+                          if (!platformOption.disabled) {
+                            setSelectedPlatform(platformOption.value);
+                            setPlatform(platformOption.value);
+                          }
+                        }}
+                      >
+                        <Stack gap="sm" align="center">
+                          <Box
+                            style={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: '50%',
+                              backgroundColor: selectedPlatform === platformOption.value
+                                ? 'var(--mantine-color-blue-6)'
+                                : 'var(--mantine-color-gray-2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {selectedPlatform === platformOption.value && (
+                              <CheckCircle size={30} color="white" />
+                            )}
+                          </Box>
+                          <Text fw={500} ta="center">
+                            {platformOption.label}
                           </Text>
-                        </Paper>
-                      </Grid.Col>
-                    ))}
-                  </Grid>
-                </Box>
+                          {platformOption.disabled && (
+                            <Badge color="gray" variant="light">
+                              Sắp ra mắt
+                            </Badge>
+                          )}
+                          {selectedPlatform === platformOption.value && !platformOption.disabled && (
+                            <Badge color="blue" variant="filled">
+                              Đã chọn
+                            </Badge>
+                          )}
+                        </Stack>
+                      </Card>
+                    </Grid.Col>
+                  ))}
+                </Grid>
+
+                {selectedPlatform && (
+                  <>
+                    <Alert color="blue" radius="md">
+                      <Text size="sm">
+                        Bạn đã chọn sàn <strong>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>. 
+                        Xem hướng dẫn chi tiết bên dưới để tạo tài khoản.
+                      </Text>
+                    </Alert>
+
+                    {/* Guide Content - Changes based on selected platform */}
+                    <Box mt="xl">
+                      <Title order={3} mb="md">
+                        Hướng dẫn tạo tài khoản {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}
+                      </Title>
+
+                      {/* Video Guides */}
+                      <Box mt="xl">
+                        <Title order={4} mb="md">
+                          📹 Video hướng dẫn
+                        </Title>
+                        <Grid gutter="md">
+                          {guideVideos.map((video) => (
+                            <Grid.Col key={video.id} span={{ base: 12, sm: 6 }}>
+                              <Card
+                                shadow="sm"
+                                padding="lg"
+                                radius="md"
+                                withBorder
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => {
+                                  setSelectedVideo(video.url);
+                                  setVideoModalOpen(true);
+                                }}
+                              >
+                                <Card.Section>
+                                  <Image
+                                    src={video.thumbnail}
+                                    height={200}
+                                    alt={video.title}
+                                  />
+                                </Card.Section>
+                                <Group justify="space-between" mt="md" mb="xs">
+                                  <Text fw={500}>{video.title}</Text>
+                                  <ActionIcon variant="light" color="blue">
+                                    <Play size={16} />
+                                  </ActionIcon>
+                                </Group>
+                              </Card>
+                            </Grid.Col>
+                          ))}
+                        </Grid>
+                      </Box>
+
+                      {/* Image Guides */}
+                      <Box mt="xl">
+                        <Title order={4} mb="md">
+                          🖼️ Hướng dẫn bằng hình ảnh
+                        </Title>
+                        <Grid gutter="md">
+                          {guideImages.map((image) => (
+                            <Grid.Col key={image.id} span={{ base: 12, sm: 6, md: 4 }}>
+                              <Paper shadow="sm" p="md" radius="md" withBorder>
+                                <Image
+                                  src={image.src}
+                                  alt={image.title}
+                                  radius="sm"
+                                  mb="sm"
+                                />
+                                <Text size="sm" fw={500} ta="center">
+                                  {image.title}
+                                </Text>
+                              </Paper>
+                            </Grid.Col>
+                          ))}
+                        </Grid>
+                      </Box>
+                    </Box>
+                  </>
+                )}
 
                 <Group justify="flex-end" mt="xl">
-                  <Button onClick={nextStep} size="lg">
+                  <Button 
+                    onClick={nextStep} 
+                    size="lg"
+                    disabled={!selectedPlatform}
+                  >
                     Tiếp theo
                   </Button>
                 </Group>
@@ -173,39 +281,36 @@ export function GetBotTab() {
             </Paper>
           </Stepper.Step>
 
-          {/* Step 2: Kiểm tra tình trạng ID MT5 */}
+          {/* Step 2: Kiểm tra Email */}
           <Stepper.Step
             label="Bước 2"
-            description="Kiểm tra ID"
+            description="Kiểm tra Email"
             allowStepSelect={accountStatus === 'authorized'}
           >
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
               <Stack gap="xl">
                 <Box>
                   <Title order={3} mb="md">
-                    Kiểm tra tình trạng ID MT5
+                    Xác thực Email của bạn
                   </Title>
                   <Text c="dimmed" mb="lg">
-                    Nhập ID tài khoản và chọn sàn giao dịch để kiểm tra tình trạng
+                    Nhập email đã đăng ký với {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label} để kiểm tra tình trạng liên kết
                   </Text>
                 </Box>
 
                 <Stack gap="md">
-                  <Select
-                    label="Chọn sàn giao dịch"
-                    placeholder="Chọn sàn"
-                    data={tradingPlatforms}
-                    value={platform}
-                    onChange={setPlatform}
-                    size="md"
-                    required
-                  />
+                  <Alert color="blue" radius="md">
+                    <Text size="sm">
+                      <strong>Sàn đã chọn:</strong> {tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}
+                    </Text>
+                  </Alert>
 
                   <TextInput
-                    label="ID tài khoản"
-                    placeholder="Nhập ID tài khoản của bạn"
-                    value={accountId}
-                    onChange={(event) => setAccountId(event.currentTarget.value)}
+                    label="Email"
+                    type="email"
+                    placeholder="client@example.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.currentTarget.value)}
                     size="md"
                     required
                   />
@@ -213,7 +318,7 @@ export function GetBotTab() {
                   <Button
                     onClick={checkAccountStatus}
                     loading={accountStatus === 'checking'}
-                    disabled={!accountId || !platform}
+                    disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
                     size="lg"
                     fullWidth
                   >
@@ -221,16 +326,24 @@ export function GetBotTab() {
                   </Button>
                 </Stack>
 
-                {accountStatus === 'authorized' && (
+                {accountStatus === 'authorized' && accountData && (
                   <Alert
                     icon={<CheckCircle size={20} />}
                     title="Xác thực thành công!"
                     color="green"
                     radius="md"
                   >
-                    Tài khoản {accountId} trên sàn{' '}
-                    {tradingPlatforms.find((p) => p.value === platform)?.label} đã được xác thực.
-                    Bạn có thể tiếp tục sang bước tiếp theo.
+                    <Stack gap="xs">
+                      <Text size="sm">
+                        <strong>Client UID:</strong> {accountData.client_uid}
+                      </Text>
+                      <Text size="sm">
+                        <strong>Tài khoản liên kết:</strong> {accountData.accounts.join(', ')}
+                      </Text>
+                      <Text size="sm" mt="xs">
+                        Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
+                      </Text>
+                    </Stack>
                   </Alert>
                 )}
 
@@ -241,8 +354,7 @@ export function GetBotTab() {
                     color="red"
                     radius="md"
                   >
-                    Không thể xác thực tài khoản. Vui lòng kiểm tra lại ID và sàn giao dịch.
-                    Đảm bảo ID bắt đầu với "MT5" để được xác thực (demo mode).
+                    {errorMessage || 'Không thể xác thực email. Vui lòng kiểm tra lại email và sàn giao dịch.'}
                   </Alert>
                 )}
 
@@ -303,7 +415,7 @@ export function GetBotTab() {
                     </Text>
                     
                     <Group gap="xs">
-                      <Badge color="blue">MT5 Compatible</Badge>
+                      <Badge color="blue">{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label} Compatible</Badge>
                       <Badge color="green">Verified</Badge>
                     </Group>
 
