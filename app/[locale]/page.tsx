@@ -7,6 +7,7 @@ import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, B
 import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
+import { LayBotTab } from '@/components/tabs/LayBotTab';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import ExnessApp from '@/components/exness/ExnessApp';
 import { HeroSection } from '@/components/HeroSection';
@@ -164,6 +165,13 @@ export default function HomePage() {
                         fw={activeTab === 'feature-guide' ? 700 : undefined}
                       >
                         {tTabs('featureGuide')}
+                      </Tabs.Tab>
+                      <Tabs.Tab
+                        value="lay-bot"
+                        c={activeTab === 'lay-bot' ? theme.white : undefined}
+                        fw={activeTab === 'lay-bot' ? 700 : undefined}
+                      >
+                        Lấy Bot
                       </Tabs.Tab>
                       <Tabs.Tab
                         value="exness"
@@ -342,6 +350,9 @@ export default function HomePage() {
               <>
                 <Tabs.Panel value="feature-guide">
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
+                </Tabs.Panel>
+                <Tabs.Panel value="lay-bot">
+                  <LayBotTab />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
                   <ExnessApp />
