@@ -66,6 +66,8 @@ export default function HomePage() {
     setIsTransitioning(true);
     setTimeout(() => {
       setShowHero(false);
+      setNavigationSection('learn');
+      setActiveTab('lay-bot');
       setIsTransitioning(false);
     }, 500);
   };
@@ -169,13 +171,6 @@ export default function HomePage() {
                         {tTabs('featureGuide')}
                       </Tabs.Tab>
                       <Tabs.Tab
-                        value="lay-bot"
-                        c={activeTab === 'lay-bot' ? theme.white : undefined}
-                        fw={activeTab === 'lay-bot' ? 700 : undefined}
-                      >
-                        Lấy Bot
-                      </Tabs.Tab>
-                      <Tabs.Tab
                         value="exness"
                         c={activeTab === 'exness' ? theme.white : undefined}
                         fw={activeTab === 'exness' ? 700 : undefined}
@@ -186,6 +181,13 @@ export default function HomePage() {
                   )}
                   {navigationSection === 'learn' && (
                     <>
+                      <Tabs.Tab
+                        value="lay-bot"
+                        c={activeTab === 'lay-bot' ? theme.white : undefined}
+                        fw={activeTab === 'lay-bot' ? 700 : undefined}
+                      >
+                        Lấy Bot
+                      </Tabs.Tab>
                       <Tabs.Tab
                         value="step-by-step"
                         c={activeTab === 'step-by-step' ? theme.white : undefined}
@@ -347,16 +349,14 @@ export default function HomePage() {
         </AppShell.Navbar>
 
         <AppShell.Main style={{
-            backgroundColor: '#000000',}}> 
+          backgroundColor: '#000000',
+        }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             {/* Features Section Tabs */}
             {navigationSection === 'features' && (
               <>
                 <Tabs.Panel value="feature-guide">
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
-                </Tabs.Panel>
-                <Tabs.Panel value="lay-bot">
-                  <GetBotTab />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
                   <ExnessApp />
@@ -369,6 +369,9 @@ export default function HomePage() {
               <>
                 <Tabs.Panel value="step-by-step">
                   <StepByStepTab selectedArticle={selectedArticle} />
+                </Tabs.Panel>
+                <Tabs.Panel value="lay-bot">
+                  <GetBotTab />
                 </Tabs.Panel>
               </>
             )}

@@ -6,8 +6,9 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
-  // Enable static export for Firebase Hosting
-  output: 'export',
+  // Disable static export for Vercel (needed for API routes)
+  // Use 'next build && next export' manually for Firebase if needed
+  // output: 'export',
   images: {
     unoptimized: true
   },

@@ -44,7 +44,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
           </Title>
 
           <Text className={classes.description} mt={15}>
-            Bot mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất!
+            Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất!
           </Text>
 
           <Button
@@ -56,7 +56,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
             rightSection={<ArrowRight size={20} />}
             onClick={onGetStarted}
           >
-            KHÁM PHÁ NGAY
+            LẤY BOT NGAY
           </Button>
           <br />
           <ImageCarousel />

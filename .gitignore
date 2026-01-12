@@ -32,5 +32,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Cloudflare Worker (optional - you can commit this)
-# cloudflare-worker/.wrangler
+thermal-loop-468609-u1-b4ac5453b4ef.json
+.vercel

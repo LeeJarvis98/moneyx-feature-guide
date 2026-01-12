@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run postbuild",
-    "postbuild": "node scripts/postbuild.js",
+    "build": "next build",
+    "build:firebase": "next build && node scripts/postbuild.js",
     "start": "next start",
     "lint": "next lint"
   },
@@ -15,6 +15,7 @@
     "@mantine/hooks": "^7.15.5",
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "googleapis": "^170.0.0",
     "lucide-react": "^0.469.0",
     "next": "^15.1.4",
     "next-intl": "^4.6.1",
