@@ -132,29 +132,26 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         
         <NavLink
           label="Partner Links"
-          leftSection={<Link size={16} color="#307fffff" />}
           active={activeTab === 'links'}
           fw={activeTab === 'links' ? 700 : undefined}
           onClick={() => setActiveTab('links')}
-          color="blue"
+          color="#FFB81C"
         />
         
         <NavLink
           label="Check Affiliation"
-          leftSection={<UserCheck size={16} color="#307fffff" />}
           active={activeTab === 'affiliation'}
           fw={activeTab === 'affiliation' ? 700 : undefined}
           onClick={() => setActiveTab('affiliation')}
-          color="blue"
+          color="#FFB81C"
         />
         
         <NavLink
           label="Client Accounts Report"
-          leftSection={<FileText size={16} color="#307fffff" />}
           active={activeTab === 'reports'}
           fw={activeTab === 'reports' ? 700 : undefined}
           onClick={() => setActiveTab('reports')}
-          color="blue"
+          color="#FFB81C"
         />
       </Stack>
     );
