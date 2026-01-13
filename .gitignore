@@ -34,3 +34,4 @@ next-env.d.ts
 
 thermal-loop-468609-u1-b4ac5453b4ef.json
 .vercel
+.env*.local
