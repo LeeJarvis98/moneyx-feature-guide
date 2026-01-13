@@ -22,8 +22,9 @@ import {
   Modal,
   Table,
   Checkbox,
+  Tabs,
 } from '@mantine/core';
-import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video, Mail, Phone } from 'lucide-react';
 import classes from './GetBotTab.module.css';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
@@ -51,6 +52,8 @@ export function GetBotTab() {
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [grantingLicense, setGrantingLicense] = useState(false);
+  const [userTypeModalOpen, setUserTypeModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>('no-account');
 
   // Function to check account status via API
   const checkAccountStatus = async () => {
@@ -206,7 +209,7 @@ export function GetBotTab() {
       label: 'Exness',
       disabled: false,
       image: '/getbot_section/exness.png',
-      tutorialVideo: 'https://example.com/exness-tutorial',
+      tutorialVideo: 'https://youtu.be/uAdKY9uNtIo?si=RgHExJAThIP4g7d4',
       platformUrl: 'https://one.exnessonelink.com/a/ojl5148a7y',
       feature: 'Hoàn phí $10/lot'
     },
@@ -215,7 +218,7 @@ export function GetBotTab() {
       label: 'Binance',
       disabled: false,
       image: '/getbot_section/binance.png',
-      tutorialVideo: 'https://example.com/binance-tutorial',
+      tutorialVideo: 'https://youtu.be/WkYlawXn9HE?si=E7ej1Td9Q2IKql4l',
       platformUrl: 'https://www.binance.com/',
       feature: ''
     },
@@ -316,7 +319,7 @@ export function GetBotTab() {
                   </Box>
                   <Button
                     c="black"
-                    onClick={nextStep}
+                    onClick={() => setUserTypeModalOpen(true)}
                     size="lg"
                     disabled={!selectedPlatform}
                     className={classes.glowButton}
@@ -365,40 +368,6 @@ export function GetBotTab() {
                             </Badge>
                           )}
                         </div>
-
-                        {!platformOption.disabled && (hoveredPlatform === platformOption.value || selectedPlatform === platformOption.value) && (
-                          <div className={`${classes.cardContent} ${classes.buttonGroup}`}>
-                            <Button
-                              variant="white"
-                              color="dark"
-                              leftSection={<Video size={18} />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedVideo(platformOption.tutorialVideo);
-                                setVideoModalOpen(true);
-                              }}
-                              fullWidth
-                              className={classes.glowButton}
-                              size="xs"
-                            >
-                              Hướng dẫn
-                            </Button>
-                            <Button
-                              variant="light"
-                              color="green"
-                              leftSection={<ExternalLink size={18} />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(platformOption.platformUrl, '_blank');
-                              }}
-                              fullWidth
-                              className={classes.glowButton}
-                              size="xs"
-                            >
-                              Đăng ký
-                            </Button>
-                          </div>
-                        )}
                       </Paper>
                     </Grid.Col>
                   ))}
@@ -693,6 +662,230 @@ export function GetBotTab() {
           </Stepper.Step>
         </Stepper>
       </Stack>
+
+      {/* User Type Selection Modal */}
+      <Modal
+        opened={userTypeModalOpen}
+        onClose={() => setUserTypeModalOpen(false)}
+        size="xl"
+        title="Chọn tình trạng tài khoản của bạn"
+        centered
+      >
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List grow>
+            <Tabs.Tab value="no-account">
+              Chưa có tài khoản
+            </Tabs.Tab>
+            <Tabs.Tab value="has-account-no-link">
+              Đã có tài khoản (chưa liên kết)
+            </Tabs.Tab>
+            <Tabs.Tab value="has-account-linked">
+              Đã có tài khoản (đã liên kết)
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="no-account" pt="xl">
+            <Stack gap="xl">
+              <Alert color="blue" title="Người dùng chưa có tài khoản">
+                <Text size="sm">
+                  Bạn chưa có tài khoản trên sàn <strong>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>. 
+                  Vui lòng xem video hướng dẫn bên dưới và đăng ký tài khoản để tiếp tục.
+                </Text>
+              </Alert>
+
+              {selectedPlatform && (() => {
+                const platform = tradingPlatforms.find((p) => p.value === selectedPlatform);
+                return platform ? (
+                  <>
+
+                    {/* Video Section */}
+                    <Box>
+                      <Group gap="xs" mb="md">
+                        <Video size={24} color="#FFB81C" />
+                        <Title order={4}>Video hướng dẫn đăng ký tài khoản</Title>
+                      </Group>
+                      
+                      <Paper 
+                        withBorder 
+                        radius="md" 
+                        style={{ 
+                          overflow: 'hidden',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                        }}
+                      >
+                        <Box style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                          <iframe
+                            src={platform.tutorialVideo.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/').split('?')[0]}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              border: 'none',
+                            }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={`Hướng dẫn đăng ký ${platform.label}`}
+                          />
+                        </Box>
+                      </Paper>
+
+                      <Text size="xs" c="dimmed" mt="xs" ta="center">
+                        💡 Xem kỹ video để đăng ký tài khoản đúng cách và nhận được ưu đãi tốt nhất
+                      </Text>
+                    </Box>
+
+                    {/* CTA Section */}
+                    <Paper
+                      withBorder
+                      p="xl"
+                      radius="md"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                        borderColor: 'rgba(34, 197, 94, 0.3)',
+                      }}
+                    >
+                      <Stack gap="md" align="center">
+                        <Box ta="center">
+                          <Title order={4} mb="xs">
+                            Sẵn sàng bắt đầu? 🚀
+                          </Title>
+                          <Text size="sm" c="dimmed">
+                            Đăng ký ngay để nhận Bot giao dịch và các ưu đãi đặc biệt
+                          </Text>
+                        </Box>
+
+                        <Button
+                          size="xl"
+                          variant="gradient"
+                          gradient={{ from: 'green', to: 'teal', deg: 45 }}
+                          leftSection={<ExternalLink size={20} />}
+                          onClick={() => window.open(platform.platformUrl, '_blank')}
+                          className={classes.glowButton}
+                          style={{ 
+                            minWidth: '300px',
+                            height: '60px',
+                            fontSize: '18px',
+                          }}
+                        >
+                          Đăng ký tài khoản {platform.label}
+                        </Button>
+
+                        <Text size="xs" c="dimmed" ta="center">
+                          Sau khi đăng ký thành công, quay lại đây và chọn tab "Đã có tài khoản (đã liên kết)" để tiếp tục
+                        </Text>
+                      </Stack>
+                    </Paper>
+                  </>
+                ) : (
+                  <Alert color="red" title="Lỗi">
+                    <Text size="sm">
+                      Vui lòng chọn một sàn giao dịch ở Bước 1 trước khi tiếp tục.
+                    </Text>
+                  </Alert>
+                );
+              })()}
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="has-account-no-link" pt="xl">
+            <Stack gap="lg">
+              <Alert color="orange" title="Người dùng đã có tài khoản (chưa liên kết với Tradi)">
+                <Text size="sm" mb="md">
+                  Bạn đã có tài khoản trên sàn <strong>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong> nhưng 
+                  chưa liên kết với Tradi. Vui lòng liên hệ với chúng tôi để được hỗ trợ liên kết tài khoản.
+                </Text>
+              </Alert>
+
+              <Paper withBorder p="xl" radius="md">
+                <Stack gap="md">
+                  <Title order={4}>Liên hệ hỗ trợ</Title>
+                  
+                  <Group gap="xl">
+                    <Group gap="xs">
+                      <Mail size={20} />
+                      <Box>
+                        <Text size="xs" c="dimmed">Email</Text>
+                        <Text size="sm" fw={500}>support@vnclc.com</Text>
+                      </Box>
+                    </Group>
+                    
+                    <Group gap="xs">
+                      <Phone size={20} />
+                      <Box>
+                        <Text size="xs" c="dimmed">Hotline</Text>
+                        <Text size="sm" fw={500}>+84 123 456 789</Text>
+                      </Box>
+                    </Group>
+                  </Group>
+
+                  <Button
+                    variant="filled"
+                    color="orange"
+                    leftSection={<ExternalLink size={18} />}
+                    onClick={() => {
+                      // Link will be attached in the future
+                      alert('Tính năng này sẽ được cập nhật trong tương lai');
+                    }}
+                    className={classes.glowButton}
+                    mt="md"
+                  >
+                    Yêu cầu liên kết tài khoản
+                  </Button>
+                </Stack>
+              </Paper>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="has-account-linked" pt="xl">
+            <Stack gap="lg">
+              <Alert color="green" title="Người dùng đã có tài khoản (đã liên kết với Tradi)" icon={<CheckCircle size={20} />}>
+                <Text size="sm">
+                  Tuyệt vời! Tài khoản của bạn đã được liên kết với Tradi. 
+                  Bạn có thể tiếp tục sang bước 2 để kiểm tra email và nhận bản quyền Bot.
+                </Text>
+              </Alert>
+
+              <Paper withBorder p="xl" radius="md">
+                <Stack gap="md" align="center">
+                  <Box
+                    style={{ 
+                      width: 80, 
+                      height: 80, 
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--mantine-color-green-1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <CheckCircle size={40} color="var(--mantine-color-green-7)" />
+                  </Box>
+                  
+                  <Title order={4} ta="center">Tài khoản đã sẵn sàng</Title>
+                  <Text size="sm" c="dimmed" ta="center">
+                    Nhấn nút bên dưới để chuyển sang bước tiếp theo và hoàn tất việc lấy Bot.
+                  </Text>
+
+                  <Button
+                    c="black"
+                    size="lg"
+                    onClick={() => {
+                      setUserTypeModalOpen(false);
+                      nextStep();
+                    }}
+                    className={classes.glowButton}
+                    mt="md"
+                  >
+                    Tiếp theo
+                  </Button>
+                </Stack>
+              </Paper>
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
+      </Modal>
 
       {/* Video Modal */}
       <Modal
