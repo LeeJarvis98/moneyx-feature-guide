@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { exnessApi } from '@/lib/exness/api';
 import type { ExnessApiError } from '@/types/exness';
-import styles from './ExnessLogin.module.css';
+import styles from './PartnerLogin.module.css';
 
-interface ExnessLoginProps {
+interface PartnerLoginProps {
   onLoginSuccess: () => void;
 }
 
-export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
+export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,9 +43,9 @@ export default function ExnessLogin({ onLoginSuccess }: ExnessLoginProps) {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h2 className={styles.title}>Exness Partner Login</h2>
+        <h2 className={styles.title}>Partner Login</h2>
         <p className={styles.subtitle}>
-          Login to access your affiliate dashboard
+          Login to access your partner dashboard
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>

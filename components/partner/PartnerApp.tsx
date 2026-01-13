@@ -1,12 +1,12 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import ExnessLogin from './ExnessLogin';
-import ExnessPartnerDashboard from './ExnessPartnerDashboard';
+import PartnerLogin from './PartnerLogin';
+import PartnerDashboard from './PartnerDashboard';
 import { exnessApi } from '@/lib/exness/api';
-import styles from './ExnessApp.module.css';
+import styles from './PartnerApp.module.css';
 
-export default function ExnessApp() {
+export default function PartnerApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -42,9 +42,9 @@ export default function ExnessApp() {
   return (
     <>
       {isAuthenticated ? (
-        <ExnessPartnerDashboard />
+        <PartnerDashboard onLogout={() => setIsAuthenticated(false)} />
       ) : (
-        <ExnessLogin onLoginSuccess={() => setIsAuthenticated(true)} />
+        <PartnerLogin onLoginSuccess={() => setIsAuthenticated(true)} />
       )}
     </>
   );

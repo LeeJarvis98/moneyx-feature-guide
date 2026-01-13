@@ -10,9 +10,13 @@ import type {
   SubPublisher,
   TrafficSource,
 } from '@/types/exness';
-import styles from './ExnessPartnerDashboard.module.css';
+import styles from './PartnerDashboard.module.css';
 
-export default function ExnessPartnerDashboard() {
+interface PartnerDashboardProps {
+  onLogout?: () => void;
+}
+
+export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'wallet' | 'subpublishers' | 'traffic'>('links');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,17 +121,23 @@ export default function ExnessPartnerDashboard() {
   const handleLogout = async () => {
     try {
       await exnessApi.logout();
-      window.location.reload();
+      // Call parent callback to return to login screen
+      if (onLogout) {
+        onLogout();
+      }
     } catch (err) {
       console.error('Logout error:', err);
-      window.location.reload();
+      // Still call logout callback even if API call fails
+      if (onLogout) {
+        onLogout();
+      }
     }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Exness Partner Dashboard</h1>
+        <h1 className={styles.title}>Partner Dashboard</h1>
         <button onClick={handleLogout} className={styles.logoutButton}>
           Logout
         </button>

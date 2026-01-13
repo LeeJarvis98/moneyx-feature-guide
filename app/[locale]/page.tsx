@@ -9,7 +9,7 @@ import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import ExnessApp from '@/components/exness/ExnessApp';
+import PartnerApp from '@/components/partner/PartnerApp';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useTranslations } from 'next-intl';
@@ -175,7 +175,7 @@ export default function HomePage() {
                         c={activeTab === 'exness' ? theme.white : undefined}
                         fw={activeTab === 'exness' ? 700 : undefined}
                       >
-                        Exness Partner
+                        Partner
                       </Tabs.Tab>
                     </>
                   )}
@@ -359,7 +359,7 @@ export default function HomePage() {
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
-                  <ExnessApp />
+                  <PartnerApp />
                 </Tabs.Panel>
               </>
             )}
