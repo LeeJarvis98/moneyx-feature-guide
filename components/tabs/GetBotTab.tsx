@@ -130,9 +130,30 @@ export function GetBotTab() {
     }
   };
 
-  const handleDownloadBot = () => {
-    // This will be replaced with actual download logic
-    alert('Bot file download will be implemented here. Please provide the bot file.');
+  const handleDownloadBot = async () => {
+    try {
+      const botUrl = '/api/download-bot';
+      
+      // Try to open the file directly (will trigger MT5 if installed)
+      const link = document.createElement('a');
+      link.href = botUrl;
+      link.target = '_blank';
+      
+      // Try to open in new tab first
+      const opened = window.open(botUrl, '_blank');
+      
+      // If popup was blocked or failed to open, fallback to download
+      if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+        // Fallback: trigger download
+        link.download = 'VNCLC [v1.3].ex5';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Error downloading bot:', error);
+      alert('Không thể tải bot. Vui lòng thử lại sau.');
+    }
   };
 
   // Grant license for newly selected unlicensed accounts
