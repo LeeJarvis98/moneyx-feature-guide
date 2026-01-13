@@ -11,10 +11,8 @@
   TrafficSource,
 } from '@/types/exness';
 
-// Use Firebase Cloud Function as proxy
-const PROXY_URL = typeof window !== 'undefined' 
-  ? 'https://us-central1-vnclc-2d2d1.cloudfunctions.net/exnessProxy'
-  : '';
+// Use Next.js API routes
+const API_BASE = '/api/exness';
 
 class ExnessApiClient {
   private token: string | null = null;
@@ -59,7 +57,7 @@ class ExnessApiClient {
         ...(token && { token }),
       });
       
-      const response = await fetch(`${PROXY_URL}?${params.toString()}`, {
+      const response = await fetch(`${API_BASE}/partner?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -78,8 +76,8 @@ class ExnessApiClient {
       return response.json();
     }
 
-    // For POST, PATCH, DELETE requests
-    const response = await fetch(PROXY_URL, {
+    // For POST, PATCH, DELETE requests to partner endpoints
+    const response = await fetch(`${API_BASE}/partner`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,7 +86,7 @@ class ExnessApiClient {
         endpoint,
         method,
         token: token || undefined,
-        data: options.body || undefined,
+        data: options.body ? JSON.parse(options.body as string) : undefined,
       }),
     });
 
@@ -108,16 +106,30 @@ class ExnessApiClient {
 
   // Login (POST /api/v2/auth/)
   async login(credentials: ExnessAuthCredentials): Promise<ExnessAuthResponse> {
-    const response = await this.request<ExnessAuthResponse>('/api/v2/auth/', {
+    const response = await fetch(`${API_BASE}/login`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(credentials),
     });
 
-    if (response.token) {
-      this.setToken(response.token);
+    if (!response.ok) {
+      const error: ExnessApiError = await response.json().catch(() => ({
+        error: 'Unknown Error',
+        message: response.statusText,
+        status: response.status,
+      }));
+      throw error;
     }
 
-    return response;
+    const data = await response.json();
+
+    if (data.token) {
+      this.setToken(data.token);
+    }
+
+    return data;
   }
 
   // Get token info (GET /api/v2/auth/token/)
@@ -128,7 +140,16 @@ class ExnessApiClient {
   // Logout (DELETE /api/v2/auth/token/)
   async logout(): Promise<void> {
     try {
-      await this.request('/api/v2/auth/token/', { method: 'DELETE' });
+      const token = this.getToken();
+      if (token) {
+        await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+      }
     } finally {
       this.clearToken();
     }

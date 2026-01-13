@@ -36,7 +36,7 @@ export default function HomePage() {
     setNavigationSection(value as NavigationSection);
     // Set default tab for each section
     if (value === 'features') {
-      setActiveTab('feature-guide');
+      setActiveTab('exness');
     } else if (value === 'learn') {
       setActiveTab('step-by-step');
     }
@@ -163,13 +163,13 @@ export default function HomePage() {
                 <Tabs.List>
                   {navigationSection === 'features' && (
                     <>
-                      <Tabs.Tab
+                      {/* <Tabs.Tab
                         value="feature-guide"
                         c={activeTab === 'feature-guide' ? theme.white : undefined}
                         fw={activeTab === 'feature-guide' ? 700 : undefined}
                       >
                         {tTabs('featureGuide')}
-                      </Tabs.Tab>
+                      </Tabs.Tab> */}
                       <Tabs.Tab
                         value="exness"
                         c={activeTab === 'exness' ? theme.white : undefined}
