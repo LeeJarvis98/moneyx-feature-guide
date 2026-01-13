@@ -6,9 +6,7 @@
   PartnerLinksResponse,
   AffiliationRequest,
   AffiliationResponse,
-  CryptoWalletInfo,
-  SubPublisher,
-  TrafficSource,
+  ClientAccountsReportResponse,
 } from '@/types/exness';
 
 // Use Next.js API routes
@@ -165,11 +163,6 @@ class ExnessApiClient {
     });
   }
 
-  // Get crypto wallet info (GET /api/partner/crypto-wallet/info/)
-  async getCryptoWalletInfo(): Promise<CryptoWalletInfo> {
-    return this.request('/api/partner/crypto-wallet/info/', { method: 'GET' });
-  }
-
   // Get default link (GET /api/partner/default_link/)
   async getDefaultLink(): Promise<PartnerLink | null> {
     const response = await this.getPartnerLinks();
@@ -181,61 +174,9 @@ class ExnessApiClient {
     return this.request('/api/partner/links/', { method: 'GET' });
   }
 
-  // Get sub-publishers list (GET /api/partner/sub_publisher/list)
-  async getSubPublishers(params?: Record<string, string>): Promise<SubPublisher[]> {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : '';
-    return this.request(`/api/partner/sub_publisher/list${queryString}`, { method: 'GET' });
-  }
-
-  // Get sub-publishers summary (GET /api/partner/sub_publisher/summary)
-  async getSubPublishersSummary(): Promise<any> {
-    return this.request('/api/partner/sub_publisher/summary', { method: 'GET' });
-  }
-
-  // Block sub-publisher (POST /api/partner/sub_publisher/{sub_id}/block)
-  async blockSubPublisher(subId: string): Promise<void> {
-    return this.request(`/api/partner/sub_publisher/${subId}/block`, { method: 'POST' });
-  }
-
-  // Get traffic sources (GET /api/partner/traffic_sources/)
-  async getTrafficSources(): Promise<TrafficSource[]> {
-    return this.request('/api/partner/traffic_sources/', { method: 'GET' });
-  }
-
-  // Add traffic source (POST /api/partner/traffic_sources/)
-  async addTrafficSource(data: any): Promise<TrafficSource> {
-    return this.request('/api/partner/traffic_sources/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // Get traffic source validator (GET /api/partner/traffic_sources/validator/)
-  async getTrafficSourceValidator(): Promise<any> {
-    return this.request('/api/partner/traffic_sources/validator/', { method: 'GET' });
-  }
-
-  // Get specific traffic source (GET /api/partner/traffic_sources/{uid})
-  async getTrafficSource(uid: string): Promise<TrafficSource> {
-    return this.request(`/api/partner/traffic_sources/${uid}`, { method: 'GET' });
-  }
-
-  // Update traffic source (PATCH /api/partner/traffic_sources/{uid})
-  async updateTrafficSource(uid: string, data: any): Promise<TrafficSource> {
-    return this.request(`/api/partner/traffic_sources/${uid}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // Delete traffic source (DELETE /api/partner/traffic_sources/{uid})
-  async deleteTrafficSource(uid: string): Promise<void> {
-    return this.request(`/api/partner/traffic_sources/${uid}`, { method: 'DELETE' });
-  }
-
-  // Verify traffic source (POST /api/partner/traffic_sources/{uid}/verify)
-  async verifyTrafficSource(uid: string): Promise<TrafficSource> {
-    return this.request(`/api/partner/traffic_sources/${uid}/verify`, { method: 'POST' });
+  // Get client accounts report (GET /api/reports/clients/accounts/)
+  async getClientAccountsReport(): Promise<ClientAccountsReportResponse> {
+    return this.request('/api/reports/clients/accounts/', { method: 'GET' });
   }
 }
 

@@ -6,9 +6,7 @@ import type {
   ExnessApiError,
   PartnerLink,
   AffiliationResponse,
-  CryptoWalletInfo,
-  SubPublisher,
-  TrafficSource,
+  ClientAccountsReportResponse,
 } from '@/types/exness';
 import styles from './PartnerDashboard.module.css';
 
@@ -16,8 +14,24 @@ interface PartnerDashboardProps {
   onLogout?: () => void;
 }
 
+// Helper function for consistent date formatting
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  
+  // Use ISO date format for consistency (YYYY-MM-DD)
+  return date.toISOString().split('T')[0];
+};
+
+// Helper function to safely format numbers
+const formatNumber = (value: any, decimals: number = 2): string => {
+  const num = Number(value);
+  return isNaN(num) ? '0.00' : num.toFixed(decimals);
+};
+
 export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'wallet' | 'subpublishers' | 'traffic'>('links');
+  const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'reports'>('links');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,14 +43,8 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
   const [affiliationEmail, setAffiliationEmail] = useState('');
   const [affiliationResult, setAffiliationResult] = useState<AffiliationResponse | null>(null);
 
-  // Wallet state
-  const [walletInfo, setWalletInfo] = useState<CryptoWalletInfo | null>(null);
-
-  // Sub-publishers state
-  const [subPublishers, setSubPublishers] = useState<SubPublisher[]>([]);
-
-  // Traffic sources state
-  const [trafficSources, setTrafficSources] = useState<TrafficSource[]>([]);
+  // Client accounts report state
+  const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
 
   // Fetch partner links
   const fetchPartnerLinks = async () => {
@@ -72,46 +80,16 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
     }
   };
 
-  // Fetch crypto wallet info
-  const fetchWalletInfo = async () => {
+  // Fetch client accounts report
+  const fetchClientAccountsReport = async () => {
     setLoading(true);
     setError(null);
     try {
-      const info = await exnessApi.getCryptoWalletInfo();
-      setWalletInfo(info);
+      const report = await exnessApi.getClientAccountsReport();
+      setClientAccountsReport(report);
     } catch (err) {
       const error = err as ExnessApiError;
-      setError(error.message || 'Failed to fetch wallet info');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch sub-publishers
-  const fetchSubPublishers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const publishers = await exnessApi.getSubPublishers();
-      setSubPublishers(publishers);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Failed to fetch sub-publishers');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch traffic sources
-  const fetchTrafficSources = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const sources = await exnessApi.getTrafficSources();
-      setTrafficSources(sources);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Failed to fetch traffic sources');
+      setError(error.message || 'Failed to fetch client accounts report');
     } finally {
       setLoading(false);
     }
@@ -158,22 +136,10 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
           Check Affiliation
         </button>
         <button
-          className={` ${activeTab === 'wallet' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('wallet')}
+          className={` ${activeTab === 'reports' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('reports')}
         >
-          Crypto Wallet
-        </button>
-        <button
-          className={` ${activeTab === 'subpublishers' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('subpublishers')}
-        >
-          Sub-Publishers
-        </button>
-        <button
-          className={` ${activeTab === 'traffic' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('traffic')}
-        >
-          Traffic Sources
+          Client Accounts Report
         </button>
       </div>
 
@@ -285,126 +251,94 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
           </div>
         )}
 
-        {/* Crypto Wallet Tab */}
-        {activeTab === 'wallet' && (
+        {/* Client Accounts Report Tab */}
+        {activeTab === 'reports' && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>Crypto Wallet Information</h2>
+              <h2>Client Accounts Report</h2>
               <button
-                onClick={fetchWalletInfo}
+                onClick={fetchClientAccountsReport}
                 disabled={loading}
                 className={styles.fetchButton}
               >
-                {loading ? 'Loading...' : 'Fetch Wallet Info'}
+                {loading ? 'Loading...' : 'Fetch Report'}
               </button>
             </div>
 
-            {walletInfo && (
-              <div className={styles.walletInfo}>
-                <div className={` ${walletInfo.available ? styles.available : styles.unavailable}`}>
-                  {walletInfo.available ? 'Available' : 'Not Available'}
-                </div>
-                {walletInfo.currencies && walletInfo.currencies.length > 0 && (
-                  <div>
-                    <h3>Supported Currencies</h3>
-                    <ul className={styles.currencyList}>
-                      {walletInfo.currencies.map((currency) => (
-                        <li key={currency}>{currency}</li>
-                      ))}
-                    </ul>
+            {clientAccountsReport && (
+              <>
+                {/* Summary Cards */}
+                <div className={styles.summaryCards}>
+                  <div className={styles.summaryCard}>
+                    <h4>Total Accounts</h4>
+                    <p className={styles.summaryValue}>{clientAccountsReport.totals.count}</p>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                  <div className={styles.summaryCard}>
+                    <h4>Total Clients</h4>
+                    <p className={styles.summaryValue}>{clientAccountsReport.totals.clients_count}</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Volume (Lots)</h4>
+                    <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.volume_lots, 2)}</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Volume (MLN USD)</h4>
+                    <p className={styles.summaryValue}>${formatNumber(clientAccountsReport.totals.volume_mln_usd, 2)}M</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Total Reward</h4>
+                    <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.reward, 2)}</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Total Reward (USD)</h4>
+                    <p className={styles.summaryValue}>${formatNumber(clientAccountsReport.totals.reward_usd, 2)}</p>
+                  </div>
+                </div>
 
-        {/* Sub-Publishers Tab */}
-        {activeTab === 'subpublishers' && (
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Sub-Publishers</h2>
-              <button
-                onClick={fetchSubPublishers}
-                disabled={loading}
-                className={styles.fetchButton}
-              >
-                {loading ? 'Loading...' : 'Fetch Sub-Publishers'}
-              </button>
-            </div>
-
-            {subPublishers.length > 0 && (
-              <div className={styles.table}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Status</th>
-                      <th>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subPublishers.map((publisher) => (
-                      <tr key={publisher.id}>
-                        <td>{publisher.name}</td>
-                        <td>{publisher.email}</td>
-                        <td>
-                          <span className={` ${styles[publisher.status]}`}>
-                            {publisher.status}
-                          </span>
-                        </td>
-                        <td>{new Date(publisher.created_at).toLocaleDateString()}</td>
+                {/* Client Accounts Table */}
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Client UID</th>
+                        <th>Client Account</th>
+                        <th>Account Type</th>
+                        <th>Country</th>
+                        <th>Platform</th>
+                        <th>Created</th>
+                        <th>Last Trade</th>
+                        <th>Volume (Lots)</th>
+                        <th>Volume (MLN USD)</th>
+                        <th>Reward</th>
+                        <th>Reward (USD)</th>
+                        <th>Partner Account</th>
+                        <th>Comment</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Traffic Sources Tab */}
-        {activeTab === 'traffic' && (
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Traffic Sources</h2>
-              <button
-                onClick={fetchTrafficSources}
-                disabled={loading}
-                className={styles.fetchButton}
-              >
-                {loading ? 'Loading...' : 'Fetch Traffic Sources'}
-              </button>
-            </div>
-
-            {trafficSources.length > 0 && (
-              <div className={styles.table}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {trafficSources.map((source) => (
-                      <tr key={source.uid}>
-                        <td>{source.name}</td>
-                        <td>{source.type}</td>
-                        <td>
-                          <span className={` ${styles[source.status]}`}>
-                            {source.status}
-                          </span>
-                        </td>
-                        <td>{new Date(source.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {clientAccountsReport.data.map((account) => (
+                        <tr key={account.id}>
+                          <td>{account.id}</td>
+                          <td>{account.client_uid}</td>
+                          <td>{account.client_account}</td>
+                          <td>{account.client_account_type}</td>
+                          <td>{account.client_country}</td>
+                          <td>{account.platform}</td>
+                          <td suppressHydrationWarning>{formatDate(account.client_account_created)}</td>
+                          <td suppressHydrationWarning>{formatDate(account.client_account_last_trade)}</td>
+                          <td>{formatNumber(account.volume_lots, 2)}</td>
+                          <td>${formatNumber(account.volume_mln_usd, 4)}M</td>
+                          <td>{formatNumber(account.reward, 2)}</td>
+                          <td>${formatNumber(account.reward_usd, 2)}</td>
+                          <td>{account.partner_account}</td>
+                          <td>{account.comment || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         )}

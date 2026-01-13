@@ -35,22 +35,6 @@ export interface PartnerLinksResponse {
   total: number;
 }
 
-export interface SubPublisher {
-  id: string;
-  name: string;
-  email: string;
-  status: 'active' | 'blocked';
-  created_at: string;
-}
-
-export interface TrafficSource {
-  uid: string;
-  name: string;
-  type: string;
-  status: 'verified' | 'pending' | 'rejected';
-  created_at: string;
-}
-
 export interface AffiliationRequest {
   email: string;
 }
@@ -61,7 +45,38 @@ export interface AffiliationResponse {
   client_uid: string;
 }
 
-export interface CryptoWalletInfo {
-  available: boolean;
-  currencies?: string[];
+// Client Accounts Report Types
+export interface ClientAccount {
+  id: number;
+  partner_account: string;
+  partner_account_name: string;
+  partner_account_currency: string;
+  partner_code: string;
+  client_uid: string;
+  client_account: string;
+  client_account_type: string;
+  client_country: string;
+  platform: string;
+  client_account_created: string; // ISO date string
+  client_account_last_trade: string; // ISO date string
+  volume_lots: number;
+  volume_mln_usd: number;
+  reward: number;
+  reward_usd: number;
+  comment: string;
+}
+
+export interface ClientAccountsReportTotals {
+  count: number;
+  clients_count: number;
+  volume_mln_usd: number;
+  volume_lots: number;
+  reward: number;
+  reward_usd: number;
+  partner_account_currency: string[];
+}
+
+export interface ClientAccountsReportResponse {
+  data: ClientAccount[];
+  totals: ClientAccountsReportTotals;
 }
