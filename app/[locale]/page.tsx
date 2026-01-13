@@ -25,6 +25,7 @@ export default function HomePage() {
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
   const [activeTab, setActiveTab] = useState<string | null>('step-by-step');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
+  const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
   const theme = useMantineTheme();
   const t = useTranslations('common');
@@ -54,7 +55,10 @@ export default function HomePage() {
   const shouldShowNavbar = navigationSection === 'learn' && activeTab === 'step-by-step';
 
   // Determine if aside should be shown
-  const shouldShowAside = (navigationSection === 'features' && activeTab === 'feature-guide');
+  const shouldShowAside = (
+    (navigationSection === 'features' && activeTab === 'feature-guide' && featureGuideAside !== null) ||
+    (navigationSection === 'features' && activeTab === 'exness' && partnerAside !== null)
+  );
 
   // Handle loading completion
   const handleLoadingComplete = () => {
@@ -359,7 +363,7 @@ export default function HomePage() {
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
-                  <PartnerApp />
+                  <PartnerApp onAsideContentChange={setPartnerAside} />
                 </Tabs.Panel>
               </>
             )}
@@ -381,6 +385,9 @@ export default function HomePage() {
         <AppShell.Aside p="md">
           {navigationSection === 'features' && activeTab === 'feature-guide' && (
             featureGuideAside
+          )}
+          {navigationSection === 'features' && activeTab === 'exness' && (
+            partnerAside
           )}
         </AppShell.Aside>
 

@@ -6,7 +6,11 @@ import PartnerDashboard from './PartnerDashboard';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
-export default function PartnerApp() {
+interface PartnerAppProps {
+  onAsideContentChange?: (content: React.ReactNode) => void;
+}
+
+export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -31,6 +35,20 @@ export default function PartnerApp() {
     checkAuth();
   }, []);
 
+  // Clear aside content when not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && onAsideContentChange) {
+      onAsideContentChange(null);
+    }
+  }, [isAuthenticated, onAsideContentChange]);
+
+  // Clear aside content when checking completes and user is not authenticated
+  useEffect(() => {
+    if (!checking && !isAuthenticated && onAsideContentChange) {
+      onAsideContentChange(null);
+    }
+  }, [checking, isAuthenticated, onAsideContentChange]);
+
   if (checking) {
     return (
       <div className={styles.checkingAuth}>
@@ -42,7 +60,10 @@ export default function PartnerApp() {
   return (
     <>
       {isAuthenticated ? (
-        <PartnerDashboard onLogout={() => setIsAuthenticated(false)} />
+        <PartnerDashboard 
+          onLogout={() => setIsAuthenticated(false)} 
+          onAsideContentChange={onAsideContentChange}
+        />
       ) : (
         <PartnerLogin onLoginSuccess={() => setIsAuthenticated(true)} />
       )}

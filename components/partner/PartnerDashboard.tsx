@@ -1,6 +1,8 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { NavLink, Stack } from '@mantine/core';
+import { Link, UserCheck, FileText } from 'lucide-react';
 import { exnessApi } from '@/lib/exness/api';
 import type {
   ExnessApiError,
@@ -12,6 +14,7 @@ import styles from './PartnerDashboard.module.css';
 
 interface PartnerDashboardProps {
   onLogout?: () => void;
+  onAsideContentChange?: (content: React.ReactNode) => void;
 }
 
 // Helper function for consistent date formatting
@@ -30,7 +33,7 @@ const formatNumber = (value: any, decimals: number = 2): string => {
   return isNaN(num) ? '0.00' : num.toFixed(decimals);
 };
 
-export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
+export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'reports'>('links');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,13 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
 
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
+
+  // Update aside content when tab or data changes
+  useEffect(() => {
+    if (onAsideContentChange) {
+      onAsideContentChange(renderAsideContent());
+    }
+  }, [activeTab, partnerLinks, defaultLink, affiliationResult, clientAccountsReport, loading, error, affiliationEmail]);
 
   // Fetch partner links
   const fetchPartnerLinks = async () => {
@@ -112,34 +122,50 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
     }
   };
 
+  // Render aside content with navigation buttons
+  const renderAsideContent = () => {
+    return (
+      <Stack gap="xs" style={{ height: '100%' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+          Partner Options
+        </h2>
+        
+        <NavLink
+          label="Partner Links"
+          leftSection={<Link size={16} color="#307fffff" />}
+          active={activeTab === 'links'}
+          fw={activeTab === 'links' ? 700 : undefined}
+          onClick={() => setActiveTab('links')}
+          color="blue"
+        />
+        
+        <NavLink
+          label="Check Affiliation"
+          leftSection={<UserCheck size={16} color="#307fffff" />}
+          active={activeTab === 'affiliation'}
+          fw={activeTab === 'affiliation' ? 700 : undefined}
+          onClick={() => setActiveTab('affiliation')}
+          color="blue"
+        />
+        
+        <NavLink
+          label="Client Accounts Report"
+          leftSection={<FileText size={16} color="#307fffff" />}
+          active={activeTab === 'reports'}
+          fw={activeTab === 'reports' ? 700 : undefined}
+          onClick={() => setActiveTab('reports')}
+          color="blue"
+        />
+      </Stack>
+    );
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Partner Dashboard</h1>
         <button onClick={handleLogout} className={styles.logoutButton}>
           Logout
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className={styles.tabs}>
-        <button
-          className={` ${activeTab === 'links' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('links')}
-        >
-          Partner Links
-        </button>
-        <button
-          className={` ${activeTab === 'affiliation' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('affiliation')}
-        >
-          Check Affiliation
-        </button>
-        <button
-          className={` ${activeTab === 'reports' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('reports')}
-        >
-          Client Accounts Report
         </button>
       </div>
 
@@ -150,7 +176,7 @@ export default function PartnerDashboard({ onLogout }: PartnerDashboardProps) {
         </div>
       )}
 
-      {/* Content Area */}
+      {/* Main Content Area */}
       <div className={styles.content}>
         {/* Partner Links Tab */}
         {activeTab === 'links' && (
