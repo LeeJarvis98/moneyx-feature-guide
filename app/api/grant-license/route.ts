@@ -59,7 +59,15 @@ export async function POST(request: NextRequest) {
 
       const sheets = google.sheets({ version: 'v4', auth });
 
-      const timestamp = new Date().toISOString();
+      // Format timestamp as dd.mm.yyyy hh:mm:ss
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timestamp = `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
 
       // === WRITE TO FIRST SHEET (Simple format - Account ID only in column B) ===
       console.log('[GRANT] Writing to first sheet (simple format)...');
