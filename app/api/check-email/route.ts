@@ -1,9 +1,8 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { SHARED_SHEET_ID, getPartnerFromRequest } from '@/lib/partners';
 
-const SHEET_ID = '10pyG095zn4Kb2yIXHqI4-INzlUpyvqFcEiwh1qgtwgI';
 const RANGE = 'B:B'; // Column B (will use the first sheet)
-const NGROK_API_URL = 'https://rainbowy-clarine-presumingly.ngrok-free.dev/api/lookup';
 
 // Service account credentials
 const SERVICE_ACCOUNT = {
@@ -22,6 +21,10 @@ const SERVICE_ACCOUNT = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get partner configuration from request
+    const partnerConfig = getPartnerFromRequest(request);
+    console.log('[API] Using partner config:', partnerConfig.name);
+
     const { email } = await request.json();
     console.log('[API] Received email:', email);
 
@@ -32,9 +35,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Fetch account IDs from ngrok API
-    console.log('[API] Step 1: Fetching from ngrok API...');
-    const ngrokResponse = await fetch(NGROK_API_URL, {
+    // Step 1: Fetch account IDs from partner-specific ngrok API
+    console.log('[API] Step 1: Fetching from ngrok API:', partnerConfig.ngrokApiUrl);
+    const ngrokResponse = await fetch(partnerConfig.ngrokApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,10 +72,10 @@ export async function POST(request: NextRequest) {
 
       const sheets = google.sheets({ version: 'v4', auth });
 
-      // Read data from column B
-      console.log('[API] Reading Google Sheets, ID:', SHEET_ID, 'Range:', RANGE);
+      // Read data from column B of the shared sheet
+      console.log('[API] Reading Google Sheets, ID:', SHARED_SHEET_ID, 'Range:', RANGE);
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: SHARED_SHEET_ID,
         range: RANGE,
       });
 

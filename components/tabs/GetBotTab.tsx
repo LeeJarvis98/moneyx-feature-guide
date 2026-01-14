@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   Box,
   Stepper,
@@ -35,6 +36,10 @@ interface AccountRow {
 }
 
 export function GetBotTab() {
+  const pathname = usePathname();
+  // Extract partner ID from pathname (e.g., /mra -> mra)
+  const partnerId = pathname.startsWith('/') && pathname !== '/' ? pathname.slice(1).split('/')[0] : null;
+  
   const [active, setActive] = useState(0);
   const [email, setEmail] = useState('');
   const [platform, setPlatform] = useState<string | null>(null);
@@ -63,11 +68,18 @@ export function GetBotTab() {
     setSelectedAccounts([]);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add partner ID header if we're on a partner route
+      if (partnerId) {
+        headers['x-partner-id'] = partnerId;
+      }
+
       const response = await fetch('/api/check-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ email }),
       });
 
@@ -173,11 +185,18 @@ export function GetBotTab() {
     setGrantingLicense(true);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add partner ID header if we're on a partner route
+      if (partnerId) {
+        headers['x-partner-id'] = partnerId;
+      }
+
       const response = await fetch('/api/grant-license', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ 
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs

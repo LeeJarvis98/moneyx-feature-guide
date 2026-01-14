@@ -1,12 +1,8 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { SHARED_SHEET_ID, getPartnerFromRequest } from '@/lib/partners';
 
-const SHEET_ID = '10pyG095zn4Kb2yIXHqI4-INzlUpyvqFcEiwh1qgtwgI';
 const RANGE = 'B:B'; // Column B only for backward compatibility
-
-// New detailed tracking sheet
-const DETAILED_SHEET_ID = '1RvbrLkn8vFYUIq4zC9W8dhR_Q38cmVUtqNzWhLMBBy8';
-const DETAILED_SHEET_NAME = 'AndyBao'; // Sheet tab name
 const DETAILED_RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
 
 // Service account credentials
@@ -26,6 +22,10 @@ const SERVICE_ACCOUNT = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get partner configuration from request
+    const partnerConfig = getPartnerFromRequest(request);
+    console.log('[GRANT] Using partner config:', partnerConfig.name, 'Sheet:', partnerConfig.sheetTabName);
+
     const { accountIds, email, clientUid } = await request.json();
     console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid);
 
@@ -70,9 +70,10 @@ export async function POST(request: NextRequest) {
       const timestamp = `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
 
       // === WRITE TO FIRST SHEET (Simple format - Account ID only in column B) ===
-      console.log('[GRANT] Writing to first sheet (simple format)...');
+      // Uses the SHARED sheet that all partners use
+      console.log('[GRANT] Writing to shared sheet (simple format)...');
       const readResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: SHARED_SHEET_ID,
         range: RANGE,
       });
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       const simpleTargetRange = `B${nextRow}:B${nextRow + simpleValues.length - 1}`;
       
       await sheets.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: SHARED_SHEET_ID,
         range: simpleTargetRange,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
@@ -93,13 +94,14 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log('[GRANT] Successfully wrote to first sheet');
+      console.log('[GRANT] Successfully wrote to shared sheet');
 
       // === WRITE TO SECOND SHEET (Detailed format - Email, UID, Account, Date) ===
-      console.log('[GRANT] Writing to second sheet (detailed format)...');
+      // Uses the partner-specific detailed sheet and tab name
+      console.log('[GRANT] Writing to partner detailed sheet:', partnerConfig.detailedSheetId, 'Tab:', partnerConfig.sheetTabName);
       const detailedReadResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: DETAILED_SHEET_ID,
-        range: `${DETAILED_SHEET_NAME}!${DETAILED_RANGE}`,
+        spreadsheetId: partnerConfig.detailedSheetId,
+        range: `${partnerConfig.sheetTabName}!${DETAILED_RANGE}`,
       });
 
       const detailedExistingRows = detailedReadResponse.data.values || [];
@@ -114,10 +116,10 @@ export async function POST(request: NextRequest) {
         timestamp
       ]);
       
-      const detailedTargetRange = `${DETAILED_SHEET_NAME}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
+      const detailedTargetRange = `${partnerConfig.sheetTabName}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
       
       const detailedResponse = await sheets.spreadsheets.values.update({
-        spreadsheetId: DETAILED_SHEET_ID,
+        spreadsheetId: partnerConfig.detailedSheetId,
         range: detailedTargetRange,
         valueInputOption: 'USER_ENTERED',
         requestBody: {

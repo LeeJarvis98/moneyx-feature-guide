@@ -1,8 +1,7 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPartnerFromRequest } from '@/lib/partners';
 
-const SHEET_ID = '1RvbrLkn8vFYUIq4zC9W8dhR_Q38cmVUtqNzWhLMBBy8';
-const SHEET_NAME = 'AndyBao';
 const RANGE = 'A:B'; // Columns: Email, UID
 
 // Service account credentials
@@ -22,6 +21,10 @@ const SERVICE_ACCOUNT = {
 
 export async function GET(request: NextRequest) {
   try {
+    // Get partner configuration from request
+    const partnerConfig = getPartnerFromRequest(request);
+    console.log('[GET-UID] Using partner config:', partnerConfig.name, 'Sheet:', partnerConfig.sheetTabName);
+
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
 
@@ -43,8 +46,8 @@ export async function GET(request: NextRequest) {
       const sheets = google.sheets({ version: 'v4', auth });
 
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `${SHEET_NAME}!${RANGE}`,
+        spreadsheetId: partnerConfig.detailedSheetId,
+        range: `${partnerConfig.sheetTabName}!${RANGE}`,
       });
 
       const rows = response.data.values || [];

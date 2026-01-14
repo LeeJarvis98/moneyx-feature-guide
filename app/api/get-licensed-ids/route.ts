@@ -1,8 +1,7 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPartnerFromRequest } from '@/lib/partners';
 
-const SHEET_ID = '1RvbrLkn8vFYUIq4zC9W8dhR_Q38cmVUtqNzWhLMBBy8';
-const SHEET_NAME = 'AndyBao'; // Sheet tab name
 const RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
 
 // Service account credentials
@@ -22,6 +21,10 @@ const SERVICE_ACCOUNT = {
 
 export async function GET(request: NextRequest) {
   try {
+    // Get partner configuration from request
+    const partnerConfig = getPartnerFromRequest(request);
+    console.log('[GET-LICENSED-IDS] Using partner config:', partnerConfig.name, 'Sheet:', partnerConfig.sheetTabName);
+
     const { searchParams } = new URL(request.url);
     const filterEmail = searchParams.get('email'); // Optional email filter
     
@@ -39,11 +42,11 @@ export async function GET(request: NextRequest) {
 
       const sheets = google.sheets({ version: 'v4', auth });
 
-      // Read data from AndyBao sheet (Email, UID, Account, Licensed Date)
-      console.log('[GET-LICENSED-IDS] Reading data from', SHEET_NAME, 'sheet...');
+      // Read data from partner-specific sheet (Email, UID, Account, Licensed Date)
+      console.log('[GET-LICENSED-IDS] Reading data from', partnerConfig.sheetTabName, 'sheet...');
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `${SHEET_NAME}!${RANGE}`,
+        spreadsheetId: partnerConfig.detailedSheetId,
+        range: `${partnerConfig.sheetTabName}!${RANGE}`,
       });
 
       const rows = response.data.values || [];
