@@ -178,7 +178,11 @@ export function GetBotTab() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ accountIds: unlicensedIds }),
+        body: JSON.stringify({ 
+          accountIds: unlicensedIds,
+          email: email, // Send email along with account IDs
+          clientUid: accountData?.client_uid // Send client UID
+        }),
       });
 
       if (!response.ok) {

@@ -94,8 +94,27 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
   const fetchClientAccountsReport = async () => {
     setLoading(true);
     setError(null);
+    setClientAccountsReport(null);
+    
     try {
-      const report = await exnessApi.getClientAccountsReport();
+      // Fetch all licensed account IDs from backend
+      const licensedIdsResponse = await fetch('/api/get-licensed-ids');
+      const licensedIdsData = await licensedIdsResponse.json();
+      
+      let accountIds: string[] = [];
+      if (licensedIdsData.success && licensedIdsData.data) {
+        accountIds = licensedIdsData.data;
+      }
+      
+      // Check if there are any licensed accounts
+      if (accountIds.length === 0) {
+        setError('No licensed accounts found. Please grant licenses first before fetching reports.');
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch report with licensed account IDs as filter
+      const report = await exnessApi.getClientAccountsReport(accountIds);
       setClientAccountsReport(report);
     } catch (err) {
       const error = err as ExnessApiError;

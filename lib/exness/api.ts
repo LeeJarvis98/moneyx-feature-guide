@@ -175,8 +175,16 @@ class ExnessApiClient {
   }
 
   // Get client accounts report (GET /api/reports/clients/accounts/)
-  async getClientAccountsReport(): Promise<ClientAccountsReportResponse> {
-    return this.request('/api/reports/clients/accounts/', { method: 'GET' });
+  async getClientAccountsReport(accountIds?: string[]): Promise<ClientAccountsReportResponse> {
+    let endpoint = '/api/reports/clients/accounts/';
+    
+    // Add client_account filter if provided (using repeated parameters)
+    if (accountIds && accountIds.length > 0) {
+      const params = accountIds.map(id => `client_account=${encodeURIComponent(id)}`).join('&');
+      endpoint += `?${params}`;
+    }
+    
+    return this.request(endpoint, { method: 'GET' });
   }
 }
 

@@ -2,7 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const SHEET_ID = '10pyG095zn4Kb2yIXHqI4-INzlUpyvqFcEiwh1qgtwgI';
-const RANGE = 'B:B'; // Column B
+const RANGE = 'B:B'; // Column B only for backward compatibility
+
+// New detailed tracking sheet
+const DETAILED_SHEET_ID = '1RvbrLkn8vFYUIq4zC9W8dhR_Q38cmVUtqNzWhLMBBy8';
+const DETAILED_SHEET_NAME = 'AndyBao'; // Sheet tab name
+const DETAILED_RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
 
 // Service account credentials
 const SERVICE_ACCOUNT = {
@@ -21,12 +26,26 @@ const SERVICE_ACCOUNT = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { accountIds } = await request.json();
-    console.log('[GRANT] Received account IDs to license:', accountIds);
+    const { accountIds, email, clientUid } = await request.json();
+    console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid);
 
     if (!accountIds || !Array.isArray(accountIds) || accountIds.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Account IDs array is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!clientUid) {
+      return NextResponse.json(
+        { success: false, error: 'Client UID is required' },
         { status: 400 }
       );
     }
@@ -40,39 +59,71 @@ export async function POST(request: NextRequest) {
 
       const sheets = google.sheets({ version: 'v4', auth });
 
-      // First, read existing data to find the next empty row
-      console.log('[GRANT] Reading existing data from column B...');
+      const timestamp = new Date().toISOString();
+
+      // === WRITE TO FIRST SHEET (Simple format - Account ID only in column B) ===
+      console.log('[GRANT] Writing to first sheet (simple format)...');
       const readResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: RANGE,
       });
 
       const existingRows = readResponse.data.values || [];
-      const nextRow = existingRows.length + 1; // Next empty row (1-indexed)
-      console.log('[GRANT] Next empty row:', nextRow);
+      const nextRow = existingRows.length + 1;
+      console.log('[GRANT] First sheet - next empty row:', nextRow);
 
-      // Prepare values to write (each ID in its own row)
-      const values = accountIds.map((id) => [id]);
-      console.log('[GRANT] Writing values to Google Sheets starting at row', nextRow, ':', values);
-
-      // Write data to specific range starting at next empty cell
-      const targetRange = `B${nextRow}:B${nextRow + values.length - 1}`;
-      const response = await sheets.spreadsheets.values.update({
+      // Write only account IDs to column B
+      const simpleValues = accountIds.map((id) => [id]);
+      const simpleTargetRange = `B${nextRow}:B${nextRow + simpleValues.length - 1}`;
+      
+      await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: targetRange,
+        range: simpleTargetRange,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: values,
+          values: simpleValues,
         },
       });
 
-      console.log('[GRANT] Successfully added', response.data.updatedRows, 'rows');
+      console.log('[GRANT] Successfully wrote to first sheet');
+
+      // === WRITE TO SECOND SHEET (Detailed format - Email, UID, Account, Date) ===
+      console.log('[GRANT] Writing to second sheet (detailed format)...');
+      const detailedReadResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: DETAILED_SHEET_ID,
+        range: `${DETAILED_SHEET_NAME}!${DETAILED_RANGE}`,
+      });
+
+      const detailedExistingRows = detailedReadResponse.data.values || [];
+      const detailedNextRow = detailedExistingRows.length + 1;
+      console.log('[GRANT] Second sheet - next empty row:', detailedNextRow);
+
+      // Format: Email, UID, Account, Licensed Date
+      const detailedValues = accountIds.map((id) => [
+        email,
+        clientUid,
+        id,
+        timestamp
+      ]);
+      
+      const detailedTargetRange = `${DETAILED_SHEET_NAME}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
+      
+      const detailedResponse = await sheets.spreadsheets.values.update({
+        spreadsheetId: DETAILED_SHEET_ID,
+        range: detailedTargetRange,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: detailedValues,
+        },
+      });
+
+      console.log('[GRANT] Successfully wrote', detailedResponse.data.updatedRows, 'rows to second sheet');
 
       return NextResponse.json({
         success: true,
         data: {
-          updatedRows: response.data.updatedRows || 0,
-          updatedRange: response.data.updatedRange,
+          updatedRows: detailedResponse.data.updatedRows || 0,
+          updatedRange: detailedResponse.data.updatedRange,
         },
       });
 
