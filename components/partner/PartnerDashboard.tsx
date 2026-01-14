@@ -125,34 +125,44 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
   // Render aside content with navigation buttons
   const renderAsideContent = () => {
     return (
-      <Stack gap="xs" style={{ height: '100%' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          Partner Options
-        </h2>
+      <Stack gap="xs" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            Partner Options
+          </h2>
+          
+          <NavLink
+            label="Partner Links"
+            active={activeTab === 'links'}
+            fw={activeTab === 'links' ? 700 : undefined}
+            onClick={() => setActiveTab('links')}
+            color="#FFB81C"
+          />
+          
+          <NavLink
+            label="Check Affiliation"
+            active={activeTab === 'affiliation'}
+            fw={activeTab === 'affiliation' ? 700 : undefined}
+            onClick={() => setActiveTab('affiliation')}
+            color="#FFB81C"
+          />
+          
+          <NavLink
+            label="Client Accounts Report"
+            active={activeTab === 'reports'}
+            fw={activeTab === 'reports' ? 700 : undefined}
+            onClick={() => setActiveTab('reports')}
+            color="#FFB81C"
+          />
+        </div>
         
-        <NavLink
-          label="Partner Links"
-          active={activeTab === 'links'}
-          fw={activeTab === 'links' ? 700 : undefined}
-          onClick={() => setActiveTab('links')}
-          color="#FFB81C"
-        />
-        
-        <NavLink
-          label="Check Affiliation"
-          active={activeTab === 'affiliation'}
-          fw={activeTab === 'affiliation' ? 700 : undefined}
-          onClick={() => setActiveTab('affiliation')}
-          color="#FFB81C"
-        />
-        
-        <NavLink
-          label="Client Accounts Report"
-          active={activeTab === 'reports'}
-          fw={activeTab === 'reports' ? 700 : undefined}
-          onClick={() => setActiveTab('reports')}
-          color="#FFB81C"
-        />
+        <button 
+          onClick={handleLogout} 
+          className={styles.logoutButton}
+          style={{ marginTop: 'auto', width: '100%' }}
+        >
+          Logout
+        </button>
       </Stack>
     );
   };
@@ -161,9 +171,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Partner Dashboard</h1>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
       </div>
 
       {/* Error Display */}
@@ -297,20 +304,8 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                     <p className={styles.summaryValue}>{clientAccountsReport.totals.count}</p>
                   </div>
                   <div className={styles.summaryCard}>
-                    <h4>Total Clients</h4>
-                    <p className={styles.summaryValue}>{clientAccountsReport.totals.clients_count}</p>
-                  </div>
-                  <div className={styles.summaryCard}>
                     <h4>Volume (Lots)</h4>
                     <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.volume_lots, 2)}</p>
-                  </div>
-                  <div className={styles.summaryCard}>
-                    <h4>Volume (MLN USD)</h4>
-                    <p className={styles.summaryValue}>${formatNumber(clientAccountsReport.totals.volume_mln_usd, 2)}M</p>
-                  </div>
-                  <div className={styles.summaryCard}>
-                    <h4>Total Reward</h4>
-                    <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.reward, 2)}</p>
                   </div>
                   <div className={styles.summaryCard}>
                     <h4>Total Reward (USD)</h4>
@@ -323,39 +318,17 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                   <table className={styles.table}>
                     <thead>
                       <tr>
-                        <th>ID</th>
-                        <th>Client UID</th>
                         <th>Client Account</th>
-                        <th>Account Type</th>
-                        <th>Country</th>
-                        <th>Platform</th>
-                        <th>Created</th>
-                        <th>Last Trade</th>
                         <th>Volume (Lots)</th>
-                        <th>Volume (MLN USD)</th>
-                        <th>Reward</th>
                         <th>Reward (USD)</th>
-                        <th>Partner Account</th>
-                        <th>Comment</th>
                       </tr>
                     </thead>
                     <tbody>
                       {clientAccountsReport.data.map((account) => (
                         <tr key={account.id}>
-                          <td>{account.id}</td>
-                          <td>{account.client_uid}</td>
                           <td>{account.client_account}</td>
-                          <td>{account.client_account_type}</td>
-                          <td>{account.client_country}</td>
-                          <td>{account.platform}</td>
-                          <td suppressHydrationWarning>{formatDate(account.client_account_created)}</td>
-                          <td suppressHydrationWarning>{formatDate(account.client_account_last_trade)}</td>
                           <td>{formatNumber(account.volume_lots, 2)}</td>
-                          <td>${formatNumber(account.volume_mln_usd, 4)}M</td>
-                          <td>{formatNumber(account.reward, 2)}</td>
                           <td>${formatNumber(account.reward_usd, 2)}</td>
-                          <td>{account.partner_account}</td>
-                          <td>{account.comment || '-'}</td>
                         </tr>
                       ))}
                     </tbody>

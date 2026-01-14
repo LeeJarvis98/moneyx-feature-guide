@@ -418,7 +418,6 @@
 
 /* Table Container */
 .tableContainer {
-  overflow-x: auto;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -427,7 +426,14 @@
 .tableContainer .table {
   margin: 0;
   width: 100%;
-  min-width: 1200px;
+  table-layout: fixed;
+}
+
+.tableContainer .table th,
+.tableContainer .table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
