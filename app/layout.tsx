@@ -1,8 +1,8 @@
 ﻿import { MantineProvider, ColorSchemeScript, createTheme, MantineColorsTuple } from '@mantine/core';
 import '@mantine/core/styles.css';
 import './globals.css';
-import { routing } from '@/routing';
 import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -10,9 +10,15 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
+export const metadata: Metadata = {
+  title: 'Việt Nam Chất Lượng Cao',
+  description: 'Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất',
+  icons: {
+    icon: '/vnclc-small-logo.png',
+    shortcut: '/vnclc-small-logo.png',
+    apple: '/vnclc-small-logo.png',
+  },
+};
 
 const accentColor: MantineColorsTuple = [
   '#FFF8E6',

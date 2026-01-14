@@ -3,14 +3,12 @@
 import { CoreCombination } from '@/types';
 import { Paper, Text, Stack, List, Alert, Group } from '@mantine/core';
 import { Zap, CheckCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface InsightPanelProps {
   combination: CoreCombination | null;
 }
 
 export function InsightPanel({ combination }: InsightPanelProps) {
-  const t = useTranslations('common');
   if (!combination || combination.cards.length === 0) {
     return null;
   }
@@ -26,7 +24,7 @@ export function InsightPanel({ combination }: InsightPanelProps) {
           <Group gap="xs">
             <CheckCircle size={20} color="#FFB81C" />
             <Text fw={600} size="lg">
-              {t('benefits')}
+              Lợi ích
             </Text>
           </Group>
 

@@ -4,7 +4,6 @@ import { Modal, Text, Badge, Group, Stack, Switch, Title } from '@mantine/core';
 import { Card as CardType } from '@/types';
 import * as Icons from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 interface CardDetailModalProps {
   card: CardType | null;
@@ -15,8 +14,6 @@ interface CardDetailModalProps {
 }
 
 export function CardDetailModal({ card, isOpen, onClose, isEnabled, onToggle }: CardDetailModalProps) {
-  const t = useTranslations('common');
-  
   if (!card) return null;
 
   const IconComponent = (Icons[card.icon as keyof typeof Icons] as LucideIcon) || Icons.HelpCircle;
@@ -41,7 +38,7 @@ export function CardDetailModal({ card, isOpen, onClose, isEnabled, onToggle }: 
           </Badge>
           <Group gap="xs">
             <Text size="sm" fw={500}>
-              {isEnabled ? t('enabled') : t('disabled')}
+              {isEnabled ? 'Đã bật' : 'Đã tắt'}
             </Text>
             <Switch
               checked={isEnabled}
@@ -54,14 +51,14 @@ export function CardDetailModal({ card, isOpen, onClose, isEnabled, onToggle }: 
 
         <div>
           <Text size="sm" fw={600} mb="xs" c="dimmed">
-            {t('description')}
+            Mô tả
           </Text>
           <Text size="md">{card.description}</Text>
         </div>
 
         <div>
           <Text size="sm" fw={600} mb="md" c="dimmed">
-            {t('parameters')}
+            Tham số
           </Text>
           <Stack gap="sm">
             {Object.entries(card.parameters).map(([key, value]) => (

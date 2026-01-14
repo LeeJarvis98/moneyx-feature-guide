@@ -8,11 +8,9 @@ import Image from 'next/image';
 import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import PartnerApp from '@/components/partner/PartnerApp';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { useTranslations } from 'next-intl';
 import classes from './page.module.css';
 
 type NavigationSection = 'features' | 'learn';
@@ -28,9 +26,6 @@ export default function HomePage() {
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
   const theme = useMantineTheme();
-  const t = useTranslations('common');
-  const tTabs = useTranslations('tabs');
-  const tNav = useTranslations('navigation');
 
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
@@ -134,7 +129,7 @@ export default function HomePage() {
                     />
                     <div>
                       <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                        {t('appName')}
+                        Việt Nam Chất Lượng Cao
                       </Title>
                     </div>
                   </Group>
@@ -148,7 +143,7 @@ export default function HomePage() {
                     visibleFrom="sm"
                     className={classes.glowButton}
                   >
-                    {tNav('features')}
+                    Đối tác
                   </Button>
                   <Button
                     variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
@@ -158,9 +153,8 @@ export default function HomePage() {
                     visibleFrom="sm"
                     className={classes.glowButton}
                   >
-                    {tNav('learn')}
+                    Thư viện
                   </Button>
-                  {/* <LanguageSwitcher /> */}
                 </Group>
               </Group>
               <Tabs value={activeTab} onChange={handleTabChange} radius="md">
@@ -197,7 +191,7 @@ export default function HomePage() {
                         c={activeTab === 'step-by-step' ? theme.white : undefined}
                         fw={activeTab === 'step-by-step' ? 700 : undefined}
                       >
-                        {tTabs('stepByStep')}
+                        Tài liệu
                       </Tabs.Tab>
                     </>
                   )}
@@ -213,7 +207,7 @@ export default function HomePage() {
                   size="xs"
                   className={classes.glowButton}
                 >
-                  {tNav('features')}
+                  Khu vực đối tác
                 </Button>
                 <Button
                   variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
@@ -223,7 +217,7 @@ export default function HomePage() {
                   size="xs"
                   className={classes.glowButton}
                 >
-                  {tNav('learn')}
+                  Thư viện
                 </Button>
               </Group>
             </Stack>
@@ -406,7 +400,7 @@ export default function HomePage() {
                   style={{ objectFit: 'contain' }}
                 />
                 <Text size="sm" c="dimmed">
-                  © {new Date().getFullYear()} Tradi. {t('allRightsReserved')}
+                  © {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.
                 </Text>
               </Group>
               {/* <Group gap="md">

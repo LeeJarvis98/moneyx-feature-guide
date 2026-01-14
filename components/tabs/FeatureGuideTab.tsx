@@ -9,7 +9,6 @@ import { AvailableFeaturesAside } from '@/components/AvailableFeaturesAside';
 import { allCards } from '@/data';
 import { Card, CoreCombination } from '@/types';
 import { generateCombinationInsight } from '@/lib/combinations';
-import { useTranslations } from 'next-intl';
 
 interface FeatureGuideTabProps {
   onAsideContentChange?: (content: React.ReactNode) => void;
@@ -20,8 +19,6 @@ export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) 
   const [currentCombination, setCurrentCombination] = useState<CoreCombination | null>(null);
   const [modalCard, setModalCard] = useState<Card | null>(null);
   const [enabledCards, setEnabledCards] = useState<Set<string>>(new Set());
-  const t = useTranslations('core');
-  const tCommon = useTranslations('common');
 
   const handleCardClick = (card: Card) => {
     setModalCard(card);
@@ -106,7 +103,7 @@ export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) 
                 <Group gap="xs">
                   <Layers size={24} color={theme.colors.accent[6]} />
                   <Title order={3} size="h4" c={theme.white}>
-                    {t('title')} ({selectedCards.length})
+                    Tính năng áp dụng ({selectedCards.length})
                   </Title>
                 </Group>
                 {selectedCards.length > 0 && (
@@ -117,7 +114,7 @@ export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) 
                     leftSection={<Trash2 size={16} />}
                     onClick={handleClearAll}
                   >
-                    {tCommon('clearAll')}
+                    Xóa tất cả
                   </Button>
                 )}
               </Group>
@@ -126,10 +123,10 @@ export function FeatureGuideTab({ onAsideContentChange }: FeatureGuideTabProps) 
                 <Stack align="center" gap="md" py="xl">
                   <Lightbulb size={48} color={theme.colors.accent[6]} />
                   <Text size="lg" ta="center">
-                    {t('emptyMessage')}
+                    Kết hợp các tính năng để bot Việt Nam Chất Lượng Cao cho ra kết quả ưu việt nhất
                   </Text>
                   <Text size="sm" c="dimmed" ta="center">
-                    {t('hint')}
+                    Nhấp vào công tắc của các thẻ phía bên phải để bật tính năng
                   </Text>
                 </Stack>
               ) : (
