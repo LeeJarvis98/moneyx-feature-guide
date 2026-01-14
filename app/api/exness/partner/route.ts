@@ -78,13 +78,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${EXNESS_API_BASE}${endpoint}`, {
+    const fullUrl = `${EXNESS_API_BASE}${endpoint}`;
+    console.log('[EXNESS API] Requesting:', fullUrl);
+
+    const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `JWT ${token}`,
       },
     });
+
+    console.log('[EXNESS API] Response status:', response.status);
+    console.log('[EXNESS API] Response content-type:', response.headers.get('content-type'));
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('[EXNESS API] Non-JSON response:', text.substring(0, 200));
+      return NextResponse.json(
+        { error: 'Invalid response from Exness API', message: 'Expected JSON but received HTML. The endpoint may not exist.' },
+        { status: 502 }
+      );
+    }
 
     const data = await response.json();
 

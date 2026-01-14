@@ -7,6 +7,7 @@
   AffiliationRequest,
   AffiliationResponse,
   ClientAccountsReportResponse,
+  ClientReportResponse,
 } from '@/types/exness';
 
 // Use Next.js API routes
@@ -50,8 +51,12 @@ class ExnessApiClient {
 
     // For GET requests, use query parameters
     if (method === 'GET') {
+      // Check if endpoint already has query parameters
+      const hasQueryParams = endpoint.includes('?');
+      const fullEndpoint = hasQueryParams ? endpoint : endpoint;
+      
       const params = new URLSearchParams({
-        endpoint,
+        endpoint: fullEndpoint,
         ...(token && { token }),
       });
       
@@ -181,6 +186,19 @@ class ExnessApiClient {
     // Add client_account filter if provided (using repeated parameters)
     if (accountIds && accountIds.length > 0) {
       const params = accountIds.map(id => `client_account=${encodeURIComponent(id)}`).join('&');
+      endpoint += `?${params}`;
+    }
+    
+    return this.request(endpoint, { method: 'GET' });
+  }
+
+  // Get client report (GET /api/v2/reports/clients/)
+  async getClientReport(clientUids?: string[]): Promise<ClientReportResponse> {
+    let endpoint = '/api/v2/reports/clients/';
+    
+    // Add client_uid filter if provided (using repeated parameters)
+    if (clientUids && clientUids.length > 0) {
+      const params = clientUids.map(uid => `client_uid=${encodeURIComponent(uid)}`).join('&');
       endpoint += `?${params}`;
     }
     

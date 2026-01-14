@@ -9,6 +9,7 @@ import type {
   PartnerLink,
   AffiliationResponse,
   ClientAccountsReportResponse,
+  ClientReportResponse,
 } from '@/types/exness';
 import styles from './PartnerDashboard.module.css';
 
@@ -34,7 +35,7 @@ const formatNumber = (value: any, decimals: number = 2): string => {
 };
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'reports'>('links');
+  const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'reports' | 'client-report'>('links');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +49,10 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
 
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
+
+  // Client report state
+  const [clientReportEmail, setClientReportEmail] = useState('');
+  const [clientReport, setClientReport] = useState<ClientReportResponse | null>(null);
 
   // Update aside content when tab or data changes
   useEffect(() => {
@@ -124,6 +129,41 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
     }
   };
 
+  // Fetch client report
+  const fetchClientReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setClientReport(null);
+    
+    try {
+      // Look up UID by email from Google Sheet
+      console.log('[FETCH] Looking up UID for email:', clientReportEmail);
+      const uidResponse = await fetch(`/api/get-uid-by-email?email=${encodeURIComponent(clientReportEmail)}`);
+      const uidData = await uidResponse.json();
+      
+      console.log('[FETCH] UID lookup result:', uidData);
+      
+      if (!uidData.success || !uidData.data?.uid) {
+        setError(uidData.error || 'Failed to find UID for this email');
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch client report with UID filter
+      console.log('[FETCH] Fetching client report for UID:', uidData.data.uid);
+      const report = await exnessApi.getClientReport([uidData.data.uid]);
+      console.log('[FETCH] Client report received:', report);
+      setClientReport(report);
+    } catch (err) {
+      const error = err as ExnessApiError;
+      console.error('[FETCH] Error fetching client report:', err);
+      setError(error.message || 'Failed to fetch client report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Logout handler
   const handleLogout = async () => {
     try {
@@ -154,7 +194,10 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             label="Partner Links"
             active={activeTab === 'links'}
             fw={activeTab === 'links' ? 700 : undefined}
-            onClick={() => setActiveTab('links')}
+            onClick={() => {
+              setActiveTab('links');
+              setError(null);
+            }}
             color="#FFB81C"
           />
           
@@ -162,7 +205,10 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             label="Check Affiliation"
             active={activeTab === 'affiliation'}
             fw={activeTab === 'affiliation' ? 700 : undefined}
-            onClick={() => setActiveTab('affiliation')}
+            onClick={() => {
+              setActiveTab('affiliation');
+              setError(null);
+            }}
             color="#FFB81C"
           />
           
@@ -170,7 +216,21 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             label="Client Accounts Report"
             active={activeTab === 'reports'}
             fw={activeTab === 'reports' ? 700 : undefined}
-            onClick={() => setActiveTab('reports')}
+            onClick={() => {
+              setActiveTab('reports');
+              setError(null);
+            }}
+            color="#FFB81C"
+          />
+          
+          <NavLink
+            label="Client Report"
+            active={activeTab === 'client-report'}
+            fw={activeTab === 'client-report' ? 700 : undefined}
+            onClick={() => {
+              setActiveTab('client-report');
+              setError(null);
+            }}
             color="#FFB81C"
           />
         </div>
@@ -348,6 +408,87 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                           <td>{account.client_account}</td>
                           <td>{formatNumber(account.volume_lots, 2)}</td>
                           <td>${formatNumber(account.reward_usd, 2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Client Report Tab */}
+        {activeTab === 'client-report' && (
+          <div className={styles.section}>
+            <h2>Client Report</h2>
+            <form onSubmit={fetchClientReport} className={styles.form}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="clientReportEmail">Client Email</label>
+                <input
+                  type="email"
+                  id="clientReportEmail"
+                  value={clientReportEmail}
+                  onChange={(e) => setClientReportEmail(e.target.value)}
+                  required
+                  placeholder="client@example.com"
+                  className={styles.input}
+                  disabled={loading}
+                />
+              </div>
+              <button type="submit" disabled={loading} className={styles.submitButton}>
+                {loading ? 'Fetching...' : 'Fetch Report'}
+              </button>
+            </form>
+
+            {clientReport && (
+              <>
+                {/* Summary Cards */}
+                <div className={styles.summaryCards}>
+                  <div className={styles.summaryCard}>
+                    <h4>Total Clients</h4>
+                    <p className={styles.summaryValue}>{clientReport.totals.count}</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Volume (Lots)</h4>
+                    <p className={styles.summaryValue}>{formatNumber(clientReport.totals.volume_lots, 2)}</p>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <h4>Total Reward (USD)</h4>
+                    <p className={styles.summaryValue}>${formatNumber(clientReport.totals.reward_usd, 2)}</p>
+                  </div>
+                </div>
+
+                {/* Client Report Table */}
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Client UID</th>
+                        <th>Country</th>
+                        <th>Reg Date</th>
+                        <th>Volume (Lots)</th>
+                        <th>Reward (USD)</th>
+                        <th>Status</th>
+                        <th>KYC</th>
+                        <th>FTD</th>
+                        <th>Balance</th>
+                        <th>Equity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clientReport.data.map((client, index) => (
+                        <tr key={index}>
+                          <td>{client.client_uid}</td>
+                          <td>{client.client_country}</td>
+                          <td suppressHydrationWarning>{formatDate(client.reg_date)}</td>
+                          <td>{formatNumber(client.volume_lots, 2)}</td>
+                          <td>${formatNumber(client.reward_usd, 2)}</td>
+                          <td>{client.client_status}</td>
+                          <td>{client.kyc_passed ? 'Yes' : 'No'}</td>
+                          <td>{client.ftd_received ? 'Yes' : 'No'}</td>
+                          <td>{client.client_balance}</td>
+                          <td>{client.client_equity}</td>
                         </tr>
                       ))}
                     </tbody>
