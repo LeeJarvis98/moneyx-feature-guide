@@ -14,10 +14,39 @@ interface Platform {
 interface PartnerNavBarProps {
   selectedPlatform: string | null;
   onPlatformSelect: (platform: string) => void;
+  isAuthenticated?: boolean;
+  onLogout?: () => void;
 }
 
-export default function PartnerNavBar({ selectedPlatform, onPlatformSelect }: PartnerNavBarProps) {
+export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAuthenticated, onLogout }: PartnerNavBarProps) {
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [pendingPlatform, setPendingPlatform] = useState<string | null>(null);
+
+  const handlePlatformClick = (platform: string) => {
+    if (isAuthenticated && selectedPlatform && selectedPlatform !== platform) {
+      setPendingPlatform(platform);
+      setShowModal(true);
+    } else {
+      onPlatformSelect(platform);
+    }
+  };
+
+  const handleLogoutAndSwitch = () => {
+    if (onLogout) {
+      onLogout();
+    }
+    if (pendingPlatform) {
+      onPlatformSelect(pendingPlatform);
+    }
+    setShowModal(false);
+    setPendingPlatform(null);
+  };
+
+  const handleCancelSwitch = () => {
+    setShowModal(false);
+    setPendingPlatform(null);
+  };
 
   const tradingPlatforms: Platform[] = [
     {
@@ -60,7 +89,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect }: Pa
 
   return (
     <div className={styles.navbar}>
-      <h3 className={styles.title}>Chọn Sàn Giao Dịch</h3>
       <div className={styles.platformGrid}>
         {tradingPlatforms.map((platform) => (
           <div
@@ -68,7 +96,7 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect }: Pa
             className={`${styles.platformCard} ${
               selectedPlatform === platform.value ? styles.selected : ''
             } ${platform.disabled ? styles.disabled : ''}`}
-            onClick={() => !platform.disabled && onPlatformSelect(platform.value)}
+            onClick={() => !platform.disabled && handlePlatformClick(platform.value)}
             onMouseEnter={() => !platform.disabled && setHoveredPlatform(platform.value)}
             onMouseLeave={() => setHoveredPlatform(null)}
           >
@@ -91,6 +119,39 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect }: Pa
           </div>
         ))}
       </div>
+
+      {/* Modal for switching platforms */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={handleCancelSwitch}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Chuyển đổi sàn giao dịch</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>
+                Bạn hiện đang đăng nhập vào <strong>{selectedPlatform?.toUpperCase()}</strong>.
+              </p>
+              <p>
+                Chỉ cho phép một phiên làm việc tại một thời điểm. Vui lòng đăng xuất trước khi chuyển sang sàn khác.
+              </p>
+            </div>
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelButton}
+                onClick={handleCancelSwitch}
+              >
+                Hủy
+              </button>
+              <button 
+                className={styles.logoutButton}
+                onClick={handleLogoutAndSwitch}
+              >
+                Đăng xuất & Chuyển sàn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

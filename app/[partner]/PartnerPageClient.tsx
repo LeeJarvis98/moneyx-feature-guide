@@ -39,6 +39,8 @@ export default function PartnerPageClient({ partnerConfig }: PartnerPageClientPr
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('mt4');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const theme = useMantineTheme();
 
   // Handle navigation section change
@@ -367,7 +369,13 @@ export default function PartnerPageClient({ partnerConfig }: PartnerPageClientPr
                     <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
                   </Tabs.Panel>
                   <Tabs.Panel value="exness">
-                    <PartnerApp onAsideContentChange={setPartnerAside} />
+                    <PartnerApp 
+                      onAsideContentChange={setPartnerAside}
+                      selectedPlatform={selectedPlatform}
+                      onPlatformSelect={setSelectedPlatform}
+                      isAuthenticated={isAuthenticated}
+                      setIsAuthenticated={setIsAuthenticated}
+                    />
                   </Tabs.Panel>
                 </>
               )}

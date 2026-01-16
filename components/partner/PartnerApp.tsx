@@ -3,18 +3,19 @@
 import { useState, useEffect } from 'react';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
-import PartnerNavBar from './PartnerNavBar';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
 interface PartnerAppProps {
   onAsideContentChange?: (content: React.ReactNode) => void;
+  selectedPlatform: string | null;
+  onPlatformSelect: (platform: string) => void;
+  isAuthenticated: boolean;
+  setIsAuthenticated: (value: boolean) => void;
 }
 
-export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
     };
 
     checkAuth();
-  }, []);
+  }, [setIsAuthenticated]);
 
   // Clear aside content when not authenticated
   useEffect(() => {
@@ -51,6 +52,13 @@ export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
     }
   }, [checking, isAuthenticated, onAsideContentChange]);
 
+  const handleLogout = () => {
+    exnessApi.clearToken();
+    sessionStorage.removeItem('partnerId');
+    sessionStorage.removeItem('platformToken');
+    setIsAuthenticated(false);
+  };
+
   if (checking) {
     return (
       <div className={styles.checkingAuth}>
@@ -63,20 +71,14 @@ export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
     <>
       {isAuthenticated ? (
         <PartnerDashboard 
-          onLogout={() => setIsAuthenticated(false)} 
+          onLogout={handleLogout} 
           onAsideContentChange={onAsideContentChange}
         />
       ) : (
-        <div className={styles.container}>
-          <PartnerNavBar 
-            selectedPlatform={selectedPlatform}
-            onPlatformSelect={setSelectedPlatform}
-          />
-          <PartnerLogin 
-            onLoginSuccess={() => setIsAuthenticated(true)} 
-            selectedPlatform={selectedPlatform}
-          />
-        </div>
+        <PartnerLogin 
+          onLoginSuccess={() => setIsAuthenticated(true)} 
+          selectedPlatform={selectedPlatform}
+        />
       )}
     </>
   );

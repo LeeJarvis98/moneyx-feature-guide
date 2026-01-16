@@ -9,6 +9,7 @@ import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
 import { StepByStepTab } from '@/components/tabs/StepByStepTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import PartnerApp from '@/components/partner/PartnerApp';
+import PartnerNavBar from '@/components/partner/PartnerNavBar';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import classes from './page.module.css';
@@ -25,6 +26,8 @@ export default function HomePage() {
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
   const theme = useMantineTheme();
 
   // Handle navigation section change
@@ -47,7 +50,10 @@ export default function HomePage() {
   };
 
   // Determine if navbar should be shown
-  const shouldShowNavbar = navigationSection === 'learn' && activeTab === 'step-by-step';
+  const shouldShowNavbar = (
+    (navigationSection === 'learn' && activeTab === 'step-by-step') ||
+    (navigationSection === 'features' && activeTab === 'exness')
+  );
 
   // Determine if aside should be shown
   const shouldShowAside = (
@@ -225,6 +231,14 @@ export default function HomePage() {
         </AppShell.Header>
 
         <AppShell.Navbar p="md">
+          {navigationSection === 'features' && activeTab === 'exness' && (
+            <PartnerNavBar 
+              selectedPlatform={selectedPlatform}
+              onPlatformSelect={setSelectedPlatform}
+              isAuthenticated={isPartnerAuthenticated}
+              onLogout={() => setIsPartnerAuthenticated(false)}
+            />
+          )}
           {navigationSection === 'learn' && activeTab === 'step-by-step' && (
             <ScrollArea h="100%" type="auto" offsetScrollbars>
               <Stack gap="xs">
@@ -357,7 +371,13 @@ export default function HomePage() {
                   <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
                 </Tabs.Panel>
                 <Tabs.Panel value="exness">
-                  <PartnerApp onAsideContentChange={setPartnerAside} />
+                  <PartnerApp 
+                    onAsideContentChange={setPartnerAside}
+                    selectedPlatform={selectedPlatform}
+                    onPlatformSelect={setSelectedPlatform}
+                    isAuthenticated={isPartnerAuthenticated}
+                    setIsAuthenticated={setIsPartnerAuthenticated}
+                  />
                 </Tabs.Panel>
               </>
             )}
