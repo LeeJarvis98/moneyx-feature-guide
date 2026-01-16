@@ -2,12 +2,7 @@
   ExnessAuthCredentials,
   ExnessAuthResponse,
   ExnessApiError,
-  PartnerLink,
-  PartnerLinksResponse,
-  AffiliationRequest,
-  AffiliationResponse,
   ClientAccountsReportResponse,
-  ClientReportResponse,
 } from '@/types/exness';
 
 // Use Next.js API routes
@@ -51,14 +46,12 @@ class ExnessApiClient {
 
     // For GET requests, use query parameters
     if (method === 'GET') {
-      // Check if endpoint already has query parameters
-      const hasQueryParams = endpoint.includes('?');
-      const fullEndpoint = hasQueryParams ? endpoint : endpoint;
-      
-      const params = new URLSearchParams({
-        endpoint: fullEndpoint,
-        ...(token && { token }),
-      });
+      // Build the URL properly to preserve query parameters in endpoint
+      const params = new URLSearchParams();
+      params.append('endpoint', endpoint); // This properly encodes the endpoint
+      if (token) {
+        params.append('token', token);
+      }
       
       const response = await fetch(`${API_BASE}/partner?${params.toString()}`, {
         method: 'GET',
@@ -160,46 +153,17 @@ class ExnessApiClient {
 
   // === PARTNER ENDPOINTS ===
 
-  // Check affiliation (POST /api/partner/affiliation/)
-  async checkAffiliation(data: AffiliationRequest): Promise<AffiliationResponse> {
-    return this.request('/api/partner/affiliation/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // Get default link (GET /api/partner/default_link/)
-  async getDefaultLink(): Promise<PartnerLink | null> {
-    const response = await this.getPartnerLinks();
-    return response.data.find(link => link.is_default) || null;
-  }
-
-  // Get all partner links (GET /api/partner/links/)
-  async getPartnerLinks(): Promise<PartnerLinksResponse> {
-    return this.request('/api/partner/links/', { method: 'GET' });
-  }
-
   // Get client accounts report (GET /api/reports/clients/accounts/)
   async getClientAccountsReport(accountIds?: string[]): Promise<ClientAccountsReportResponse> {
     let endpoint = '/api/reports/clients/accounts/';
     
-    // Add client_account filter if provided (using repeated parameters)
+    // Add client_account filter if provided (using comma-separated values)
     if (accountIds && accountIds.length > 0) {
-      const params = accountIds.map(id => `client_account=${encodeURIComponent(id)}`).join('&');
-      endpoint += `?${params}`;
-    }
-    
-    return this.request(endpoint, { method: 'GET' });
-  }
-
-  // Get client report (GET /api/v2/reports/clients/)
-  async getClientReport(clientUids?: string[]): Promise<ClientReportResponse> {
-    let endpoint = '/api/v2/reports/clients/';
-    
-    // Add client_uid filter if provided (using repeated parameters)
-    if (clientUids && clientUids.length > 0) {
-      const params = clientUids.map(uid => `client_uid=${encodeURIComponent(uid)}`).join('&');
-      endpoint += `?${params}`;
+      const accountsParam = accountIds.join(',');
+      endpoint += `?client_account=${accountsParam}`;
+      console.log('[EXNESS API CLIENT] Requesting endpoint:', endpoint);
+      console.log('[EXNESS API CLIENT] Account IDs:', accountIds);
+      console.log('[EXNESS API CLIENT] Account IDs count:', accountIds.length);
     }
     
     return this.request(endpoint, { method: 'GET' });

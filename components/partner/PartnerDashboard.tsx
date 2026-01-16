@@ -1,15 +1,11 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { NavLink, Stack } from '@mantine/core';
-import { Link, UserCheck, FileText } from 'lucide-react';
+import { Stack, NavLink } from '@mantine/core';
 import { exnessApi } from '@/lib/exness/api';
 import type {
   ExnessApiError,
-  PartnerLink,
-  AffiliationResponse,
   ClientAccountsReportResponse,
-  ClientReportResponse,
 } from '@/types/exness';
 import styles from './PartnerDashboard.module.css';
 
@@ -18,16 +14,6 @@ interface PartnerDashboardProps {
   onAsideContentChange?: (content: React.ReactNode) => void;
 }
 
-// Helper function for consistent date formatting
-const formatDate = (dateString: string): string => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '-';
-  
-  // Use ISO date format for consistency (YYYY-MM-DD)
-  return date.toISOString().split('T')[0];
-};
-
 // Helper function to safely format numbers
 const formatNumber = (value: any, decimals: number = 2): string => {
   const num = Number(value);
@@ -35,65 +21,21 @@ const formatNumber = (value: any, decimals: number = 2): string => {
 };
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'links' | 'affiliation' | 'reports' | 'client-report'>('links');
+  const [activeSection, setActiveSection] = useState<'reports' | 'commissions'>('reports');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Links state
-  const [partnerLinks, setPartnerLinks] = useState<PartnerLink[]>([]);
-  const [defaultLink, setDefaultLink] = useState<PartnerLink | null>(null);
-
-  // Affiliation check state
-  const [affiliationEmail, setAffiliationEmail] = useState('');
-  const [affiliationResult, setAffiliationResult] = useState<AffiliationResponse | null>(null);
-
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
+  const [licensedAccountsDetails, setLicensedAccountsDetails] = useState<Array<{email: string; uid: string; accountId: string; timestamp: string | null}>>([]);
+  const [tradiCommissionPercentage, setTradiCommissionPercentage] = useState<number>(10); // Default 10%
 
-  // Client report state
-  const [clientReportEmail, setClientReportEmail] = useState('');
-  const [clientReport, setClientReport] = useState<ClientReportResponse | null>(null);
-
-  // Update aside content when tab or data changes
+  // Update aside content when data changes
   useEffect(() => {
     if (onAsideContentChange) {
       onAsideContentChange(renderAsideContent());
     }
-  }, [activeTab, partnerLinks, defaultLink, affiliationResult, clientAccountsReport, loading, error, affiliationEmail]);
-
-  // Fetch partner links
-  const fetchPartnerLinks = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await exnessApi.getPartnerLinks();
-      setPartnerLinks(response.data);
-      const defaultLink = response.data.find(link => link.is_default) || null;
-      setDefaultLink(defaultLink);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Failed to fetch partner links');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Check client affiliation
-  const checkAffiliation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setAffiliationResult(null);
-    try {
-      const result = await exnessApi.checkAffiliation({ email: affiliationEmail });
-      setAffiliationResult(result);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Failed to check affiliation');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [activeSection, clientAccountsReport, loading, error]);
 
   // Fetch client accounts report
   const fetchClientAccountsReport = async () => {
@@ -107,8 +49,10 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
       const licensedIdsData = await licensedIdsResponse.json();
       
       let accountIds: string[] = [];
+      let accountDetails: Array<{email: string; uid: string; accountId: string; timestamp: string | null}> = [];
       if (licensedIdsData.success && licensedIdsData.data) {
         accountIds = licensedIdsData.data;
+        accountDetails = licensedIdsData.details || [];
       }
       
       // Check if there are any licensed accounts
@@ -118,47 +62,19 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         return;
       }
       
+      console.log('[FETCH CLIENT ACCOUNTS] Fetching report for account IDs:', accountIds);
+      
       // Fetch report with licensed account IDs as filter
       const report = await exnessApi.getClientAccountsReport(accountIds);
+      
+      console.log('[FETCH CLIENT ACCOUNTS] Received report:', report);
+      console.log('[FETCH CLIENT ACCOUNTS] Number of accounts in response:', report.data?.length || 0);
+      
       setClientAccountsReport(report);
+      setLicensedAccountsDetails(accountDetails);
     } catch (err) {
       const error = err as ExnessApiError;
       setError(error.message || 'Failed to fetch client accounts report');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch client report
-  const fetchClientReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setClientReport(null);
-    
-    try {
-      // Look up UID by email from Google Sheet
-      console.log('[FETCH] Looking up UID for email:', clientReportEmail);
-      const uidResponse = await fetch(`/api/get-uid-by-email?email=${encodeURIComponent(clientReportEmail)}`);
-      const uidData = await uidResponse.json();
-      
-      console.log('[FETCH] UID lookup result:', uidData);
-      
-      if (!uidData.success || !uidData.data?.uid) {
-        setError(uidData.error || 'Failed to find UID for this email');
-        setLoading(false);
-        return;
-      }
-      
-      // Fetch client report with UID filter
-      console.log('[FETCH] Fetching client report for UID:', uidData.data.uid);
-      const report = await exnessApi.getClientReport([uidData.data.uid]);
-      console.log('[FETCH] Client report received:', report);
-      setClientReport(report);
-    } catch (err) {
-      const error = err as ExnessApiError;
-      console.error('[FETCH] Error fetching client report:', err);
-      setError(error.message || 'Failed to fetch client report');
     } finally {
       setLoading(false);
     }
@@ -181,58 +97,38 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
     }
   };
 
-  // Render aside content with navigation buttons
+  // Render aside content
   const renderAsideContent = () => {
     return (
       <Stack gap="xs" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Partner Options
+            Partner Dashboard
           </h2>
           
-          <NavLink
-            label="Partner Links"
-            active={activeTab === 'links'}
-            fw={activeTab === 'links' ? 700 : undefined}
-            onClick={() => {
-              setActiveTab('links');
-              setError(null);
-            }}
-            color="#FFB81C"
-          />
-          
-          <NavLink
-            label="Check Affiliation"
-            active={activeTab === 'affiliation'}
-            fw={activeTab === 'affiliation' ? 700 : undefined}
-            onClick={() => {
-              setActiveTab('affiliation');
-              setError(null);
-            }}
-            color="#FFB81C"
-          />
-          
-          <NavLink
-            label="Client Accounts Report"
-            active={activeTab === 'reports'}
-            fw={activeTab === 'reports' ? 700 : undefined}
-            onClick={() => {
-              setActiveTab('reports');
-              setError(null);
-            }}
-            color="#FFB81C"
-          />
-          
-          <NavLink
-            label="Client Report"
-            active={activeTab === 'client-report'}
-            fw={activeTab === 'client-report' ? 700 : undefined}
-            onClick={() => {
-              setActiveTab('client-report');
-              setError(null);
-            }}
-            color="#FFB81C"
-          />
+          <Stack gap="xs" style={{ marginTop: '16px' }}>
+            <NavLink
+              label="Client Accounts Report"
+              active={activeSection === 'reports'}
+              fw={activeSection === 'reports' ? 700 : undefined}
+              onClick={() => {
+                setActiveSection('reports');
+                setError(null);
+              }}
+              color="#FFB81C"
+            />
+            
+            <NavLink
+              label="Commissions"
+              active={activeSection === 'commissions'}
+              fw={activeSection === 'commissions' ? 700 : undefined}
+              onClick={() => {
+                setActiveSection('commissions');
+                setError(null);
+              }}
+              color="#FFB81C"
+            />
+          </Stack>
         </div>
         
         <button 
@@ -261,107 +157,8 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
 
       {/* Main Content Area */}
       <div className={styles.content}>
-        {/* Partner Links Tab */}
-        {activeTab === 'links' && (
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h2>Your Partner Links</h2>
-              <button
-                onClick={fetchPartnerLinks}
-                disabled={loading}
-                className={styles.fetchButton}
-              >
-                {loading ? 'Loading...' : 'Fetch Links'}
-              </button>
-            </div>
-
-            {defaultLink && (
-              <div className={styles.defaultLink}>
-                <h3>Default Link</h3>
-                <div className={styles.linkItem}>
-                  <span className={styles.linkName}>{defaultLink.link_code}</span>
-                  <span className={styles.linkUrl}>
-                    Partner Account: {defaultLink.partner_account}
-                  </span>
-                  <span className={styles.linkDate}>
-                    Schema: {defaultLink.reward_schema}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {partnerLinks.length > 0 && (
-              <div className={styles.linksList}>
-                <h3>All Links ({partnerLinks.length})</h3>
-                {partnerLinks.map((link, index) => (
-                  <div key={index} className={styles.linkItem}>
-                    <span className={styles.linkName}>
-                      {link.link_code}
-                      {link.is_default && ' (Default)'}
-                      {link.is_blocked && ' (Blocked)'}
-                      {link.is_custom && ' (Custom)'}
-                    </span>
-                    <span className={styles.linkUrl}>
-                      Account: {link.partner_account}
-                    </span>
-                    <span className={styles.linkDate}>
-                      Schema: {link.reward_schema}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Affiliation Check Tab */}
-        {activeTab === 'affiliation' && (
-          <div className={styles.section}>
-            <h2>Check Client Affiliation</h2>
-            <form onSubmit={checkAffiliation} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="affiliationEmail">Client Email</label>
-                <input
-                  type="email"
-                  id="affiliationEmail"
-                  value={affiliationEmail}
-                  onChange={(e) => setAffiliationEmail(e.target.value)}
-                  required
-                  placeholder="client@example.com"
-                  className={styles.input}
-                  disabled={loading}
-                />
-              </div>
-              <button type="submit" disabled={loading} className={styles.submitButton}>
-                {loading ? 'Checking...' : 'Check Affiliation'}
-              </button>
-            </form>
-
-            {affiliationResult && (
-              <div className={` ${affiliationResult.affiliation ? styles.affiliated : styles.notAffiliated}`}>
-                <h3>
-                  {affiliationResult.affiliation ? 'Client is Affiliated' : 'Client is Not Affiliated'}
-                </h3>
-                {affiliationResult.client_uid && (
-                  <p>Client UID: {affiliationResult.client_uid}</p>
-                )}
-                {affiliationResult.accounts.length > 0 && (
-                  <div>
-                    <p>Accounts:</p>
-                    <ul>
-                      {affiliationResult.accounts.map((account, index) => (
-                        <li key={index}>{account}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Client Accounts Report Tab */}
-        {activeTab === 'reports' && (
+        {/* Client Accounts Report Section */}
+        {activeSection === 'reports' && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Client Accounts Report</h2>
@@ -397,19 +194,42 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                   <table className={styles.table}>
                     <thead>
                       <tr>
+                        <th className={styles.orderColumn} />
                         <th>Client Account</th>
+                        <th>Email</th>
+                        <th>Licensed Date</th>
                         <th>Volume (Lots)</th>
                         <th>Reward (USD)</th>
+                        <th>Partner Com.</th>
+                        <th>Tradi Com.</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {clientAccountsReport.data.map((account) => (
-                        <tr key={account.id}>
-                          <td>{account.client_account}</td>
-                          <td>{formatNumber(account.volume_lots, 2)}</td>
-                          <td>${formatNumber(account.reward_usd, 2)}</td>
-                        </tr>
-                      ))}
+                      {clientAccountsReport.data.map((account, index) => {
+                        // Find matching licensed account details
+                        const details = licensedAccountsDetails.find(
+                          (d) => d.accountId === account.client_account
+                        );
+                        // Calculate commissions
+                        const tradiCom = account.reward_usd * (tradiCommissionPercentage / 100);
+                        const partnerCom = account.reward_usd - tradiCom;
+                        
+                        // Extract only the date part from timestamp (remove time)
+                        const licensedDate = details?.timestamp ? details.timestamp.split(' ')[0] : 'N/A';
+                        
+                        return (
+                          <tr key={account.id}>
+                            <td className={styles.orderColumn}>{index + 1}</td>
+                            <td>{account.client_account}</td>
+                            <td>{details?.email || 'N/A'}</td>
+                            <td>{licensedDate}</td>
+                            <td>{formatNumber(account.volume_lots, 2)}</td>
+                            <td>${formatNumber(account.reward_usd, 2)}</td>
+                            <td>${formatNumber(partnerCom, 2)}</td>
+                            <td>${formatNumber(tradiCom, 2)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -418,83 +238,44 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
           </div>
         )}
 
-        {/* Client Report Tab */}
-        {activeTab === 'client-report' && (
+        {/* Commissions Section */}
+        {activeSection === 'commissions' && (
           <div className={styles.section}>
-            <h2>Client Report</h2>
-            <form onSubmit={fetchClientReport} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="clientReportEmail">Client Email</label>
-                <input
-                  type="email"
-                  id="clientReportEmail"
-                  value={clientReportEmail}
-                  onChange={(e) => setClientReportEmail(e.target.value)}
-                  required
-                  placeholder="client@example.com"
-                  className={styles.input}
-                  disabled={loading}
-                />
-              </div>
-              <button type="submit" disabled={loading} className={styles.submitButton}>
-                {loading ? 'Fetching...' : 'Fetch Report'}
-              </button>
-            </form>
+            <div className={styles.sectionHeader}>
+              <h2>Commissions</h2>
+            </div>
 
-            {clientReport && (
+            {clientAccountsReport ? (
               <>
-                {/* Summary Cards */}
+                {/* Commission Summary Cards */}
                 <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
-                    <h4>Total Clients</h4>
-                    <p className={styles.summaryValue}>{clientReport.totals.count}</p>
+                    <h4>Total Partner Com.</h4>
+                    <p className={styles.summaryValue}>
+                      ${formatNumber(
+                        clientAccountsReport.data.reduce((sum, account) => {
+                          const tradiCom = account.reward_usd * (tradiCommissionPercentage / 100);
+                          return sum + (account.reward_usd - tradiCom);
+                        }, 0), 2
+                      )}
+                    </p>
                   </div>
                   <div className={styles.summaryCard}>
-                    <h4>Volume (Lots)</h4>
-                    <p className={styles.summaryValue}>{formatNumber(clientReport.totals.volume_lots, 2)}</p>
+                    <h4>Total Tradi Com.</h4>
+                    <p className={styles.summaryValue}>
+                      ${formatNumber(
+                        clientAccountsReport.data.reduce((sum, account) => 
+                          sum + (account.reward_usd * (tradiCommissionPercentage / 100)), 0
+                        ), 2
+                      )}
+                    </p>
                   </div>
-                  <div className={styles.summaryCard}>
-                    <h4>Total Reward (USD)</h4>
-                    <p className={styles.summaryValue}>${formatNumber(clientReport.totals.reward_usd, 2)}</p>
-                  </div>
-                </div>
-
-                {/* Client Report Table */}
-                <div className={styles.tableContainer}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Client UID</th>
-                        <th>Country</th>
-                        <th>Reg Date</th>
-                        <th>Volume (Lots)</th>
-                        <th>Reward (USD)</th>
-                        <th>Status</th>
-                        <th>KYC</th>
-                        <th>FTD</th>
-                        <th>Balance</th>
-                        <th>Equity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clientReport.data.map((client, index) => (
-                        <tr key={index}>
-                          <td>{client.client_uid}</td>
-                          <td>{client.client_country}</td>
-                          <td suppressHydrationWarning>{formatDate(client.reg_date)}</td>
-                          <td>{formatNumber(client.volume_lots, 2)}</td>
-                          <td>${formatNumber(client.reward_usd, 2)}</td>
-                          <td>{client.client_status}</td>
-                          <td>{client.kyc_passed ? 'Yes' : 'No'}</td>
-                          <td>{client.ftd_received ? 'Yes' : 'No'}</td>
-                          <td>{client.client_balance}</td>
-                          <td>{client.client_equity}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </>
+            ) : (
+              <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Please fetch the Client Accounts Report first to view commission data.
+              </p>
             )}
           </div>
         )}

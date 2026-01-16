@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
 
     const fullUrl = `${EXNESS_API_BASE}${endpoint}`;
     console.log('[EXNESS API] Requesting:', fullUrl);
+    console.log('[EXNESS API] Endpoint param received:', endpoint);
+    console.log('[EXNESS API] Token present:', !!token);
 
     const response = await fetch(fullUrl, {
       method: 'GET',

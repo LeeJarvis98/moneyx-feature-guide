@@ -20,31 +20,6 @@ export interface ExnessApiError {
   status: number;
 }
 
-// Partner API Types
-export interface PartnerLink {
-  reward_schema: string;
-  link_code: string;
-  is_default: boolean;
-  is_blocked: boolean;
-  is_custom: boolean;
-  partner_account: string;
-}
-
-export interface PartnerLinksResponse {
-  data: PartnerLink[];
-  total: number;
-}
-
-export interface AffiliationRequest {
-  email: string;
-}
-
-export interface AffiliationResponse {
-  affiliation: boolean;
-  accounts: string[];
-  client_uid: string;
-}
-
 // Client Accounts Report Types
 export interface ClientAccount {
   id: number;
@@ -79,41 +54,4 @@ export interface ClientAccountsReportTotals {
 export interface ClientAccountsReportResponse {
   data: ClientAccount[];
   totals: ClientAccountsReportTotals;
-}
-
-// Client Report Types
-export interface ClientReportItem {
-  partner_account: string;
-  client_uid: string;
-  reg_date: string;
-  client_country: string;
-  volume_lots: number;
-  volume_mln_usd: number;
-  reward_usd: number;
-  trade_fn: string;
-  client_contact_sharing_status: string;
-  client_status: string;
-  last_partner_contact_sharing_dt: string;
-  comment: string;
-  rebate_amount_usd: number;
-  kyc_passed: boolean;
-  ftd_received: boolean;
-  ftt_made: boolean;
-  last_client_contact_sharing_dt: string;
-  client_balance: number;
-  client_equity: number;
-}
-
-export interface ClientReportTotals {
-  count: number;
-  volume_lots: number;
-  volume_mln_usd: number;
-  reward_usd: number;
-  server_dt: string;
-  available_for_request: number;
-}
-
-export interface ClientReportResponse {
-  data: ClientReportItem[];
-  totals: ClientReportTotals;
 }

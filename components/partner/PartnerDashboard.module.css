@@ -436,6 +436,11 @@
   white-space: nowrap;
 }
 
+.orderColumn {
+  width: 50px;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .header {
     flex-direction: column;

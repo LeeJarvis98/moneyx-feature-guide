@@ -217,7 +217,7 @@ export default function PartnerPageClient({ partnerConfig }: PartnerPageClientPr
                     size="xs"
                     className={classes.glowButton}
                   >
-                    Khu vực đối tác
+                    Đối tác
                   </Button>
                   <Button
                     variant={navigationSection === 'learn' ? 'filled' : 'subtle'}

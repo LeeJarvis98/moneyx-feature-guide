@@ -106,20 +106,6 @@ export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
             {loading ? 'Logging in...' : success ? 'Success!' : 'Login'}
           </button>
         </form>
-
-        <div className={styles.footer}>
-          <p>
-            Don't have an account?{' '}
-            <a
-              href="https://my.exnessaffiliates.com/signup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              Sign up here
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
