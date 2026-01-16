@@ -1,40 +1,66 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { exnessApi } from '@/lib/exness/api';
-import type { ExnessApiError } from '@/types/exness';
 import styles from './PartnerLogin.module.css';
+import SignUpModal from './SignUpModal';
 
 interface PartnerLoginProps {
   onLoginSuccess: () => void;
+  selectedPlatform: string | null;
 }
 
-export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
-  const [login, setLogin] = useState('');
+export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: PartnerLoginProps) {
+  const [partnerId, setPartnerId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validate platform selection
+    if (!selectedPlatform) {
+      setError('Vui lòng chọn sàn giao dịch trước khi đăng nhập');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await exnessApi.login({
-        login,
-        password,
+      const response = await fetch('/api/partner-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerId,
+          password,
+          platform: selectedPlatform,
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed. Please check your credentials.');
+      }
+
+      // Store partner info in session storage or context
+      if (data.partnerId) {
+        sessionStorage.setItem('partnerId', data.partnerId);
+      }
+      if (data.exnessToken) {
+        sessionStorage.setItem('exnessToken', data.exnessToken);
+      }
 
       setSuccess(true);
       setTimeout(() => {
         onLoginSuccess();
       }, 1000);
     } catch (err) {
-      const error = err as ExnessApiError;
-      setError(error.message || 'Login failed. Please check your credentials.');
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -49,19 +75,19 @@ export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>
-          {/* Login Input */}
+          {/* Partner ID Input */}
           <div className={styles.inputGroup}>
-            <label htmlFor="login" className={styles.label}>
-              Login / Email
+            <label htmlFor="partnerId" className={styles.label}>
+              Partner ID
             </label>
             <input
               type="text"
-              id="login"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
+              id="partnerId"
+              value={partnerId}
+              onChange={(e) => setPartnerId(e.target.value)}
               required
               className={styles.input}
-              placeholder="partner@example.com"
+              placeholder="Enter your partner ID"
               disabled={loading || success}
             />
           </div>
@@ -78,7 +104,7 @@ export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               className={styles.input}
-              placeholder=""
+              placeholder="Enter your password"
               disabled={loading || success}
             />
           </div>
@@ -106,7 +132,24 @@ export default function PartnerLogin({ onLoginSuccess }: PartnerLoginProps) {
             {loading ? 'Logging in...' : success ? 'Success!' : 'Login'}
           </button>
         </form>
+
+        <div className={styles.footer}>
+          <p>
+            Don't have an account?{' '}
+            <button
+              type="button"
+              onClick={() => setShowSignUpModal(true)}
+              className={styles.link}
+            >
+              Sign up here
+            </button>
+          </p>
+        </div>
       </div>
+
+      {showSignUpModal && (
+        <SignUpModal onClose={() => setShowSignUpModal(false)} />
+      )}
     </div>
   );
 }

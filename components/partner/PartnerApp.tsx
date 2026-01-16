@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
+import PartnerNavBar from './PartnerNavBar';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
@@ -13,6 +14,7 @@ interface PartnerAppProps {
 export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -65,7 +67,16 @@ export default function PartnerApp({ onAsideContentChange }: PartnerAppProps) {
           onAsideContentChange={onAsideContentChange}
         />
       ) : (
-        <PartnerLogin onLoginSuccess={() => setIsAuthenticated(true)} />
+        <div className={styles.container}>
+          <PartnerNavBar 
+            selectedPlatform={selectedPlatform}
+            onPlatformSelect={setSelectedPlatform}
+          />
+          <PartnerLogin 
+            onLoginSuccess={() => setIsAuthenticated(true)} 
+            selectedPlatform={selectedPlatform}
+          />
+        </div>
       )}
     </>
   );
