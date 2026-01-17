@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerLogin.module.css';
 import SignUpModal from './SignUpModal';
 
@@ -51,8 +52,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
       if (data.partnerId) {
         sessionStorage.setItem('partnerId', data.partnerId);
       }
-      if (data.exnessToken) {
-        sessionStorage.setItem('exnessToken', data.exnessToken);
+      if (data.platformToken) {
+        exnessApi.setToken(data.platformToken);
       }
 
       setSuccess(true);

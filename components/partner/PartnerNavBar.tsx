@@ -113,9 +113,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
             {platform.disabled && (
               <div className={styles.comingSoon}>Sắp Ra Mắt</div>
             )}
-            {selectedPlatform === platform.value && (
-              <div className={styles.selectedBadge}>✓</div>
-            )}
           </div>
         ))}
       </div>

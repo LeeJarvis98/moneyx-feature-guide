@@ -37,6 +37,17 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
     }
   }, [activeSection, clientAccountsReport, loading, error]);
 
+  // Auto-fetch report when Client Accounts Report section is selected
+  useEffect(() => {
+    if (activeSection === 'reports' && !clientAccountsReport && !loading) {
+      // Ensure token is available before fetching
+      const token = exnessApi.getToken();
+      if (token) {
+        fetchClientAccountsReport();
+      }
+    }
+  }, [activeSection]);
+
   // Fetch client accounts report
   const fetchClientAccountsReport = async () => {
     setLoading(true);
@@ -167,7 +178,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                 disabled={loading}
                 className={styles.fetchButton}
               >
-                {loading ? 'Loading...' : 'Fetch Report'}
+                {loading ? 'Loading...' : 'Refresh'}
               </button>
             </div>
 
