@@ -91,6 +91,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
               placeholder="Nhập ID của bạn"
               disabled={loading || success}
               autoComplete="username"
+              inputMode="text"
             />
           </div>
 
@@ -136,9 +137,9 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
                 Ghi nhớ đăng nhập
               </label>
             </div>
-            <a href="#" className={styles.forgotLink}>
+            <button type="button" className={styles.forgotLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
               Quên mật khẩu?
-            </a>
+            </button>
           </div>
 
           {error && (
@@ -158,23 +159,21 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
             className={styles.submitButton}
             disabled={loading || success}
           >
-            {loading ? 'Đang đăng nhập...' : success ? 'Thành công!' : 'Đăng nhập'}
+            {loading ? 'Đang đăng nhập…' : success ? 'Thành công!' : 'Đăng nhập'}
           </button>
         </form>
 
         <div className={styles.footer}>
           <p className={styles.footerText}>
             Chưa có tài khoản?{' '}
-            <a
-              href="#"
+            <button
+              type="button"
               className={styles.signUpLink}
-              onClick={(e) => {
-                e.preventDefault();
-                setModalOpened(true);
-              }}
+              onClick={() => setModalOpened(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Đăng ký ngay
-            </a>
+            </button>
           </p>
         </div>
       </div>

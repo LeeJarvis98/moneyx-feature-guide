@@ -396,7 +396,11 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
                 type="button"
                 onClick={handleCheckPartnerId}
                 className={`${styles.checkButton} ${
-                  partnerIdAvailable === true ? styles.verified : ''
+                  partnerIdAvailable === true ? styles.checkButtonVerified : ''
+                } ${
+                  partnerId && partnerId.length >= 3 && validatePartnerId(partnerId) && partnerIdAvailable === null && !checkingPartnerId
+                    ? styles.checkButtonActive
+                    : ''
                 }`}
                 disabled={loading || checkingPartnerId || !partnerId || partnerId.length < 3}
               >
@@ -635,7 +639,16 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
                     type="button"
                     onClick={() => handleCheckCredentials(index)}
                     className={`${styles.checkButton} ${
-                      credentials.verified ? styles.verified : ''
+                      credentials.verified ? styles.checkButtonVerified : ''
+                    } ${
+                      credentials.username &&
+                      credentials.password &&
+                      credentials.url &&
+                      validateUrl(credentials.url) &&
+                      !credentials.verified &&
+                      checkingCredentials !== index
+                        ? styles.checkButtonActive
+                        : ''
                     }`}
                     disabled={
                       loading ||

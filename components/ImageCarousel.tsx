@@ -47,12 +47,29 @@ export function ImageCarousel() {
             key={item.id}
             data-pos={item.pos}
             className={classes.galleryItem}
-            style={{
-              transform: `translateX(calc(var(--item-spacing) * ${item.pos - 2})) scale(${getScale(item.pos)})`,
-              backgroundImage: `url(${item.url})`,
-            }}
-            onClick={() => shuffle(item)}
-          />
+          >
+            <button
+              onClick={() => shuffle(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  shuffle(item);
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                transform: `translateX(calc(var(--item-spacing) * ${item.pos - 2})) scale(${getScale(item.pos)})`,
+                backgroundImage: `url(${item.url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+              aria-label={`Carousel image ${item.id + 1}`}
+            />
+          </li>
         ))}
       </ul>
     </div>

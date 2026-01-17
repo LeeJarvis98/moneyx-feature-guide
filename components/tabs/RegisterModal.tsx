@@ -85,7 +85,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const handlePartnerIdChange = (value: string) => {
     if (validatePartnerId(value)) {
       setRegPartnerId(value);
-      setPartnerIdAvailable(null);
+      // Reset availability when user modifies input
+      if (partnerIdAvailable !== null) {
+        setPartnerIdAvailable(null);
+      }
       setRegError(null);
     }
   };
@@ -283,10 +286,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               <button
                 type="button"
                 onClick={handleCheckPartnerId}
-                className={styles.checkButton}
+                className={`${styles.checkButton} ${
+                  partnerIdAvailable === true
+                    ? styles.checkButtonVerified
+                    : isIdFormatValid && partnerIdAvailable === null && !checkingPartnerId
+                    ? styles.checkButtonActive
+                    : ''
+                }`}
                 disabled={!regPartnerId || !isIdFormatValid || checkingPartnerId || regLoading || regSuccess}
               >
-                {checkingPartnerId ? 'Kiểm tra...' : 'Kiểm tra'}
+                {checkingPartnerId ? 'Kiểm tra...' : partnerIdAvailable === true ? '✓' : 'Kiểm tra'}
               </button>
             </div>
             {partnerIdAvailable === true && (
@@ -322,7 +331,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 value={regEmail}
                 onChange={(e) => {
                   setRegEmail(e.target.value);
-                  setEmailAvailable(null);
+                  // Reset availability when user modifies input
+                  if (emailAvailable !== null) {
+                    setEmailAvailable(null);
+                  }
                   setRegError(null);
                 }}
                 required
@@ -339,10 +351,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               <button
                 type="button"
                 onClick={handleCheckEmail}
-                className={styles.checkButton}
+                className={`${styles.checkButton} ${
+                  emailAvailable === true
+                    ? styles.checkButtonVerified
+                    : isEmailFormatValid && emailAvailable === null && !checkingEmail
+                    ? styles.checkButtonActive
+                    : ''
+                }`}
                 disabled={!regEmail || !isEmailFormatValid || checkingEmail || regLoading || regSuccess}
               >
-                {checkingEmail ? 'Kiểm tra...' : 'Kiểm tra'}
+                {checkingEmail ? 'Kiểm tra...' : emailAvailable === true ? '✓' : 'Kiểm tra'}
               </button>
             </div>
             {emailAvailable === true && (

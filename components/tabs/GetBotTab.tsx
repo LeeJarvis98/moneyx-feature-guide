@@ -383,6 +383,7 @@ export function GetBotTab() {
                           }`}
                         style={{
                           backgroundImage: `url(${platformOption.image})`,
+                          cursor: platformOption.disabled ? 'not-allowed' : 'pointer',
                         }}
                         onClick={() => {
                           if (!platformOption.disabled) {
@@ -390,8 +391,19 @@ export function GetBotTab() {
                             setPlatform(platformOption.value);
                           }
                         }}
+                        onKeyDown={(e) => {
+                          if (!platformOption.disabled && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault();
+                            setSelectedPlatform(platformOption.value);
+                            setPlatform(platformOption.value);
+                          }
+                        }}
                         onMouseEnter={() => !platformOption.disabled && setHoveredPlatform(platformOption.value)}
                         onMouseLeave={() => setHoveredPlatform(null)}
+                        tabIndex={platformOption.disabled ? -1 : 0}
+                        role="button"
+                        aria-label={`Select ${platformOption.label} trading platform`}
+                        aria-disabled={platformOption.disabled}
                       >
                         <div className={classes.cardContent} style={{ marginTop: '-20px' }}>
                           <Title order={6} className={classes.platformTitle}>
@@ -683,6 +695,7 @@ export function GetBotTab() {
                       style={{ width: '100%', height: '100%', minHeight: 400, border: 'none' }}
                       allow="autoplay"
                       title="Video hướng dẫn tải Bot"
+                      aria-label="Tutorial video for downloading the bot"
                     />
                   </Paper>
                 </Grid.Col>

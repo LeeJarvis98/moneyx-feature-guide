@@ -90,6 +90,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
               className={styles.input}
               placeholder="Enter your partner ID"
               disabled={loading || success}
+              autoComplete="username"
+              inputMode="text"
             />
           </div>
 
@@ -107,6 +109,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
               className={styles.input}
               placeholder="Enter your password"
               disabled={loading || success}
+              autoComplete="current-password"
             />
           </div>
 
@@ -130,7 +133,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
             className={styles.submitButton}
             disabled={loading || success}
           >
-            {loading ? 'Logging in...' : success ? 'Success!' : 'Login'}
+            {loading ? 'Logging in…' : success ? 'Success!' : 'Login'}
           </button>
         </form>
 
@@ -141,6 +144,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
               type="button"
               onClick={() => setShowSignUpModal(true)}
               className={styles.link}
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Sign up here
             </button>

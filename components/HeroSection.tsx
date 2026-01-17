@@ -20,6 +20,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
         muted
         playsInline
         className={classes.videoBackground}
+        aria-label="Promotional video showcasing VNCLC trading bot features"
       >
         <source src="/vnclc-landing-video.mp4" type="video/mp4" />
       </video>
@@ -56,7 +57,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
             rightSection={<ArrowRight size={20} />}
             onClick={onGetStarted}
           >
-            LẤY BOT NGAY
+            Lấy Bot Ngay
           </Button>
           <br />
           <ImageCarousel />

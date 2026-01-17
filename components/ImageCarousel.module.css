@@ -73,6 +73,14 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
 }
 
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .galleryItem,
+  .galleryItem::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .gallery {

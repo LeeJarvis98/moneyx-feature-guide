@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './PartnerNavBar.module.css';
 
@@ -22,6 +22,20 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState<string | null>(null);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal) {
+        handleCancelSwitch();
+      }
+    };
+    
+    if (showModal) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showModal]);
 
   const handlePlatformClick = (platform: string) => {
     if (isAuthenticated && selectedPlatform && selectedPlatform !== platform) {
@@ -91,14 +105,18 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
     <div className={styles.navbar}>
       <div className={styles.platformGrid}>
         {tradingPlatforms.map((platform) => (
-          <div
+          <button
             key={platform.value}
+            type="button"
             className={`${styles.platformCard} ${
               selectedPlatform === platform.value ? styles.selected : ''
             } ${platform.disabled ? styles.disabled : ''}`}
             onClick={() => !platform.disabled && handlePlatformClick(platform.value)}
             onMouseEnter={() => !platform.disabled && setHoveredPlatform(platform.value)}
             onMouseLeave={() => setHoveredPlatform(null)}
+            disabled={platform.disabled}
+            aria-label={`Select ${platform.label} trading platform`}
+            style={{ background: 'none', border: 'none', cursor: platform.disabled ? 'not-allowed' : 'pointer' }}
           >
             <div className={styles.imageWrapper}>
               <Image
@@ -113,16 +131,23 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
             {platform.disabled && (
               <div className={styles.comingSoon}>Sắp Ra Mắt</div>
             )}
-          </div>
+          </button>
         ))}
       </div>
 
       {/* Modal for switching platforms */}
       {showModal && (
-        <div className={styles.modalOverlay} onClick={handleCancelSwitch}>
+        <div 
+          className={styles.modalOverlay} 
+          onClick={handleCancelSwitch}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          style={{ overscrollBehavior: 'contain' }}
+        >
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Chuyển đổi sàn giao dịch</h3>
+              <h3 id="modal-title">Chuyển đổi sàn giao dịch</h3>
             </div>
             <div className={styles.modalBody}>
               <p>

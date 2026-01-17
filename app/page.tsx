@@ -140,26 +140,20 @@ export default function HomePage() {
                   </div>
                 </Group>
                 <Group gap="md">
-                  <a
-                    href="#features"
+                  <button
                     className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigationChange('features');
-                    }}
+                    onClick={() => handleNavigationChange('features')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Đối tác
-                  </a>
-                  <a
-                    href="#library"
+                  </button>
+                  <button
                     className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigationChange('library');
-                    }}
+                    onClick={() => handleNavigationChange('library')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Thư viện
-                  </a>
+                  </button>
                   <Button
                     variant={navigationSection === 'login' ? 'light' : 'filled'}
                     c={navigationSection === 'login' ? undefined : 'black'}

@@ -53,9 +53,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning className={inter.variable}>
+    <html suppressHydrationWarning className={inter.variable} lang="vi" style={{ colorScheme: 'dark' }}>
       <head>
-        <ColorSchemeScript defaultColorScheme="dark" ></ColorSchemeScript>
+        <ColorSchemeScript defaultColorScheme="dark" />
+        <meta name="theme-color" content="#000000" />
       </head>
       <body>
         <MantineProvider theme={theme} defaultColorScheme="dark">{children}</MantineProvider>
