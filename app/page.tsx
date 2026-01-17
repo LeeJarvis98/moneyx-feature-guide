@@ -3,19 +3,18 @@
 import { useState } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Compass, GraduationCap, TrendingUp, PanelRight, BookOpen } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
+import { LoginTab } from '@/components/tabs/LoginTab';
 import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
-import UserRegister from '@/components/UserRegister';
-import UserLogin from '@/components/UserLogin';
 import classes from './page.module.css';
 
-type NavigationSection = 'features' | 'library' | 'register' | 'login';
+type NavigationSection = 'features' | 'library' | 'login';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +102,7 @@ export default function HomePage() {
         <AppShell
         transitionDuration={500}
         transitionTimingFunction="ease"
-        header={{ height: 100 }}
+        header={{ height: navigationSection === 'login' ? 65 : 100 }}
         footer={{ height: 60 }}
         navbar={{
           width: 300,
@@ -124,7 +123,7 @@ export default function HomePage() {
           }}
         >
           <Container size="100%" h="100%">
-            <Stack gap="md" justify="end" h="100%">
+            <Stack gap="md" justify={navigationSection === 'login' ? 'center' : 'end'} h="100%">
               <Group justify="space-between" align="center">
                 <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
                   <Image
@@ -165,19 +164,9 @@ export default function HomePage() {
                 </Group>
                 <Group gap="md">
                   <Button
-                    variant='subtle'
-                    c={navigationSection === 'register' ? 'black' : undefined}
-                    leftSection={<GraduationCap size={18} />}
-                    onClick={() => handleNavigationChange('register')}
-                    visibleFrom="sm"
-                    className={classes.glowButton}
-                  >
-                    Đăng ký
-                  </Button>
-                  <Button
-                    variant='filled'
+                    variant={navigationSection === 'login' ? 'filled' : 'subtle'}
                     c={navigationSection === 'login' ? 'black' : undefined}
-                    leftSection={<GraduationCap size={18} />}
+                    leftSection={<LogIn size={18} />}
                     onClick={() => handleNavigationChange('login')}
                     visibleFrom="sm"
                     className={classes.glowButton}
@@ -186,11 +175,12 @@ export default function HomePage() {
                   </Button>
                 </Group>
               </Group>
-              <Tabs value={activeTab} onChange={handleTabChange} radius="md">
-                <Tabs.List>
-                  {navigationSection === 'features' && (
-                    <>
-                      <Tabs.Tab
+              {navigationSection !== 'login' && (
+                <Tabs value={activeTab} onChange={handleTabChange} radius="md">
+                  <Tabs.List>
+                    {navigationSection === 'features' && (
+                      <>
+                        <Tabs.Tab
                         value="partner"
                         c={activeTab === 'partner' ? theme.white : undefined}
                         fw={activeTab === 'partner' ? 700 : undefined}
@@ -217,8 +207,9 @@ export default function HomePage() {
                       </Tabs.Tab>
                     </>
                   )}
-                </Tabs.List>
-              </Tabs>
+                  </Tabs.List>
+                </Tabs>
+              )}
               {/* Mobile navigation links */}
               <Group gap="md" hiddenFrom="sm" justify="center">
                 <Anchor
@@ -413,14 +404,14 @@ export default function HomePage() {
               </>
             )}
 
-            {/* Register Section */}
-            {navigationSection === 'register' && (
-              <UserRegister />
-            )}
-
             {/* Login Section */}
             {navigationSection === 'login' && (
-              <UserLogin />
+              <LoginTab 
+                onLoginSuccess={() => {
+                  // Redirect to partner dashboard
+                  handleNavigationChange('features');
+                }}
+              />
             )}
           </Tabs>
         </AppShell.Main>
