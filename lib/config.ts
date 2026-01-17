@@ -1,12 +1,3 @@
-/**
- * Application Configuration
- * 
- * Centralized configuration for the application with settings for:
- * - Google Sheet ID (for detailed tracking)
- * - Sheet tab name (within the detailed sheet)
- * - NGROK API URL (for account lookups)
- */
-
 export interface AppConfig {
   id: string;
   name: string;

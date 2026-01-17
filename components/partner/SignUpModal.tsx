@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check, X } from 'lucide-react';
 import styles from './SignUpModal.module.css';
 
 interface SignUpModalProps {
@@ -408,10 +408,14 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
               </button>
             </div>
             {partnerIdAvailable === true && (
-              <p className={styles.successText}>ID đối tác khả dụng</p>
+              <p className={styles.successText}>
+                <Check size={16} /> ID đối tác khả dụng
+              </p>
             )}
             {partnerIdAvailable === false && (
-              <p className={styles.errorText}>ID đối tác này đã được sử dụng</p>
+              <p className={styles.errorText}>
+                <X size={16} /> ID đối tác này đã được sử dụng
+              </p>
             )}
             <p className={styles.helperText}>
               Chỉ cho phép chữ cái và số (không có khoảng trắng hoặc ký tự đặc biệt)
@@ -466,29 +470,33 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
               <p className={styles.criteriaTitle}>Mật khẩu phải chứa:</p>
               <ul className={styles.criteriaList}>
                 <li className={passwordCriteria.minLength ? styles.criteriaMet : styles.criteriaUnmet}>
-                  {passwordCriteria.minLength ? '✓' : 'X'} Ít nhất 8 ký tự
+                  {passwordCriteria.minLength ? <Check size={14} /> : <X size={14} />} Ít nhất 8 ký tự
                 </li>
                 <li className={passwordCriteria.hasUppercase ? styles.criteriaMet : styles.criteriaUnmet}>
-                  {passwordCriteria.hasUppercase ? '✓' : 'X'} Một chữ cái viết hoa (A-Z)
+                  {passwordCriteria.hasUppercase ? <Check size={14} /> : <X size={14} />} Một chữ cái viết hoa (A-Z)
                 </li>
                 <li className={passwordCriteria.hasLowercase ? styles.criteriaMet : styles.criteriaUnmet}>
-                  {passwordCriteria.hasLowercase ? '✓' : 'X'} Một chữ cái viết thường (a-z)
+                  {passwordCriteria.hasLowercase ? <Check size={14} /> : <X size={14} />} Một chữ cái viết thường (a-z)
                 </li>
                 <li className={passwordCriteria.hasNumber ? styles.criteriaMet : styles.criteriaUnmet}>
-                  {passwordCriteria.hasNumber ? '✓' : 'X'} Một chữ số (0-9)
+                  {passwordCriteria.hasNumber ? <Check size={14} /> : <X size={14} />} Một chữ số (0-9)
                 </li>
                 <li className={passwordCriteria.hasSpecial ? styles.criteriaMet : styles.criteriaUnmet}>
-                  {passwordCriteria.hasSpecial ? '✓' : 'X'} Một ký tự đặc biệt (!@#$%^&*...)
+                  {passwordCriteria.hasSpecial ? <Check size={14} /> : <X size={14} />} Một ký tự đặc biệt (!@#$%^&*...)
                 </li>
               </ul>
             </div>
           )}
 
           {passwordsMatch && (
-            <p className={styles.successText}>✓ Mật khẩu khớp</p>
+            <p className={styles.successText}>
+              <Check size={16} /> Mật khẩu khớp
+            </p>
           )}
           {passwordsDontMatch && (
-            <p className={styles.errorText}>X Mật khẩu không khớp</p>
+            <p className={styles.errorText}>
+              <X size={16} /> Mật khẩu không khớp
+            </p>
           )}
 
           {/* Platform Credentials Section */}
@@ -648,7 +656,7 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
 
                 {credentials.verified && (
                   <p className={styles.verifiedText}>
-                    Xác minh thông tin thành công!
+                    <Check size={16} /> Xác minh thông tin thành công!
                   </p>
                 )}
               </div>

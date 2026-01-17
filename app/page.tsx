@@ -139,8 +139,7 @@ export default function HomePage() {
                     </Title>
                   </div>
                 </Group>
-
-                <Group gap={0} visibleFrom="sm" h="120%">
+                <Group gap="md">
                   <a
                     href="#features"
                     className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
@@ -161,11 +160,9 @@ export default function HomePage() {
                   >
                     Thư viện
                   </a>
-                </Group>
-                <Group gap="md">
                   <Button
-                    variant={navigationSection === 'login' ? 'filled' : 'subtle'}
-                    c={navigationSection === 'login' ? 'black' : undefined}
+                    variant={navigationSection === 'login' ? 'light' : 'filled'}
+                    c={navigationSection === 'login' ? undefined : 'black'}
                     leftSection={<LogIn size={18} />}
                     onClick={() => handleNavigationChange('login')}
                     visibleFrom="sm"
