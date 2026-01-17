@@ -28,7 +28,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
   const [licensedAccountsDetails, setLicensedAccountsDetails] = useState<Array<{email: string; uid: string; accountId: string; timestamp: string | null}>>([]);
-  const [tradiCommissionPercentage, setTradiCommissionPercentage] = useState<number>(10); // Default 10%
 
   // Update aside content when data changes
   useEffect(() => {
@@ -80,6 +79,9 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
       
       console.log('[FETCH CLIENT ACCOUNTS] Received report:', report);
       console.log('[FETCH CLIENT ACCOUNTS] Number of accounts in response:', report.data?.length || 0);
+      console.log('[FETCH CLIENT ACCOUNTS] Totals:', report.totals);
+      console.log('[FETCH CLIENT ACCOUNTS] Partner Commission:', report.totals?.partner_commission);
+      console.log('[FETCH CLIENT ACCOUNTS] Tradi Commission:', report.totals?.tradi_commission);
       
       setClientAccountsReport(report);
       setLicensedAccountsDetails(accountDetails);
@@ -221,9 +223,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                         const details = licensedAccountsDetails.find(
                           (d) => d.accountId === account.client_account
                         );
-                        // Calculate commissions
-                        const tradiCom = account.reward_usd * (tradiCommissionPercentage / 100);
-                        const partnerCom = account.reward_usd - tradiCom;
                         
                         // Extract only the date part from timestamp (remove time)
                         const licensedDate = details?.timestamp ? details.timestamp.split(' ')[0] : 'N/A';
@@ -236,8 +235,8 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                             <td>{licensedDate}</td>
                             <td>{formatNumber(account.volume_lots, 2)}</td>
                             <td>${formatNumber(account.reward_usd, 2)}</td>
-                            <td>${formatNumber(partnerCom, 2)}</td>
-                            <td>${formatNumber(tradiCom, 2)}</td>
+                            <td>${formatNumber(account.partner_commission || 0, 2)}</td>
+                            <td>${formatNumber(account.tradi_commission || 0, 2)}</td>
                           </tr>
                         );
                       })}
@@ -263,22 +262,13 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                   <div className={styles.summaryCard}>
                     <h4>Total Partner Com.</h4>
                     <p className={styles.summaryValue}>
-                      ${formatNumber(
-                        clientAccountsReport.data.reduce((sum, account) => {
-                          const tradiCom = account.reward_usd * (tradiCommissionPercentage / 100);
-                          return sum + (account.reward_usd - tradiCom);
-                        }, 0), 2
-                      )}
+                      ${formatNumber(clientAccountsReport.totals.partner_commission || 0, 2)}
                     </p>
                   </div>
                   <div className={styles.summaryCard}>
                     <h4>Total Tradi Com.</h4>
                     <p className={styles.summaryValue}>
-                      ${formatNumber(
-                        clientAccountsReport.data.reduce((sum, account) => 
-                          sum + (account.reward_usd * (tradiCommissionPercentage / 100)), 0
-                        ), 2
-                      )}
+                      ${formatNumber(clientAccountsReport.totals.tradi_commission || 0, 2)}
                     </p>
                   </div>
                 </div>
