@@ -1,6 +1,6 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { getPartnerFromRequest } from '@/lib/partners';
+import { MAIN_CONFIG } from '@/lib/config';
 
 const RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
 
@@ -21,10 +21,6 @@ const SERVICE_ACCOUNT = {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get partner configuration from request
-    const partnerConfig = getPartnerFromRequest(request);
-    console.log('[GET-LICENSED-IDS] Using partner config:', partnerConfig.name, 'Sheet:', partnerConfig.sheetTabName);
-
     const { searchParams } = new URL(request.url);
     const filterEmail = searchParams.get('email'); // Optional email filter
     
@@ -42,11 +38,11 @@ export async function GET(request: NextRequest) {
 
       const sheets = google.sheets({ version: 'v4', auth });
 
-      // Read data from partner-specific sheet (Email, UID, Account, Licensed Date)
-      console.log('[GET-LICENSED-IDS] Reading data from', partnerConfig.sheetTabName, 'sheet...');
+      // Read data from main sheet (Email, UID, Account, Licensed Date)
+      console.log('[GET-LICENSED-IDS] Reading data from', MAIN_CONFIG.sheetTabName, 'sheet...');
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: partnerConfig.detailedSheetId,
-        range: `${partnerConfig.sheetTabName}!${RANGE}`,
+        spreadsheetId: MAIN_CONFIG.detailedSheetId,
+        range: `${MAIN_CONFIG.sheetTabName}!${RANGE}`,
       });
 
       const rows = response.data.values || [];

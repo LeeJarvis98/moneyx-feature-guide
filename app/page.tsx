@@ -1,28 +1,29 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Compass, Calculator, GraduationCap, TrendingUp, FileText, PanelRight, BookOpen } from 'lucide-react';
+import { Compass, GraduationCap, TrendingUp, PanelRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
-import { FeatureGuideTab } from '@/components/tabs/FeatureGuideTab';
-import { StepByStepTab } from '@/components/tabs/StepByStepTab';
+import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import UserRegister from '@/components/UserRegister';
+import UserLogin from '@/components/UserLogin';
 import classes from './page.module.css';
 
-type NavigationSection = 'features' | 'learn';
+type NavigationSection = 'features' | 'library' | 'register' | 'login';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showHero, setShowHero] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
-  const [navigationSection, setNavigationSection] = useState<NavigationSection>('learn');
-  const [activeTab, setActiveTab] = useState<string | null>('step-by-step');
+  const [navigationSection, setNavigationSection] = useState<NavigationSection>('library');
+  const [activeTab, setActiveTab] = useState<string | null>('documentation');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
@@ -35,9 +36,9 @@ export default function HomePage() {
     setNavigationSection(value as NavigationSection);
     // Set default tab for each section
     if (value === 'features') {
-      setActiveTab('exness');
-    } else if (value === 'learn') {
-      setActiveTab('step-by-step');
+      setActiveTab('partner');
+    } else if (value === 'library') {
+      setActiveTab('documentation');
     }
     // Close mobile menus when switching sections
     closeMobileAside();
@@ -51,14 +52,14 @@ export default function HomePage() {
 
   // Determine if navbar should be shown
   const shouldShowNavbar = (
-    (navigationSection === 'learn' && activeTab === 'step-by-step') ||
-    (navigationSection === 'features' && activeTab === 'exness')
+    (navigationSection === 'library' && activeTab === 'documentation') ||
+    (navigationSection === 'features' && activeTab === 'partner')
   );
 
   // Determine if aside should be shown
   const shouldShowAside = (
     (navigationSection === 'features' && activeTab === 'feature-guide' && featureGuideAside !== null) ||
-    (navigationSection === 'features' && activeTab === 'exness' && partnerAside !== null)
+    (navigationSection === 'features' && activeTab === 'partner' && partnerAside !== null)
   );
 
   // Handle loading completion
@@ -71,8 +72,8 @@ export default function HomePage() {
     setIsTransitioning(true);
     setTimeout(() => {
       setShowHero(false);
-      setNavigationSection('learn');
-      setActiveTab('lay-bot');
+      setNavigationSection('library');
+      setActiveTab('documentation');
       setIsTransitioning(false);
     }, 500);
   };
@@ -97,8 +98,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className={`${classes.mainWrapper} ${isTransitioning ? classes.transitioning : ''}`}>
-      <AppShell
+    <>
+      <div className={`${classes.mainWrapper} ${isTransitioning ? classes.transitioning : ''}`}>
+        <AppShell
         transitionDuration={500}
         transitionTimingFunction="ease"
         header={{ height: 100 }}
@@ -124,42 +126,63 @@ export default function HomePage() {
           <Container size="100%" h="100%">
             <Stack gap="md" justify="end" h="100%">
               <Group justify="space-between" align="center">
-                <Group>
-                  <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
-                    <Image
-                      src="/vnclc-logo.png"
-                      alt="VNCLC Logo"
-                      width={90.53}
-                      height={20}
-                      priority
-                    />
-                    <div>
-                      <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                        Việt Nam Chất Lượng Cao
-                      </Title>
-                    </div>
-                  </Group>
+                <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
+                  <Image
+                    src="/vnclc-logo.png"
+                    alt="VNCLC Logo"
+                    width={90.53}
+                    height={20}
+                    priority
+                  />
+                  <div>
+                    <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                      Việt Nam Chất Lượng Cao
+                    </Title>
+                  </div>
+                </Group>
+
+                <Group gap={0} visibleFrom="sm" h="120%">
+                  <a
+                    href="#features"
+                    className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigationChange('features');
+                    }}
+                  >
+                    Đối tác
+                  </a>
+                  <a
+                    href="#library"
+                    className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigationChange('library');
+                    }}
+                  >
+                    Thư viện
+                  </a>
                 </Group>
                 <Group gap="md">
                   <Button
-                    variant={navigationSection === 'features' ? 'filled' : 'subtle'}
-                    c={navigationSection === 'features' ? 'black' : undefined}
-                    leftSection={<Compass size={18} />}
-                    onClick={() => handleNavigationChange('features')}
+                    variant='subtle'
+                    c={navigationSection === 'register' ? 'black' : undefined}
+                    leftSection={<GraduationCap size={18} />}
+                    onClick={() => handleNavigationChange('register')}
                     visibleFrom="sm"
                     className={classes.glowButton}
                   >
-                    Đối tác
+                    Đăng ký
                   </Button>
                   <Button
-                    variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
-                    c={navigationSection === 'learn' ? 'black' : undefined}
+                    variant='filled'
+                    c={navigationSection === 'login' ? 'black' : undefined}
                     leftSection={<GraduationCap size={18} />}
-                    onClick={() => handleNavigationChange('learn')}
+                    onClick={() => handleNavigationChange('login')}
                     visibleFrom="sm"
                     className={classes.glowButton}
                   >
-                    Thư viện
+                    Đăng nhập
                   </Button>
                 </Group>
               </Group>
@@ -167,79 +190,78 @@ export default function HomePage() {
                 <Tabs.List>
                   {navigationSection === 'features' && (
                     <>
-                      {/* <Tabs.Tab
-                        value="feature-guide"
-                        c={activeTab === 'feature-guide' ? theme.white : undefined}
-                        fw={activeTab === 'feature-guide' ? 700 : undefined}
-                      >
-                        {tTabs('featureGuide')}
-                      </Tabs.Tab> */}
                       <Tabs.Tab
-                        value="exness"
-                        c={activeTab === 'exness' ? theme.white : undefined}
-                        fw={activeTab === 'exness' ? 700 : undefined}
+                        value="partner"
+                        c={activeTab === 'partner' ? theme.white : undefined}
+                        fw={activeTab === 'partner' ? 700 : undefined}
                       >
                         Partner
                       </Tabs.Tab>
                     </>
                   )}
-                  {navigationSection === 'learn' && (
+                  {navigationSection === 'library' && (
                     <>
                       <Tabs.Tab
-                        value="lay-bot"
-                        c={activeTab === 'lay-bot' ? theme.white : undefined}
-                        fw={activeTab === 'lay-bot' ? 700 : undefined}
-                      >
-                        Lấy Bot
-                      </Tabs.Tab>
-                      <Tabs.Tab
-                        value="step-by-step"
-                        c={activeTab === 'step-by-step' ? theme.white : undefined}
-                        fw={activeTab === 'step-by-step' ? 700 : undefined}
+                        value="documentation"
+                        c={activeTab === 'documentation' ? theme.white : undefined}
+                        fw={activeTab === 'documentation' ? 700 : undefined}
                       >
                         Tài liệu
+                      </Tabs.Tab>
+                      <Tabs.Tab
+                        value="get-bot"
+                        c={activeTab === 'get-bot' ? theme.white : undefined}
+                        fw={activeTab === 'get-bot' ? 700 : undefined}
+                      >
+                        Lấy Bot
                       </Tabs.Tab>
                     </>
                   )}
                 </Tabs.List>
               </Tabs>
-              {/* Mobile navigation buttons */}
-              <Group gap="xs" hiddenFrom="sm" justify="center">
-                <Button
-                  variant={navigationSection === 'features' ? 'filled' : 'subtle'}
-                  c={navigationSection === 'features' ? 'black' : undefined}
-                  leftSection={<Compass size={16} />}
-                  onClick={() => handleNavigationChange('features')}
-                  size="xs"
-                  className={classes.glowButton}
+              {/* Mobile navigation links */}
+              <Group gap="md" hiddenFrom="sm" justify="center">
+                <Anchor
+                  size="sm"
+                  fw={navigationSection === 'features' ? 700 : 500}
+                  c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigationChange('features');
+                  }}
+                  href="#features"
+                  underline="always"
                 >
-                  Khu vực đối tác
-                </Button>
-                <Button
-                  variant={navigationSection === 'learn' ? 'filled' : 'subtle'}
-                  c={navigationSection === 'learn' ? 'black' : undefined}
-                  leftSection={<GraduationCap size={16} />}
-                  onClick={() => handleNavigationChange('learn')}
-                  size="xs"
-                  className={classes.glowButton}
+                  Đối tác
+                </Anchor>
+                <Anchor
+                  size="sm"
+                  fw={navigationSection === 'library' ? 700 : 500}
+                  c={navigationSection === 'library' ? theme.colors.accent[6] : 'dimmed'}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigationChange('library');
+                  }}
+                  href="#library"
+                  underline="always"
                 >
                   Thư viện
-                </Button>
+                </Anchor>
               </Group>
             </Stack>
           </Container>
         </AppShell.Header>
 
         <AppShell.Navbar p="md">
-          {navigationSection === 'features' && activeTab === 'exness' && (
-            <PartnerNavBar 
+          {navigationSection === 'features' && activeTab === 'partner' && (
+            <PartnerNavBar
               selectedPlatform={selectedPlatform}
               onPlatformSelect={setSelectedPlatform}
               isAuthenticated={isPartnerAuthenticated}
               onLogout={() => setIsPartnerAuthenticated(false)}
             />
           )}
-          {navigationSection === 'learn' && activeTab === 'step-by-step' && (
+          {navigationSection === 'library' && activeTab === 'documentation' && (
             <ScrollArea h="100%" type="auto" offsetScrollbars>
               <Stack gap="xs">
                 <Badge
@@ -367,11 +389,8 @@ export default function HomePage() {
             {/* Features Section Tabs */}
             {navigationSection === 'features' && (
               <>
-                <Tabs.Panel value="feature-guide">
-                  <FeatureGuideTab onAsideContentChange={setFeatureGuideAside} />
-                </Tabs.Panel>
-                <Tabs.Panel value="exness">
-                  <PartnerApp 
+                <Tabs.Panel value="partner">
+                  <PartnerApp
                     onAsideContentChange={setPartnerAside}
                     selectedPlatform={selectedPlatform}
                     onPlatformSelect={setSelectedPlatform}
@@ -382,16 +401,26 @@ export default function HomePage() {
               </>
             )}
 
-            {/* Learn Section Tabs */}
-            {navigationSection === 'learn' && (
+            {/* Library Section Tabs */}
+            {navigationSection === 'library' && (
               <>
-                <Tabs.Panel value="step-by-step">
+                <Tabs.Panel value="documentation">
                   <StepByStepTab selectedArticle={selectedArticle} />
                 </Tabs.Panel>
-                <Tabs.Panel value="lay-bot">
+                <Tabs.Panel value="get-bot">
                   <GetBotTab />
                 </Tabs.Panel>
               </>
+            )}
+
+            {/* Register Section */}
+            {navigationSection === 'register' && (
+              <UserRegister />
+            )}
+
+            {/* Login Section */}
+            {navigationSection === 'login' && (
+              <UserLogin />
             )}
           </Tabs>
         </AppShell.Main>
@@ -400,7 +429,7 @@ export default function HomePage() {
           {navigationSection === 'features' && activeTab === 'feature-guide' && (
             featureGuideAside
           )}
-          {navigationSection === 'features' && activeTab === 'exness' && (
+          {navigationSection === 'features' && activeTab === 'partner' && (
             partnerAside
           )}
         </AppShell.Aside>
@@ -462,6 +491,7 @@ export default function HomePage() {
           </Transition>
         </Affix>
       </AppShell>
-    </div>
+      </div>
+    </>
   );
 }

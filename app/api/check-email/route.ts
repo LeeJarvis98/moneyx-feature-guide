@@ -1,6 +1,6 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { SHARED_SHEET_ID, getPartnerFromRequest } from '@/lib/partners';
+import { SHARED_SHEET_ID, MAIN_CONFIG } from '@/lib/config';
 
 const RANGE = 'B:B'; // Column B (will use the first sheet)
 
@@ -21,10 +21,6 @@ const SERVICE_ACCOUNT = {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get partner configuration from request
-    const partnerConfig = getPartnerFromRequest(request);
-    console.log('[API] Using partner config:', partnerConfig.name);
-
     const { email } = await request.json();
     console.log('[API] Received email:', email);
 
@@ -35,9 +31,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Fetch account IDs from partner-specific ngrok API
-    console.log('[API] Step 1: Fetching from ngrok API:', partnerConfig.ngrokApiUrl);
-    const ngrokResponse = await fetch(partnerConfig.ngrokApiUrl, {
+    // Step 1: Fetch account IDs from ngrok API
+    console.log('[API] Step 1: Fetching from ngrok API:', MAIN_CONFIG.ngrokApiUrl);
+    const ngrokResponse = await fetch(MAIN_CONFIG.ngrokApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

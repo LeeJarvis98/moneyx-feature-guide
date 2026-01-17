@@ -32,3 +32,35 @@
   transform: translateY(0);
   box-shadow: 0 3px 8px rgba(255, 184, 28, 0.3);
 }
+
+/* Navigation link styles */
+.link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: var(--mantine-spacing-md);
+  padding-right: var(--mantine-spacing-md);
+  text-decoration: none;
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  font-weight: 500;
+  font-size: var(--mantine-font-size-sm);
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+}
+
+.link:hover {
+  border-radius: 8px;
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.linkActive {
+  color: var(--mantine-color-accent-6);
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .link {
+    height: 42px;
+    width: 100%;
+  }
+}

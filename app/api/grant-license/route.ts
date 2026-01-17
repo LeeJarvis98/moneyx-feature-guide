@@ -1,6 +1,6 @@
 ﻿import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { SHARED_SHEET_ID, getPartnerFromRequest } from '@/lib/partners';
+import { SHARED_SHEET_ID, MAIN_CONFIG } from '@/lib/config';
 
 const RANGE = 'B:B'; // Column B only for backward compatibility
 const DETAILED_RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
@@ -22,10 +22,6 @@ const SERVICE_ACCOUNT = {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get partner configuration from request
-    const partnerConfig = getPartnerFromRequest(request);
-    console.log('[GRANT] Using partner config:', partnerConfig.name, 'Sheet:', partnerConfig.sheetTabName);
-
     const { accountIds, email, clientUid } = await request.json();
     console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid);
 
@@ -97,11 +93,11 @@ export async function POST(request: NextRequest) {
       console.log('[GRANT] Successfully wrote to shared sheet');
 
       // === WRITE TO SECOND SHEET (Detailed format - Email, UID, Account, Date) ===
-      // Uses the partner-specific detailed sheet and tab name
-      console.log('[GRANT] Writing to partner detailed sheet:', partnerConfig.detailedSheetId, 'Tab:', partnerConfig.sheetTabName);
+      // Uses the main detailed sheet and tab name
+      console.log('[GRANT] Writing to detailed sheet:', MAIN_CONFIG.detailedSheetId, 'Tab:', MAIN_CONFIG.sheetTabName);
       const detailedReadResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: partnerConfig.detailedSheetId,
-        range: `${partnerConfig.sheetTabName}!${DETAILED_RANGE}`,
+        spreadsheetId: MAIN_CONFIG.detailedSheetId,
+        range: `${MAIN_CONFIG.sheetTabName}!${DETAILED_RANGE}`,
       });
 
       const detailedExistingRows = detailedReadResponse.data.values || [];
@@ -116,10 +112,10 @@ export async function POST(request: NextRequest) {
         timestamp
       ]);
       
-      const detailedTargetRange = `${partnerConfig.sheetTabName}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
+      const detailedTargetRange = `${MAIN_CONFIG.sheetTabName}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
       
       const detailedResponse = await sheets.spreadsheets.values.update({
-        spreadsheetId: partnerConfig.detailedSheetId,
+        spreadsheetId: MAIN_CONFIG.detailedSheetId,
         range: detailedTargetRange,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
