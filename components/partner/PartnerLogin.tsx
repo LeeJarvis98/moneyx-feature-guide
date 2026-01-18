@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerLogin.module.css';
-import SignUpModal from './SignUpModal';
 
 interface PartnerLoginProps {
   onLoginSuccess: () => void;
@@ -16,7 +15,6 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
@@ -70,16 +68,22 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h2 className={styles.title}>Partner Login</h2>
+        <h2 className={styles.title}>
+          {selectedPlatform 
+            ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Login`
+            : 'Partner Login'}
+        </h2>
         <p className={styles.subtitle}>
           Login to access your partner dashboard
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>
-          {/* Partner ID Input */}
+          {/* ID Input */}
           <div className={styles.inputGroup}>
             <label htmlFor="partnerId" className={styles.label}>
-              Partner ID
+              {selectedPlatform 
+                ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
+                : 'Partner ID'}
             </label>
             <input
               type="text"
@@ -88,7 +92,9 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
               onChange={(e) => setPartnerId(e.target.value)}
               required
               className={styles.input}
-              placeholder="Enter your partner ID"
+              placeholder={selectedPlatform 
+                ? `Enter your ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
+                : 'Enter your partner ID'}
               disabled={loading || success}
               autoComplete="username"
               inputMode="text"
@@ -138,23 +144,11 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
         </form>
 
         <div className={styles.footer}>
-          <p>
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={() => setShowSignUpModal(true)}
-              className={styles.link}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              Sign up here
-            </button>
+          <p className={styles.footerText}>
+            Connect directly with your Exness partner account credentials
           </p>
         </div>
       </div>
-
-      {showSignUpModal && (
-        <SignUpModal onClose={() => setShowSignUpModal(false)} />
-      )}
     </div>
   );
 }

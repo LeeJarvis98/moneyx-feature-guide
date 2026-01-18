@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
+import PartnerAgreement from './PartnerAgreement';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
@@ -12,15 +13,50 @@ interface PartnerAppProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
+  onAgreementVisibilityChange?: (visible: boolean) => void;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
+  const [isPartner, setIsPartner] = useState(false);
+  const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
 
-  // Check if user is already logged in on mount
+  // Function to check partner status from Google Sheets
+  const checkPartnerStatus = async (partnerId: string) => {
+    try {
+      const response = await fetch('/api/check-partner-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsPartner(data.isPartner);
+        console.log('[PartnerApp] Partner status:', data.isPartner, 'Rank:', data.rank);
+        return data.isPartner;
+      }
+    } catch (error) {
+      console.error('[PartnerApp] Error checking partner status:', error);
+    }
+    return false;
+  };
+
+  // Check if user is already a partner and if authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = exnessApi.getToken();
+      const partnerId = sessionStorage.getItem('partnerId');
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      
+      // Check partner status using logged-in userId first, fallback to partnerId
+      const idToCheck = userId || partnerId;
+      if (idToCheck) {
+        setCheckingPartnerStatus(true);
+        await checkPartnerStatus(idToCheck);
+        setCheckingPartnerStatus(false);
+      }
+      
       if (token) {
         try {
           // Verify token is valid by making a test request
@@ -57,7 +93,25 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
     setIsAuthenticated(false);
+    setIsPartner(false);
   };
+
+  const handleAcceptTerms = async () => {
+    // When user accepts terms, proceed to login
+    // After they log in, the partner status will be checked again
+    setIsPartner(true);
+    if (onAgreementVisibilityChange) {
+      onAgreementVisibilityChange(false);
+    }
+  };
+
+  // Notify parent about agreement visibility
+  useEffect(() => {
+    if (onAgreementVisibilityChange) {
+      const showingAgreement = !checking && !isAuthenticated && !isPartner;
+      onAgreementVisibilityChange(showingAgreement);
+    }
+  }, [checking, isAuthenticated, isPartner, onAgreementVisibilityChange]);
 
   if (checking) {
     return (
@@ -74,10 +128,16 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onLogout={handleLogout} 
           onAsideContentChange={onAsideContentChange}
         />
-      ) : (
+      ) : isPartner ? (
         <PartnerLogin 
           onLoginSuccess={() => setIsAuthenticated(true)} 
           selectedPlatform={selectedPlatform}
+        />
+      ) : (
+        <PartnerAgreement 
+          onAccept={handleAcceptTerms}
+          selectedPlatform={selectedPlatform}
+          onPlatformSelect={onPlatformSelect}
         />
       )}
     </>

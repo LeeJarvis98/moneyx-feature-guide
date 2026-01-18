@@ -17,7 +17,6 @@ export interface AppConfig {
 // Google Sheets IDs from environment variables
 export const SHARED_SHEET_ID = process.env.SHARED_SHEET_ID || '';
 export const USER_SHEET_ID = process.env.USER_SHEET_ID || '';
-export const PARTNER_SHEET_ID = process.env.PARTNER_SHEET_ID || '';
 
 // Main application configuration
 export const MAIN_CONFIG: AppConfig = {
@@ -39,7 +38,6 @@ export function validateEnvConfig(): void {
     'GOOGLE_PRIVATE_KEY',
     'GOOGLE_CLIENT_EMAIL',
     'USER_SHEET_ID',
-    'PARTNER_SHEET_ID',
     'SHARED_SHEET_ID',
   ];
 

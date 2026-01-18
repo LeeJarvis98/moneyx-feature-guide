@@ -21,7 +21,7 @@ const formatNumber = (value: any, decimals: number = 2): string => {
 };
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
-  const [activeSection, setActiveSection] = useState<'reports' | 'commissions'>('reports');
+  const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem'>('reports');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,7 +121,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
           
           <Stack gap="xs" style={{ marginTop: '16px' }}>
             <NavLink
-              label="Client Accounts Report"
+              label="Client"
               active={activeSection === 'reports'}
               fw={activeSection === 'reports' ? 700 : undefined}
               onClick={() => {
@@ -132,11 +132,11 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             />
             
             <NavLink
-              label="Commissions"
-              active={activeSection === 'commissions'}
-              fw={activeSection === 'commissions' ? 700 : undefined}
+              label="Partner System"
+              active={activeSection === 'partnerSystem'}
+              fw={activeSection === 'partnerSystem' ? 700 : undefined}
               onClick={() => {
-                setActiveSection('commissions');
+                setActiveSection('partnerSystem');
                 setError(null);
               }}
               color="#FFB81C"
@@ -170,11 +170,11 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
 
       {/* Main Content Area */}
       <div className={styles.content}>
-        {/* Client Accounts Report Section */}
+        {/* Client Section */}
         {activeSection === 'reports' && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>Client Accounts Report</h2>
+              <h2>Client</h2>
               <button
                 onClick={fetchClientAccountsReport}
                 disabled={loading}
@@ -213,8 +213,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                         <th>Licensed Date</th>
                         <th>Volume (Lots)</th>
                         <th>Reward (USD)</th>
-                        <th>Partner Com.</th>
-                        <th>Tradi Com.</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -235,8 +233,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                             <td>{licensedDate}</td>
                             <td>{formatNumber(account.volume_lots, 2)}</td>
                             <td>${formatNumber(account.reward_usd, 2)}</td>
-                            <td>${formatNumber(account.partner_commission || 0, 2)}</td>
-                            <td>${formatNumber(account.tradi_commission || 0, 2)}</td>
                           </tr>
                         );
                       })}
@@ -248,11 +244,11 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
           </div>
         )}
 
-        {/* Commissions Section */}
-        {activeSection === 'commissions' && (
+        {/* Partner System Section */}
+        {activeSection === 'partnerSystem' && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>Commissions</h2>
+              <h2>Partner System</h2>
             </div>
 
             {clientAccountsReport ? (
@@ -275,7 +271,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
               </>
             ) : (
               <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Please fetch the Client Accounts Report first to view commission data.
+                Please fetch the Client data first to view commission data.
               </p>
             )}
           </div>

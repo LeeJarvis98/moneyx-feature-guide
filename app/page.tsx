@@ -26,10 +26,12 @@ export default function HomePage() {
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
+  const [showPartnerAgreement, setShowPartnerAgreement] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+  const [partnerRank, setPartnerRank] = useState<string>('');
   const theme = useMantineTheme();
 
   // Check if user is logged in on mount
@@ -38,8 +40,38 @@ export default function HomePage() {
     if (userId) {
       setIsUserLoggedIn(true);
       setLoggedInUserId(userId);
+      // Check partner rank
+      checkPartnerRank(userId);
     }
   }, []);
+
+  // Function to check partner rank from Google Sheets
+  const checkPartnerRank = async (userId: string) => {
+    console.log('[HomePage] Checking partner rank for userId:', userId);
+    try {
+      const response = await fetch('/api/check-partner-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId: userId }),
+      });
+      
+      console.log('[HomePage] Partner status response:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[HomePage] Partner status data:', data);
+        if (data.isPartner && data.rank) {
+          console.log('[HomePage] Setting partner rank:', data.rank);
+          setPartnerRank(data.rank);
+        } else {
+          console.log('[HomePage] User is not a partner or rank is empty');
+          setPartnerRank('');
+        }
+      }
+    } catch (error) {
+      console.error('[HomePage] Error checking partner rank:', error);
+    }
+  };
 
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
@@ -63,7 +95,7 @@ export default function HomePage() {
   // Determine if navbar should be shown
   const shouldShowNavbar = (
     (navigationSection === 'library' && activeTab === 'documentation') ||
-    (navigationSection === 'features' && activeTab === 'partner')
+    (navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement)
   );
 
   // Determine if aside should be shown
@@ -103,6 +135,10 @@ export default function HomePage() {
     sessionStorage.removeItem('userId');
     setIsUserLoggedIn(false);
     setLoggedInUserId(null);
+    setPartnerRank('');
+    // Navigate to documentation tab
+    handleNavigationChange('library');
+    setActiveTab('documentation');
   };
 
   // Show loading screen first
@@ -152,11 +188,26 @@ export default function HomePage() {
                     height={20}
                     priority
                   />
-                  <div>
+                  <Group gap="xs">
                     <Title order={1} size="h2" c={theme.colors.accent[6]}>
                       Việt Nam Chất Lượng Cao
                     </Title>
-                  </div>
+                    {isUserLoggedIn && partnerRank && (
+                      <Badge
+                        variant="gradient"
+                        gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
+                        size="lg"
+                        style={{
+                          fontSize: '0.9rem',
+                          fontWeight: 700,
+                          padding: '0.5rem 1rem',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {partnerRank}
+                      </Badge>
+                    )}
+                  </Group>
                 </Group>
                 <Group gap="md">
                   {isUserLoggedIn && (
@@ -312,7 +363,7 @@ export default function HomePage() {
         </AppShell.Header>
 
         <AppShell.Navbar p="md">
-          {navigationSection === 'features' && activeTab === 'partner' && (
+          {navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement && (
             <PartnerNavBar
               selectedPlatform={selectedPlatform}
               onPlatformSelect={setSelectedPlatform}
@@ -455,6 +506,7 @@ export default function HomePage() {
                     onPlatformSelect={setSelectedPlatform}
                     isAuthenticated={isPartnerAuthenticated}
                     setIsAuthenticated={setIsPartnerAuthenticated}
+                    onAgreementVisibilityChange={setShowPartnerAgreement}
                   />
                 </Tabs.Panel>
               </>
@@ -477,10 +529,14 @@ export default function HomePage() {
             {/* Login Section */}
             {navigationSection === 'login' && (
               <LoginTab 
-                onLoginSuccess={(userId) => {
+                onLoginSuccess={(userId, partnerRank) => {
                   // Update parent state
                   setIsUserLoggedIn(true);
                   setLoggedInUserId(userId);
+                  // Set partner rank from login response
+                  if (partnerRank) {
+                    setPartnerRank(partnerRank);
+                  }
                   // Redirect to documentation
                   handleNavigationChange('library');
                   setActiveTab('documentation');

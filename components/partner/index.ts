@@ -2,4 +2,4 @@
 export { default as PartnerLogin } from './PartnerLogin';
 export { default as PartnerDashboard } from './PartnerDashboard';
 export { default as PartnerNavBar } from './PartnerNavBar';
-export { default as SignUpModal } from './SignUpModal';
+export { default as PartnerAgreement } from './PartnerAgreement';

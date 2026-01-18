@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Read all data from the sheet (assuming first sheet/tab)
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: USER_SHEET_ID,
-      range: 'A:E', // Read columns A through E
+      range: 'A:F', // Read columns A through F (including partner rank)
     });
 
     const rows = response.data.values;
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     // Column B (index 1): User ID
     // Column C (index 2): Password
     // Column E (index 4): Status
+    // Column F (index 5): Partner Rank
     let foundUser = null;
     let rowIndex = -1;
 
@@ -52,12 +53,14 @@ export async function POST(request: NextRequest) {
       const rowUserId = row[1]?.toString().trim(); // Column B
       const rowPassword = row[2]?.toString().trim(); // Column C
       const rowStatus = row[4]?.toString().trim(); // Column E
+      const rowPartnerRank = row[5]?.toString().trim() || ''; // Column F
 
       if (rowUserId === userId) {
         foundUser = {
           userId: rowUserId,
           password: rowPassword,
           status: rowStatus,
+          partnerRank: rowPartnerRank,
         };
         rowIndex = i;
         break;
@@ -105,10 +108,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Login successful
+    const isPartner = foundUser.partnerRank !== '';
+    
     return NextResponse.json(
       {
         success: true,
         userId: foundUser.userId,
+        partnerRank: foundUser.partnerRank,
+        isPartner: isPartner,
         message: 'Đăng nhập thành công',
       },
       { status: 200 }
