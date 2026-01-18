@@ -19,6 +19,26 @@
   }
 }
 
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
 @keyframes breathe {
   0%, 100% {
     transform: scale(1);
@@ -47,6 +67,10 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+.overlayClosing {
+  animation: fadeOut 0.3s ease-in forwards;
+}
+
 .container {
   display: flex;
   align-items: center;
@@ -67,6 +91,10 @@
   overflow-x: hidden;
   animation: slideUp 0.3s ease-out;
   box-sizing: border-box;
+}
+
+.modalClosing {
+  animation: slideDown 0.3s ease-in forwards;
 }
 
 .modalContent {

@@ -10,6 +10,7 @@ interface RegisterModalProps {
 }
 
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
+  const [isClosing, setIsClosing] = useState(false);
   const [regPartnerId, setRegPartnerId] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -79,8 +80,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setPartnerIdAvailable(null);
       setCheckingEmail(false);
       setEmailAvailable(null);
+      setIsClosing(false);
     }
   }, [isOpen]);
+
+  // Handle close with animation
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Match animation duration
+  };
 
   const handlePartnerIdChange = (value: string) => {
     if (validatePartnerId(value)) {
@@ -228,7 +238,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
       setRegSuccess(true);
       setTimeout(() => {
-        onClose();
+        handleClose();
       }, 2000);
     } catch (err) {
       setRegError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
@@ -241,18 +251,18 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
   return (
     <div 
-      className={styles.overlay}
+      className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ''}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          onClose();
+          handleClose();
         }
       }}
     >
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>Đăng ký tài khoản</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className={styles.closeButton}
             type="button"
             aria-label="Close modal"
