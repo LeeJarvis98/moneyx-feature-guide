@@ -165,7 +165,7 @@ export default function HomePage() {
                       onClick={() => handleNavigationChange('features')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
-                      Đối tác
+                      Cổng đối tác
                     </button>
                   )}
                   <button
@@ -173,7 +173,7 @@ export default function HomePage() {
                     onClick={() => handleNavigationChange('library')}
                     style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    Thư viện
+                    Học viện
                   </button>
                   {!isUserLoggedIn ? (
                     <Button
