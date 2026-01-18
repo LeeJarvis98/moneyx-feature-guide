@@ -1,9 +1,9 @@
 ﻿'use client';
 
-import { useState } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut } from 'lucide-react';
 import Image from 'next/image';
 import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
@@ -28,7 +28,18 @@ export default function HomePage() {
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const theme = useMantineTheme();
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    if (userId) {
+      setIsUserLoggedIn(true);
+      setLoggedInUserId(userId);
+    }
+  }, []);
 
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
@@ -86,6 +97,14 @@ export default function HomePage() {
     }, 300);
   };
 
+  // Handle user logout
+  const handleUserLogout = () => {
+    localStorage.removeItem('userId');
+    sessionStorage.removeItem('userId');
+    setIsUserLoggedIn(false);
+    setLoggedInUserId(null);
+  };
+
   // Show loading screen first
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
@@ -140,13 +159,15 @@ export default function HomePage() {
                   </div>
                 </Group>
                 <Group gap="md">
-                  <button
-                    className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
-                    onClick={() => handleNavigationChange('features')}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    Đối tác
-                  </button>
+                  {isUserLoggedIn && (
+                    <button
+                      className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
+                      onClick={() => handleNavigationChange('features')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      Đối tác
+                    </button>
+                  )}
                   <button
                     className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
                     onClick={() => handleNavigationChange('library')}
@@ -154,16 +175,68 @@ export default function HomePage() {
                   >
                     Thư viện
                   </button>
-                  <Button
-                    variant={navigationSection === 'login' ? 'light' : 'filled'}
-                    c={navigationSection === 'login' ? undefined : 'black'}
-                    leftSection={<LogIn size={18} />}
-                    onClick={() => handleNavigationChange('login')}
-                    visibleFrom="sm"
-                    className={classes.glowButton}
-                  >
-                    Đăng nhập
-                  </Button>
+                  {!isUserLoggedIn ? (
+                    <Button
+                      variant={navigationSection === 'login' ? 'light' : 'filled'}
+                      c={navigationSection === 'login' ? undefined : 'black'}
+                      leftSection={<LogIn size={18} />}
+                      onClick={() => handleNavigationChange('login')}
+                      visibleFrom="sm"
+                      className={classes.glowButton}
+                    >
+                      Đăng nhập
+                    </Button>
+                  ) : (
+                    <Menu
+                      width={260}
+                      position="bottom-end"
+                      transitionProps={{ transition: 'pop-top-right' }}
+                    >
+                      <Menu.Target>
+                        <UnstyledButton
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            transition: 'background-color 0.2s',
+                            backgroundColor: 'transparent',
+                          }}
+                        >
+                          <Avatar
+                            radius="xl"
+                            size={32}
+                            style={{
+                              background: 'linear-gradient(135deg, #FFB81C 0%, #FFA000 100%)',
+                            }}
+                          >
+                            <User size={18} color="#000000" />
+                          </Avatar>
+                          <Text size="sm" fw={500} c="white" visibleFrom="sm">
+                            {loggedInUserId}
+                          </Text>
+                          <ChevronDown size={16} color="white" style={{ opacity: 0.6 }} />
+                        </UnstyledButton>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item leftSection={<User size={16} />}>
+                          Thông tin tài khoản
+                        </Menu.Item>
+                        <Menu.Item leftSection={<Settings size={16} />}>
+                          Cài đặt
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          color="red"
+                          leftSection={<LogOut size={16} />}
+                          onClick={handleUserLogout}
+                        >
+                          Đăng xuất
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  )}
                 </Group>
               </Group>
               {navigationSection !== 'login' && (
@@ -189,13 +262,15 @@ export default function HomePage() {
                       >
                         Tài liệu
                       </Tabs.Tab>
-                      <Tabs.Tab
-                        value="get-bot"
-                        c={activeTab === 'get-bot' ? theme.white : undefined}
-                        fw={activeTab === 'get-bot' ? 700 : undefined}
-                      >
-                        Lấy Bot
-                      </Tabs.Tab>
+                      {isUserLoggedIn && (
+                        <Tabs.Tab
+                          value="get-bot"
+                          c={activeTab === 'get-bot' ? theme.white : undefined}
+                          fw={activeTab === 'get-bot' ? 700 : undefined}
+                        >
+                          Lấy Bot
+                        </Tabs.Tab>
+                      )}
                     </>
                   )}
                   </Tabs.List>
@@ -203,19 +278,21 @@ export default function HomePage() {
               )}
               {/* Mobile navigation links */}
               <Group gap="md" hiddenFrom="sm" justify="center">
-                <Anchor
-                  size="sm"
-                  fw={navigationSection === 'features' ? 700 : 500}
-                  c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigationChange('features');
-                  }}
-                  href="#features"
-                  underline="always"
-                >
-                  Đối tác
-                </Anchor>
+                {isUserLoggedIn && (
+                  <Anchor
+                    size="sm"
+                    fw={navigationSection === 'features' ? 700 : 500}
+                    c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigationChange('features');
+                    }}
+                    href="#features"
+                    underline="always"
+                  >
+                    Đối tác
+                  </Anchor>
+                )}
                 <Anchor
                   size="sm"
                   fw={navigationSection === 'library' ? 700 : 500}
@@ -369,7 +446,7 @@ export default function HomePage() {
         }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             {/* Features Section Tabs */}
-            {navigationSection === 'features' && (
+            {isUserLoggedIn && navigationSection === 'features' && (
               <>
                 <Tabs.Panel value="partner">
                   <PartnerApp
@@ -389,18 +466,24 @@ export default function HomePage() {
                 <Tabs.Panel value="documentation">
                   <StepByStepTab selectedArticle={selectedArticle} />
                 </Tabs.Panel>
-                <Tabs.Panel value="get-bot">
-                  <GetBotTab />
-                </Tabs.Panel>
+                {isUserLoggedIn && (
+                  <Tabs.Panel value="get-bot">
+                    <GetBotTab />
+                  </Tabs.Panel>
+                )}
               </>
             )}
 
             {/* Login Section */}
             {navigationSection === 'login' && (
               <LoginTab 
-                onLoginSuccess={() => {
-                  // Redirect to partner dashboard
-                  handleNavigationChange('features');
+                onLoginSuccess={(userId) => {
+                  // Update parent state
+                  setIsUserLoggedIn(true);
+                  setLoggedInUserId(userId);
+                  // Redirect to documentation
+                  handleNavigationChange('library');
+                  setActiveTab('documentation');
                 }}
               />
             )}

@@ -6,7 +6,7 @@ import styles from './LoginTab.module.css';
 import { RegisterModal } from './RegisterModal';
 
 interface LoginTabProps {
-  onLoginSuccess?: () => void;
+  onLoginSuccess?: (userId: string) => void;
 }
 
 export function LoginTab({ onLoginSuccess }: LoginTabProps) {
@@ -31,11 +31,11 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/partner-login', {
+      const response = await fetch('/api/user-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          partnerId,
+          userId: partnerId,
           password,
           rememberMe,
         }),
@@ -47,18 +47,19 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
         throw new Error(data.error || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
       }
 
-      if (data.partnerId) {
+      if (data.userId) {
         if (rememberMe) {
-          localStorage.setItem('partnerId', data.partnerId);
+          localStorage.setItem('userId', data.userId);
         } else {
-          sessionStorage.setItem('partnerId', data.partnerId);
+          sessionStorage.setItem('userId', data.userId);
         }
       }
 
       setSuccess(true);
+      
       setTimeout(() => {
         if (onLoginSuccess) {
-          onLoginSuccess();
+          onLoginSuccess(data.userId);
         }
       }, 1000);
     } catch (err) {
@@ -159,7 +160,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
             className={styles.submitButton}
             disabled={loading || success}
           >
-            {loading ? 'Đang đăng nhập…' : success ? 'Thành công!' : 'Đăng nhập'}
+            {loading ? 'Đang đăng nhập' : success ? 'Thành công!' : 'Đăng nhập'}
           </button>
         </form>
 

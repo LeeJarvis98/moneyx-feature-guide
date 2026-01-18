@@ -27,19 +27,19 @@ interface UserSignupData {
 // Validation helper functions
 function validatePartnerId(partnerId: string): { valid: boolean; error?: string } {
   if (!partnerId || typeof partnerId !== 'string') {
-    return { valid: false, error: 'Partner ID is required' };
+    return { valid: false, error: 'ID is required' };
   }
 
-  if (partnerId.length < 3) {
-    return { valid: false, error: 'Partner ID must be at least 3 characters long' };
+  if (partnerId.length < 4) {
+    return { valid: false, error: 'ID must be at least 4 characters long' };
   }
 
   if (partnerId.length > 50) {
-    return { valid: false, error: 'Partner ID must not exceed 50 characters' };
+    return { valid: false, error: 'ID must not exceed 50 characters' };
   }
 
   if (!/^[a-zA-Z0-9]+$/.test(partnerId)) {
-    return { valid: false, error: 'Partner ID can only contain letters and numbers' };
+    return { valid: false, error: 'ID can only contain letters and numbers' };
   }
 
   return { valid: true };
@@ -94,10 +94,10 @@ export async function POST(request: NextRequest) {
       email: data.email,
     });
 
-    // Validate Partner ID
+    // Validate ID
     const partnerIdValidation = validatePartnerId(data.partnerId);
     if (!partnerIdValidation.valid) {
-      console.error('[USER-SIGNUP] Partner ID validation failed:', partnerIdValidation.error);
+      console.error('[USER-SIGNUP] ID validation failed:', partnerIdValidation.error);
       return NextResponse.json(
         { error: partnerIdValidation.error },
         { status: 400 }
@@ -133,6 +133,69 @@ export async function POST(request: NextRequest) {
 
     const sheets = google.sheets({ version: 'v4', auth });
 
+    // Get spreadsheet metadata to determine the sheet
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+    });
+
+    if (!spreadsheet.data.sheets || spreadsheet.data.sheets.length === 0) {
+      console.error('[USER-SIGNUP] No sheets found in the spreadsheet');
+      return NextResponse.json(
+        { error: 'Database configuration error' },
+        { status: 500 }
+      );
+    }
+
+    const firstSheet = spreadsheet.data.sheets[0];
+    const sheetName = firstSheet.properties?.title || 'Sheet1';
+    const sheetId = firstSheet.properties?.sheetId;
+
+    console.log('[USER-SIGNUP] Using sheet:', sheetName, 'with ID:', sheetId);
+
+    // BACKEND VALIDATION: Double-check Partner ID availability
+    console.log('[USER-SIGNUP] Double-checking ID availability...');
+    const existingIdsRange = `${sheetName}!B2:B`;
+    const existingIdsResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: existingIdsRange,
+    });
+
+    const existingIds = existingIdsResponse.data.values?.flat().filter(Boolean) || [];
+    const partnerIdTaken = existingIds.some(
+      (id) => id.toString().toLowerCase() === data.partnerId.toLowerCase()
+    );
+
+    if (partnerIdTaken) {
+      console.error('[USER-SIGNUP] ID already exists:', data.partnerId);
+      return NextResponse.json(
+        { error: 'ID này đã được sử dụng. Vui lòng chọn ID khác.' },
+        { status: 409 }
+      );
+    }
+
+    // BACKEND VALIDATION: Double-check Email availability
+    console.log('[USER-SIGNUP] Double-checking Email availability...');
+    const existingEmailsRange = `${sheetName}!D2:D`;
+    const existingEmailsResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: existingEmailsRange,
+    });
+
+    const existingEmails = existingEmailsResponse.data.values?.flat().filter(Boolean) || [];
+    const emailTaken = existingEmails.some(
+      (existingEmail) => existingEmail.toString().toLowerCase() === data.email.toLowerCase()
+    );
+
+    if (emailTaken) {
+      console.error('[USER-SIGNUP] Email already exists:', data.email);
+      return NextResponse.json(
+        { error: 'Email này đã được đăng ký. Vui lòng sử dụng email khác.' },
+        { status: 409 }
+      );
+    }
+
+    console.log('[USER-SIGNUP] All validations passed. Proceeding with registration...');
+
     // Create timestamp in ISO format (can be formatted by Google Sheets)
     const timestamp = new Date().toISOString();
 
@@ -158,24 +221,6 @@ export async function POST(request: NextRequest) {
     ];
 
     console.log('[USER-SIGNUP] Attempting to write to Google Sheets...');
-    console.log('[USER-SIGNUP] Spreadsheet ID:', SPREADSHEET_ID);
-
-    // Get spreadsheet metadata to determine the first sheet
-    const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEET_ID,
-    });
-
-    if (!spreadsheet.data.sheets || spreadsheet.data.sheets.length === 0) {
-      console.error('[USER-SIGNUP] No sheets found in the spreadsheet');
-      throw new Error('No sheets found in the spreadsheet');
-    }
-
-    // Use the first sheet (default sheet)
-    const firstSheet = spreadsheet.data.sheets[0];
-    const sheetName = firstSheet.properties?.title || 'Sheet1';
-    const sheetId = firstSheet.properties?.sheetId;
-
-    console.log('[USER-SIGNUP] Using sheet:', sheetName, 'with ID:', sheetId);
 
     // Insert a new row at position 2 (right after headers)
     if (sheetId !== undefined) {
