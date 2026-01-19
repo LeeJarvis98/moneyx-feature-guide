@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { USER_SHEET_ID } from '@/lib/config';
+import { getSupabaseClient } from '@/lib/supabase';
+import type { User } from '@/types/database';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,50 +21,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set up Google Sheets API with centralized credentials
-    const sheets = await getGoogleSheetsClient();
+    // Set up Supabase client
+    const supabase = getSupabaseClient();
 
-    // Read all data from the sheet (assuming first sheet/tab)
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: USER_SHEET_ID,
-      range: 'A:F', // Read columns A through F (including partner rank)
-    });
+    // Find user by id
+    const { data: foundUser, error: queryError } = await supabase
+      .from('users')
+      .select('*')
+      .ilike('id', userId)
+      .maybeSingle() as { data: User | null; error: any };
 
-    const rows = response.data.values;
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Không tìm thấy dữ liệu người dùng' },
-        { status: 404 }
-      );
-    }
-
-    // Skip header row (index 0) and search for user
-    // Column A (index 0): might be timestamp or other data
-    // Column B (index 1): User ID
-    // Column C (index 2): Password
-    // Column E (index 4): Status
-    // Column F (index 5): Partner Rank
-    let foundUser = null;
-    let rowIndex = -1;
-
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const rowUserId = row[1]?.toString().trim(); // Column B
-      const rowPassword = row[2]?.toString().trim(); // Column C
-      const rowStatus = row[4]?.toString().trim(); // Column E
-      const rowPartnerRank = row[5]?.toString().trim() || ''; // Column F
-
-      if (rowUserId === userId) {
-        foundUser = {
-          userId: rowUserId,
-          password: rowPassword,
-          status: rowStatus,
-          partnerRank: rowPartnerRank,
-        };
-        rowIndex = i;
-        break;
-      }
+    if (queryError) {
+      console.error('[USER-LOGIN] Database error:', queryError);
+      throw queryError;
     }
 
     // Check if user exists
@@ -93,9 +62,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (status === 'cancelled') {
+    if (status === 'terminated') {
       return NextResponse.json(
         { error: 'Tài khoản của bạn đã bị xóa. Vui lòng liên hệ quản trị viên.' },
+        { status: 403 }
+      );
+    }
+
+    if (status === 'hold') {
+      return NextResponse.json(
+        { error: 'Tài khoản của bạn đang tạm dừng. Vui lòng liên hệ quản trị viên.' },
         { status: 403 }
       );
     }
@@ -108,13 +84,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Login successful
-    const isPartner = foundUser.partnerRank !== '';
+    const isPartner = foundUser.partner_rank !== '';
     
     return NextResponse.json(
       {
         success: true,
-        userId: foundUser.userId,
-        partnerRank: foundUser.partnerRank,
+        userId: foundUser.id,
+        partnerRank: foundUser.partner_rank,
         isPartner: isPartner,
         message: 'Đăng nhập thành công',
       },

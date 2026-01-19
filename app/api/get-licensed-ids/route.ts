@@ -1,8 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { MAIN_CONFIG } from '@/lib/config';
-
-const RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,61 +12,65 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // Initialize auth with centralized service account
-      const sheets = await getGoogleSheetsClient();
+      // Initialize Supabase client
+      const supabase = getSupabaseClient();
 
-      // Read data from main sheet (Email, UID, Account, Licensed Date)
-      console.log('[GET-LICENSED-IDS] Reading data from', MAIN_CONFIG.sheetTabName, 'sheet...');
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: MAIN_CONFIG.detailedSheetId,
-        range: `${MAIN_CONFIG.sheetTabName}!${RANGE}`,
-      });
+      console.log('[GET-LICENSED-IDS] Fetching licensed account IDs from database...');
+      if (filterEmail) {
+        console.log('[GET-LICENSED-IDS] Filtering by email:', filterEmail);
+      }
 
-      const rows = response.data.values || [];
-      console.log('[GET-LICENSED-IDS] Found', rows.length, 'rows');
-
-      // Extract email (column A), UID (column B), account IDs (column C), and timestamp (column D)
-      let licensedAccounts = rows
-        .slice(1) // Skip header row
-        .filter((row) => row[2]) // Filter out rows without account ID
-        .map((row) => ({
-          email: row[0] || '',
-          uid: row[1] || '',
-          accountId: row[2],
-          timestamp: row[3] || null,
-        }));
+      // Build query
+      let query = supabase
+        .from('licensed_accounts')
+        .select('email, uid, account_id, licensed_at')
+        .order('licensed_at', { ascending: false });
 
       // Filter by email if provided
       if (filterEmail) {
-        licensedAccounts = licensedAccounts.filter(
-          (account) => account.email.toLowerCase() === filterEmail.toLowerCase()
-        );
-        console.log('[GET-LICENSED-IDS] After email filter:', licensedAccounts.length, 'accounts');
+        query = query.ilike('email', filterEmail);
       }
 
+      const { data: licensedAccounts, error: queryError } = await query;
+
+      if (queryError) {
+        console.error('[GET-LICENSED-IDS] Database error:', queryError);
+        throw queryError;
+      }
+
+      console.log('[GET-LICENSED-IDS] Found', licensedAccounts?.length || 0, 'accounts');
+
+      // Transform data
+      const accountDetails = (licensedAccounts || []).map((account) => ({
+        email: account.email,
+        uid: account.uid,
+        accountId: account.account_id,
+        timestamp: account.licensed_at,
+      }));
+
       // Return just the account IDs array for filtering
-      const accountIds = licensedAccounts.map((account) => account.accountId);
+      const accountIds = accountDetails.map((account) => account.accountId);
 
       console.log('[GET-LICENSED-IDS] Returning', accountIds.length, 'licensed account IDs');
 
       return NextResponse.json({
         success: true,
         data: accountIds,
-        details: licensedAccounts, // Include full details with timestamps
+        details: accountDetails, // Include full details with timestamps
       });
 
     } catch (apiError: any) {
-      console.error('[GET-LICENSED-IDS] Google Sheets API Error:', apiError);
+      console.error('[GET-LICENSED-IDS] Database Error:', apiError);
       console.error('[GET-LICENSED-IDS] Error details:', {
         message: apiError.message,
         code: apiError.code,
-        errors: apiError.errors,
+        details: apiError.details,
       });
       
       return NextResponse.json(
         { 
           success: false, 
-          error: apiError.message || 'Failed to read from Google Sheets',
+          error: apiError.message || 'Failed to read from database',
         },
         { status: 500 }
       );

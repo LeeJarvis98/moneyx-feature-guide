@@ -11,7 +11,7 @@ interface RegisterModalProps {
 
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [isClosing, setIsClosing] = useState(false);
-  const [regPartnerId, setRegPartnerId] = useState('');
+  const [regId, setRegPartnerId] = useState('');
   const [regReferralId, setRegReferralId] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -22,15 +22,15 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
   const [regSuccess, setRegSuccess] = useState(false);
-  const [checkingPartnerId, setCheckingPartnerId] = useState(false);
-  const [partnerIdAvailable, setPartnerIdAvailable] = useState<boolean | null>(null);
+  const [checkingId, setCheckingId] = useState(false);
+  const [idAvailable, setIdAvailable] = useState<boolean | null>(null);
   const [checkingReferralId, setCheckingReferralId] = useState(false);
   const [referralIdValid, setReferralIdValid] = useState<boolean | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
 
   // Registration form validation functions
-  const validatePartnerId = (value: string): boolean => {
+  const validateId = (value: string): boolean => {
     return /^[a-zA-Z0-9]*$/.test(value);
   };
 
@@ -51,8 +51,8 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const passwordsDontMatch = regConfirmPassword && regPassword !== regConfirmPassword;
   
   // ID validation states
-  const isIdFormatValid = regPartnerId && validatePartnerId(regPartnerId) && regPartnerId.length >= 4;
-  const isIdFormatInvalid = regPartnerId && (!validatePartnerId(regPartnerId) || regPartnerId.length < 4);
+  const isIdFormatValid = regId && validateId(regId) && regId.length >= 4;
+  const isIdFormatInvalid = regId && (!validateId(regId) || regId.length < 4);
   
   // Email validation states with common TLD mistake detection
   const hasCommonTLDMistake = regEmail && (
@@ -80,8 +80,8 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setRegLoading(false);
       setRegError(null);
       setRegSuccess(false);
-      setCheckingPartnerId(false);
-      setPartnerIdAvailable(null);
+      setCheckingId(false);
+      setIdAvailable(null);
       setCheckingReferralId(false);
       setReferralIdValid(null);
       setCheckingEmail(false);
@@ -99,58 +99,58 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   };
 
   const handlePartnerIdChange = (value: string) => {
-    if (validatePartnerId(value)) {
+    if (validateId(value)) {
       setRegPartnerId(value);
       // Reset availability when user modifies input
-      if (partnerIdAvailable !== null) {
-        setPartnerIdAvailable(null);
+      if (idAvailable !== null) {
+        setIdAvailable(null);
       }
       setRegError(null);
     }
   };
 
   const handleCheckPartnerId = async () => {
-    if (!regPartnerId) {
+    if (!regId) {
       setRegError('Vui lòng nhập ID');
       return;
     }
 
-    if (regPartnerId.length < 4) {
+    if (regId.length < 4) {
       setRegError('ID phải có ít nhất 4 ký tự');
       return;
     }
 
     setRegError(null);
-    setCheckingPartnerId(true);
-    setPartnerIdAvailable(null);
+    setCheckingId(true);
+    setIdAvailable(null);
 
     try {
       const response = await fetch('/api/check-user-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId: regPartnerId }),
+        body: JSON.stringify({ id: regId }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to check partner ID');
+        throw new Error(data.error || 'Failed to check ID');
       }
 
-      setPartnerIdAvailable(data.available);
+      setIdAvailable(data.available);
       if (!data.available) {
         setRegError(data.message || 'ID này đã được sử dụng');
       }
     } catch (err) {
-      setRegError(err instanceof Error ? err.message : 'Failed to check partner ID');
-      setPartnerIdAvailable(null);
+      setRegError(err instanceof Error ? err.message : 'Failed to check ID');
+      setIdAvailable(null);
     } finally {
-      setCheckingPartnerId(false);
+      setCheckingId(false);
     }
   };
 
   const handleReferralIdChange = (value: string) => {
-    if (validatePartnerId(value)) {
+    if (validateId(value)) {
       setRegReferralId(value);
       // Reset validity when user modifies input
       if (referralIdValid !== null) {
@@ -179,7 +179,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       const response = await fetch('/api/check-user-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId: regReferralId }),
+        body: JSON.stringify({ id: regReferralId }),
       });
 
       const data = await response.json();
@@ -245,12 +245,12 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     e.preventDefault();
     setRegError(null);
 
-    if (!regPartnerId || !regReferralId || !regEmail || !regPassword || !regConfirmPassword) {
+    if (!regId || !regReferralId || !regEmail || !regPassword || !regConfirmPassword) {
       setRegError('Vui lòng điền đầy đủ thông tin');
       return;
     }
 
-    if (!validatePartnerId(regPartnerId)) {
+    if (!validateId(regId)) {
       setRegError('ID chỉ được chứa chữ cái và số');
       return;
     }
@@ -282,7 +282,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          partnerId: regPartnerId,
+          id: regId,
           referralId: regReferralId,
           email: regEmail,
           password: regPassword,
@@ -332,20 +332,20 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
         <form onSubmit={handleRegisterSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label htmlFor="regPartnerId" className={styles.label}>
+            <label htmlFor="regId" className={styles.label}>
               ID<span className={styles.required}>*</span>
             </label>
             <div className={styles.inputWithButton}>
               <input
                 type="text"
-                id="regPartnerId"
-                value={regPartnerId}
+                id="regId"
+                value={regId}
                 onChange={(e) => handlePartnerIdChange(e.target.value)}
                 required
                 className={`${styles.input} ${
-                  partnerIdAvailable === true
+                  idAvailable === true
                     ? styles.inputSuccess
-                    : partnerIdAvailable === false || isIdFormatInvalid
+                    : idAvailable === false || isIdFormatInvalid
                     ? styles.inputError
                     : ''
                 }`}
@@ -356,33 +356,33 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 type="button"
                 onClick={handleCheckPartnerId}
                 className={`${styles.checkButton} ${
-                  partnerIdAvailable === true
+                  idAvailable === true
                     ? styles.checkButtonVerified
-                    : isIdFormatValid && partnerIdAvailable === null && !checkingPartnerId
+                    : isIdFormatValid && idAvailable === null && !checkingId
                     ? styles.checkButtonActive
                     : ''
                 }`}
-                disabled={!regPartnerId || !isIdFormatValid || checkingPartnerId || regLoading || regSuccess}
+                disabled={!regId || !isIdFormatValid || checkingId || regLoading || regSuccess}
               >
-                {checkingPartnerId ? 'Kiểm tra...' : partnerIdAvailable === true ? '✓' : 'Kiểm tra'}
+                {checkingId ? 'Kiểm tra...' : idAvailable === true ? '✓' : 'Kiểm tra'}
               </button>
             </div>
-            {partnerIdAvailable === true && (
+            {idAvailable === true && (
               <span className={styles.successText}>
                 <Check size={16} /> Bạn có thể sử dụng ID này
               </span>
             )}
-            {partnerIdAvailable === false && (
+            {idAvailable === false && (
               <span className={styles.errorText}>
                 <X size={16} /> ID này đã được sử dụng
               </span>
             )}
-            {isIdFormatInvalid && partnerIdAvailable === null && (
+            {isIdFormatInvalid && idAvailable === null && (
               <span className={styles.errorText}>
-                <X size={16} /> {!validatePartnerId(regPartnerId) ? 'ID chỉ được chứa chữ cái và số' : 'ID phải có ít nhất 4 ký tự'}
+                <X size={16} /> {!validateId(regId) ? 'ID chỉ được chứa chữ cái và số' : 'ID phải có ít nhất 4 ký tự'}
               </span>
             )}
-            {!regPartnerId && (
+            {!regId && (
               <span className={styles.hint}>
                 Chỉ chữ cái và số, ít nhất 4 ký tự
               </span>
@@ -416,11 +416,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 className={`${styles.checkButton} ${
                   referralIdValid === true
                     ? styles.checkButtonVerified
-                    : regReferralId.length >= 4 && validatePartnerId(regReferralId) && referralIdValid === null && !checkingReferralId
+                    : regReferralId.length >= 4 && validateId(regReferralId) && referralIdValid === null && !checkingReferralId
                     ? styles.checkButtonActive
                     : ''
                 }`}
-                disabled={!regReferralId || regReferralId.length < 4 || !validatePartnerId(regReferralId) || checkingReferralId || regLoading || regSuccess}
+                disabled={!regReferralId || regReferralId.length < 4 || !validateId(regReferralId) || checkingReferralId || regLoading || regSuccess}
               >
                 {checkingReferralId ? 'Kiểm tra...' : referralIdValid === true ? '✓' : 'Kiểm tra'}
               </button>
@@ -440,7 +440,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <X size={16} /> ID phải có ít nhất 4 ký tự
               </span>
             )}
-            {regReferralId && !validatePartnerId(regReferralId) && (
+            {regReferralId && !validateId(regReferralId) && (
               <span className={styles.errorText}>
                 <X size={16} /> ID chỉ được chứa chữ cái và số
               </span>
@@ -648,7 +648,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               regLoading || 
               regSuccess || 
               !regTermsAccepted || 
-              partnerIdAvailable !== true || 
+              idAvailable !== true || 
               referralIdValid !== true || 
               emailAvailable !== true || 
               !isPasswordStrong || 

@@ -1,9 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { SHARED_SHEET_ID, MAIN_CONFIG } from '@/lib/config';
-
-const RANGE = 'B:B'; // Column B only for backward compatibility
-const DETAILED_RANGE = 'A:D'; // Columns: Email, UID, Account, Licensed Date
+import { getSupabaseClient, getGoogleSheetsClient } from '@/lib/supabase';
+import { SHARED_SHEET_ID } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,30 +29,46 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Initialize auth with centralized service account
+      // Initialize clients
+      const supabase = getSupabaseClient();
       const sheets = await getGoogleSheetsClient();
 
-      // Format timestamp as dd.mm.yyyy hh:mm:ss
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = now.getFullYear();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const timestamp = `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+      console.log('[GRANT] Writing licenses to Supabase and Google Sheets...');
 
-      // === WRITE TO FIRST SHEET (Simple format - Account ID only in column B) ===
-      // Uses the SHARED sheet that all partners use
-      console.log('[GRANT] Writing to shared sheet (simple format)...');
+      // Format timestamp as ISO string
+      const timestamp = new Date().toISOString();
+
+      // === WRITE TO SUPABASE (Detailed tracking) ===
+      console.log('[GRANT] Writing to Supabase...');
+      const licensedRecords = accountIds.map((accountId) => ({
+        email,
+        uid: clientUid,
+        account_id: accountId,
+        licensed_at: timestamp,
+      }));
+
+      const { data: insertedRecords, error: insertError } = await supabase
+        .from('licensed_accounts')
+        .insert(licensedRecords)
+        .select();
+
+      if (insertError) {
+        console.error('[GRANT] Supabase error:', insertError);
+        throw insertError;
+      }
+
+      console.log('[GRANT] Successfully wrote', insertedRecords?.length || 0, 'records to Supabase');
+
+      // === WRITE TO GOOGLE SHEETS (Shared license list) ===
+      console.log('[GRANT] Writing to shared Google Sheet...');
       const readResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SHARED_SHEET_ID,
-        range: RANGE,
+        range: 'B:B',
       });
 
       const existingRows = readResponse.data.values || [];
       const nextRow = existingRows.length + 1;
-      console.log('[GRANT] First sheet - next empty row:', nextRow);
+      console.log('[GRANT] Shared sheet - next empty row:', nextRow);
 
       // Write only account IDs to column B
       const simpleValues = accountIds.map((id) => [id]);
@@ -70,61 +83,28 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log('[GRANT] Successfully wrote to shared sheet');
-
-      // === WRITE TO SECOND SHEET (Detailed format - Email, UID, Account, Date) ===
-      // Uses the main detailed sheet and tab name
-      console.log('[GRANT] Writing to detailed sheet:', MAIN_CONFIG.detailedSheetId, 'Tab:', MAIN_CONFIG.sheetTabName);
-      const detailedReadResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: MAIN_CONFIG.detailedSheetId,
-        range: `${MAIN_CONFIG.sheetTabName}!${DETAILED_RANGE}`,
-      });
-
-      const detailedExistingRows = detailedReadResponse.data.values || [];
-      const detailedNextRow = detailedExistingRows.length + 1;
-      console.log('[GRANT] Second sheet - next empty row:', detailedNextRow);
-
-      // Format: Email, UID, Account, Licensed Date
-      const detailedValues = accountIds.map((id) => [
-        email,
-        clientUid,
-        id,
-        timestamp
-      ]);
-      
-      const detailedTargetRange = `${MAIN_CONFIG.sheetTabName}!A${detailedNextRow}:D${detailedNextRow + detailedValues.length - 1}`;
-      
-      const detailedResponse = await sheets.spreadsheets.values.update({
-        spreadsheetId: MAIN_CONFIG.detailedSheetId,
-        range: detailedTargetRange,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: detailedValues,
-        },
-      });
-
-      console.log('[GRANT] Successfully wrote', detailedResponse.data.updatedRows, 'rows to second sheet');
+      console.log('[GRANT] Successfully wrote to shared Google Sheet');
 
       return NextResponse.json({
         success: true,
         data: {
-          updatedRows: detailedResponse.data.updatedRows || 0,
-          updatedRange: detailedResponse.data.updatedRange,
+          updatedRows: insertedRecords?.length || 0,
+          records: insertedRecords,
         },
       });
 
     } catch (apiError: any) {
-      console.error('[GRANT] Google Sheets API Error:', apiError);
+      console.error('[GRANT] Error:', apiError);
       console.error('[GRANT] Error details:', {
         message: apiError.message,
         code: apiError.code,
-        errors: apiError.errors,
+        details: apiError.details,
       });
       
       return NextResponse.json(
         { 
           success: false, 
-          error: apiError.message || 'Failed to write to Google Sheets',
+          error: apiError.message || 'Failed to grant license',
         },
         { status: 500 }
       );

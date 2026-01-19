@@ -1,30 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { USER_SHEET_ID } from '@/lib/config';
-
-const SPREADSHEET_ID = USER_SHEET_ID;
+import { getSupabaseClient } from '@/lib/supabase';
+import type { User } from '@/types/database';
 
 interface UserSignupData {
-  partnerId: string;
+  id: string;
   email: string;
   password: string;
 }
 
 // Validation helper functions
-function validatePartnerId(partnerId: string): { valid: boolean; error?: string } {
-  if (!partnerId || typeof partnerId !== 'string') {
+function validateId(id: string): { valid: boolean; error?: string } {
+  if (!id || typeof id !== 'string') {
     return { valid: false, error: 'ID is required' };
   }
 
-  if (partnerId.length < 4) {
+  if (id.length < 4) {
     return { valid: false, error: 'ID must be at least 4 characters long' };
   }
 
-  if (partnerId.length > 50) {
+  if (id.length > 50) {
     return { valid: false, error: 'ID must not exceed 50 characters' };
   }
 
-  if (!/^[a-zA-Z0-9]+$/.test(partnerId)) {
+  if (!/^[a-zA-Z0-9]+$/.test(id)) {
     return { valid: false, error: 'ID can only contain letters and numbers' };
   }
 
@@ -76,16 +74,16 @@ export async function POST(request: NextRequest) {
   try {
     const data: UserSignupData = await request.json();
     console.log('[USER-SIGNUP] Received signup data:', {
-      partnerId: data.partnerId,
+      id: data.id,
       email: data.email,
     });
 
     // Validate ID
-    const partnerIdValidation = validatePartnerId(data.partnerId);
-    if (!partnerIdValidation.valid) {
-      console.error('[USER-SIGNUP] ID validation failed:', partnerIdValidation.error);
+    const idValidation = validateId(data.id);
+    if (!idValidation.valid) {
+      console.error('[USER-SIGNUP] ID validation failed:', idValidation.error);
       return NextResponse.json(
-        { error: partnerIdValidation.error },
+        { error: idValidation.error },
         { status: 400 }
       );
     }
@@ -110,44 +108,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[USER-SIGNUP] Initializing Google Sheets API...');
-    // Initialize Google Sheets client with centralized credentials
-    const sheets = await getGoogleSheetsClient();
+    console.log('[USER-SIGNUP] Initializing Supabase client...');
+    const supabase = getSupabaseClient();
 
-    // Get spreadsheet metadata to determine the sheet
-    const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEET_ID,
-    });
+    // BACKEND VALIDATION: Double-check ID availability
+    console.log('[USER-SIGNUP] Double-checking ID availability...');
+    const { data: existingId, error: idCheckError } = await supabase
+      .from('users')
+      .select('id')
+      .ilike('id', data.id)
+      .maybeSingle();
 
-    if (!spreadsheet.data.sheets || spreadsheet.data.sheets.length === 0) {
-      console.error('[USER-SIGNUP] No sheets found in the spreadsheet');
-      return NextResponse.json(
-        { error: 'Database configuration error' },
-        { status: 500 }
-      );
+    if (idCheckError) {
+      console.error('[USER-SIGNUP] Error checking ID:', idCheckError);
+      throw idCheckError;
     }
 
-    const firstSheet = spreadsheet.data.sheets[0];
-    const sheetName = firstSheet.properties?.title || 'Sheet1';
-    const sheetId = firstSheet.properties?.sheetId;
-
-    console.log('[USER-SIGNUP] Using sheet:', sheetName, 'with ID:', sheetId);
-
-    // BACKEND VALIDATION: Double-check Partner ID availability
-    console.log('[USER-SIGNUP] Double-checking ID availability...');
-    const existingIdsRange = `${sheetName}!B2:B`;
-    const existingIdsResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: existingIdsRange,
-    });
-
-    const existingIds = existingIdsResponse.data.values?.flat().filter(Boolean) || [];
-    const partnerIdTaken = existingIds.some(
-      (id) => id.toString().toLowerCase() === data.partnerId.toLowerCase()
-    );
-
-    if (partnerIdTaken) {
-      console.error('[USER-SIGNUP] ID already exists:', data.partnerId);
+    if (existingId) {
+      console.error('[USER-SIGNUP] ID already exists:', data.id);
       return NextResponse.json(
         { error: 'ID này đã được sử dụng. Vui lòng chọn ID khác.' },
         { status: 409 }
@@ -156,18 +134,18 @@ export async function POST(request: NextRequest) {
 
     // BACKEND VALIDATION: Double-check Email availability
     console.log('[USER-SIGNUP] Double-checking Email availability...');
-    const existingEmailsRange = `${sheetName}!D2:D`;
-    const existingEmailsResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: existingEmailsRange,
-    });
+    const { data: existingEmail, error: emailCheckError } = await supabase
+      .from('users')
+      .select('email')
+      .ilike('email', data.email)
+      .maybeSingle();
 
-    const existingEmails = existingEmailsResponse.data.values?.flat().filter(Boolean) || [];
-    const emailTaken = existingEmails.some(
-      (existingEmail) => existingEmail.toString().toLowerCase() === data.email.toLowerCase()
-    );
+    if (emailCheckError) {
+      console.error('[USER-SIGNUP] Error checking email:', emailCheckError);
+      throw emailCheckError;
+    }
 
-    if (emailTaken) {
+    if (existingEmail) {
       console.error('[USER-SIGNUP] Email already exists:', data.email);
       return NextResponse.json(
         { error: 'Email này đã được đăng ký. Vui lòng sử dụng email khác.' },
@@ -177,72 +155,38 @@ export async function POST(request: NextRequest) {
 
     console.log('[USER-SIGNUP] All validations passed. Proceeding with registration...');
 
-    // Create timestamp in ISO format (can be formatted by Google Sheets)
-    const timestamp = new Date().toISOString();
-
-    // Format timestamp to dd.mm.yyyy hh:mm:ss
-    const formatTimestamp = (isoString: string): string => {
-      const date = new Date(isoString);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+    // Insert new user into database
+    const insertData = {
+      id: data.id,
+      email: data.email,
+      password: data.password,
+      status: 'active' as const,
+      partner_rank: '',
     };
+    
+    const { data: newUser, error: insertError } = (await (supabase as any)
+      .from('users')
+      .insert(insertData)
+      .select()
+      .single()) as { data: User | null; error: any };
 
-    // Prepare row data: Timestamp, ID, Password, Email, Status
-    const rowData = [
-      formatTimestamp(timestamp),
-      data.partnerId,
-      data.password,
-      data.email,
-      'Active', // Status automatically set to Active
-    ];
-
-    console.log('[USER-SIGNUP] Attempting to write to Google Sheets...');
-
-    // Insert a new row at position 2 (right after headers)
-    if (sheetId !== undefined) {
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SPREADSHEET_ID,
-        requestBody: {
-          requests: [
-            {
-              insertDimension: {
-                range: {
-                  sheetId: sheetId,
-                  dimension: 'ROWS',
-                  startIndex: 1,
-                  endIndex: 2,
-                },
-              },
-            },
-          ],
-        },
-      });
+    if (insertError) {
+      console.error('[USER-SIGNUP] Error inserting user:', insertError);
+      throw insertError;
     }
 
-    // Write data to the newly inserted row (row 2)
-    const range = `${sheetName}!A2:E2`;
-    const response = await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: range,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [rowData],
-      },
-    });
+    if (!newUser) {
+      throw new Error('Failed to create user - no data returned');
+    }
 
-    console.log('[USER-SIGNUP] Successfully wrote to Google Sheets:', response.data);
+    console.log('[USER-SIGNUP] Successfully registered user:', newUser.id);
 
     return NextResponse.json(
-      { success: true, message: 'Registration successful', partnerId: data.partnerId },
+      { success: true, message: 'Registration successful', id: data.id },
       { status: 200 }
     );
   } catch (error) {
-    console.error('[USER-SIGNUP] Error submitting to Google Sheets:', error);
+    console.error('[USER-SIGNUP] Error during signup:', error);
     if (error instanceof Error) {
       console.error('[USER-SIGNUP] Error message:', error.message);
       console.error('[USER-SIGNUP] Error stack:', error.stack);
