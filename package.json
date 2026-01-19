@@ -7,7 +7,9 @@
     "build": "next build",
     "build:firebase": "next build && node scripts/postbuild.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "types:generate": "npx supabase gen types typescript --project-id yctqvpgofipnaziqdxsz > types/database.generated.ts",
+    "types:update": "npm run types:generate && echo Types updated successfully!"
   },
   "dependencies": {
     "@mantine/carousel": "^8.3.11",
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.6",
+    "supabase": "^2.72.8",
     "typescript": "^5.7.3"
   }
 }

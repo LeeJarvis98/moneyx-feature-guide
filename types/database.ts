@@ -1,73 +1,38 @@
 /**
- * Supabase Database Types
+ * Supabase Database Helper Types
  * 
- * TypeScript types for Supabase database tables
+ * Re-exports from database.generated.ts with convenient helper types
+ * 
+ * To regenerate types from Supabase:
+ * npm run types:generate
  */
 
-export interface Database {
-  public: {
-    Tables: {
-      users: {
-        Row: {
-          id: string;
-          referral_id: string;
-          email: string;
-          password: string;
-          status: 'active' | 'banned' | 'cancelled' | 'hold' | 'terminated';
-          partner_rank: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          referral_id?: string;
-          email: string;
-          password: string;
-          status?: 'active' | 'banned' | 'cancelled' | 'hold' | 'terminated';
-          partner_rank?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          referral_id?: string;
-          email?: string;
-          password?: string;
-          status?: 'active' | 'banned' | 'cancelled' | 'hold' | 'terminated';
-          partner_rank?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      licensed_accounts: {
-        Row: {
-          email: string;
-          uid: string;
-          account_id: string;
-          licensed_at: string;
-        };
-        Insert: {
-          email?: string;
-          uid?: string;
-          account_id?: string;
-          licensed_at?: string;
-        };
-        Update: {
-          email?: string;
-          uid?: string;
-          account_id?: string;
-          licensed_at?: string;
-        };
-      };
-    };
-  };
-}
+import type { Database, Tables, TablesInsert, TablesUpdate } from './database.generated';
 
-// Helper types for easier usage
-export type User = Database['public']['Tables']['users']['Row'];
-export type UserInsert = Database['public']['Tables']['users']['Insert'];
-export type UserUpdate = Database['public']['Tables']['users']['Update'];
+// Re-export Database type
+export type { Database };
 
-export type LicensedAccount = Database['public']['Tables']['licensed_accounts']['Row'];
-export type LicensedAccountInsert = Database['public']['Tables']['licensed_accounts']['Insert'];
-export type LicensedAccountUpdate = Database['public']['Tables']['licensed_accounts']['Update'];
+// User types
+export type User = Tables<'users'>;
+export type UserInsert = TablesInsert<'users'>;
+export type UserUpdate = TablesUpdate<'users'>;
+
+// Licensed Account types
+export type LicensedAccount = Tables<'licensed_accounts'>;
+export type LicensedAccountInsert = TablesInsert<'licensed_accounts'>;
+export type LicensedAccountUpdate = TablesUpdate<'licensed_accounts'>;
+
+// Partner types
+export type Partner = Tables<'partners'>;
+export type PartnerInsert = TablesInsert<'partners'>;
+export type PartnerUpdate = TablesUpdate<'partners'>;
+
+// Partner Rank List types
+export type PartnerRank = Tables<'partner_rank_list'>;
+export type PartnerRankInsert = TablesInsert<'partner_rank_list'>;
+export type PartnerRankUpdate = TablesUpdate<'partner_rank_list'>;
+
+// Own Referral ID List types
+export type OwnReferralId = Tables<'own_referral_id_list'>;
+export type OwnReferralIdInsert = TablesInsert<'own_referral_id_list'>;
+export type OwnReferralIdUpdate = TablesUpdate<'own_referral_id_list'>;
