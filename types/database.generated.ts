@@ -37,17 +37,17 @@ export type Database = {
       }
       own_referral_id_list: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           own_referral_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id: string
           own_referral_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           own_referral_id?: string
         }
@@ -55,7 +55,7 @@ export type Database = {
           {
             foreignKeyName: "own_referral_id_list_id_fkey"
             columns: ["id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -79,7 +79,6 @@ export type Database = {
       partners: {
         Row: {
           id: string
-          own_referral_id: string | null
           platform_accounts: string[] | null
           platform_ref_links: string[] | null
           total_partner_com: number | null
@@ -87,7 +86,6 @@ export type Database = {
         }
         Insert: {
           id: string
-          own_referral_id?: string | null
           platform_accounts?: string[] | null
           platform_ref_links?: string[] | null
           total_partner_com?: number | null
@@ -95,13 +93,20 @@ export type Database = {
         }
         Update: {
           id?: string
-          own_referral_id?: string | null
           platform_accounts?: string[] | null
           platform_ref_links?: string[] | null
           total_partner_com?: number | null
           total_tradi_com?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "partners_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

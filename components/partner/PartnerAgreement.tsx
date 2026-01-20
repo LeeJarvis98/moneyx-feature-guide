@@ -10,20 +10,31 @@ interface PartnerAgreementProps {
 }
 
 const partnerTiers = [
-  { name: 'Đồng', partner: '70%', tradi: '30%' },
-  { name: 'Bạc', partner: '75%', tradi: '25%' },
-  { name: 'Vàng', partner: '80%', tradi: '20%' },
-  { name: 'Bạch Kim', partner: '85%', tradi: '15%' },
-  { name: 'Đá Quý', partner: '90%', tradi: '10%' },
-  { name: 'Kim Cương', partner: '95%', tradi: '5%' },
+  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot' },
+  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot' },
+  { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '600 lot' },
+  { name: 'Vàng', partner: '80%', tradi: '20%', condition: '300 lot' },
+  { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 lot' },
+  { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành' },
 ];
 
 export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
+  const [hasConfirmed, setHasConfirmed] = useState(false);
   const [partnerType, setPartnerType] = useState<'new' | 'system' | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [hasClickedTerms, setHasClickedTerms] = useState(false);
 
-  const canProceed = hasRead && hasAgreed;
+  const canProceed = hasConfirmed;
+  const canConfirm = hasRead && hasAgreed;
+
+  const handleConfirm = () => {
+    if (canConfirm) {
+      setHasConfirmed(true);
+      setShowTermsModal(false);
+    }
+  };
 
   const handlePartnerTypeSelect = (type: 'new' | 'system') => {
     if (canProceed) {
@@ -42,7 +53,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         muted
         playsInline
       >
-        <source src="/vnclc-partner.mp4" type="video/mp4" />
+        <source src="/vnclc-partner-background.mp4" type="video/mp4" />
       </video>
 
       {/* Overlay */}
@@ -58,61 +69,55 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
           </p>
 
           <div className={styles.horizontalLayout}>
-            {/* Left Section: Commission Table, Checkboxes, Buttons */}
             <div className={styles.leftSection}>
               <div className={styles.tableContainer}>
-                <div className={styles.tableColumn}>
-                  <h3 className={styles.columnTitle}>ĐỐI TÁC</h3>
-                  {partnerTiers.map((tier, index) => (
-                    <div key={index} className={styles.tierRow}>
-                      <span className={styles.checkmark}>✓</span>
-                      <span className={styles.tierName}>{tier.name} :</span>
-                      <span className={styles.percentage}>{tier.partner}</span>
-                    </div>
-                  ))}
+                {/* Table Header */}
+                <div className={styles.tableHeader}>
+                  <div className={styles.headerCell}>CẤP ĐỘ</div>
+                  <div className={styles.headerCell}>ĐỐI TÁC</div>
+                  <div className={styles.headerCell}>TRADI</div>
+                  <div className={styles.headerCell}>ĐIỀU KIỆN</div>
                 </div>
 
-                <div className={styles.divider} />
-
-                <div className={styles.tableColumn}>
-                  <h3 className={styles.columnTitle}>TRADI</h3>
+                {/* Table Body */}
+                <div className={styles.tableBody}>
                   {partnerTiers.map((tier, index) => (
-                    <div key={index} className={styles.tradiRow}>
-                      <span className={styles.tradiPercentage}>{tier.tradi}</span>
+                    <div key={index} className={styles.tableRow}>
+                      <div className={styles.tableCell}>
+                        <span className={styles.checkmark}>✓</span>
+                        <span className={styles.tierName}>{tier.name}</span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.percentage}>{tier.partner}</span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.tradiPercentage}>{tier.tradi}</span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.conditionText}>{tier.condition}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Checkboxes */}
-              <div className={styles.checkboxContainer}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={hasRead}
-                    onChange={(e) => setHasRead(e.target.checked)}
-                    className={styles.checkbox}
-                  />
-                  <span>Tôi đã đọc và hiểu</span>
-                </label>
-
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={hasAgreed}
-                    onChange={(e) => setHasAgreed(e.target.checked)}
-                    className={styles.checkbox}
-                  />
-                  <span>Tôi đồng ý với các điều khoản trên</span>
-                </label>
-              </div>
+              {/* Terms Button */}
+              <button
+                className={`${styles.termsButton} ${!hasClickedTerms ? styles.breathing : ''}`}
+                onClick={() => {
+                  setShowTermsModal(true);
+                  setHasClickedTerms(true);
+                }}
+              >
+                Điều khoản hợp tác & bảo mật
+              </button>
 
               {/* Buttons */}
               <div className={styles.buttonContainer}>
                 <div className={styles.buttonWrapper}>
                   <div className={styles.buttonInfo}>
                     <span className={styles.commissionLabel}>Hoa hồng : 70%</span>
-                    <span className={styles.commissionSubtext}>(nâng được)</span>
+                    <span className={styles.commissionSubtext}>( nâng được )</span>
                   </div>
                   <button
                     className={styles.partnerButton}
@@ -125,35 +130,109 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
 
                 <div className={styles.buttonWrapper}>
                   <div className={styles.buttonInfo}>
-                    <span className={styles.commissionLabel}>Hoa hồng : 85%</span>
-                    <span className={styles.commissionSubtext}>(chỉ nâng khi hệ thống nâng cấp)</span>
+                    <span className={styles.commissionLabel}>Hoa hồng hệ thống : 90%</span>
+                    <span className={styles.commissionSubtext}>( chỉ nâng khi hệ thống nâng cấp )</span>
                   </div>
                   <button
                     className={styles.partnerButton}
                     onClick={() => handlePartnerTypeSelect('system')}
                     disabled={!canProceed}
                   >
-                    ĐỐI TÁC HỆ THỐNG
+                    ĐẠI LÍ HỆ THỐNG
                   </button>
                 </div>
-              </div>
-            </div>
-
-            {/* Right Section: Terms & Privacy */}
-            <div className={styles.rightSection}>
-              <div className={styles.termsSection}>
-                <h3 className={styles.termsTitle}>Điều khoản hợp tác & bảo mật</h3>
-                <ol className={styles.termsList}>
-                  <li>Mọi thông tin tiền quan đến khách hàng, tài khoản giao dịch đều được bảo mật tuyệt đối.</li>
-                  <li>Mọi hành vi vi phạm bảo mật gây thiệt hại sẽ hoàn toàn chịu trách nhiệm pháp lý.</li>
-                  <li>Thời gian thanh lý hoa hồng phải được trả đúng kỳ hạn.</li>
-                  <li>Tradi có quyền chấp dứt hợp đồng với đối tác nếu đối tác vi phạm điều khoản.</li>
-                </ol>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Terms Modal */}
+      {showTermsModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowTermsModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.modalClose}
+              onClick={() => setShowTermsModal(false)}
+            >
+              ✕
+            </button>
+            
+            <div className={styles.termsSection}>
+              <h3 className={styles.termsTitle}>Điều khoản hợp tác & bảo mật</h3>
+              
+              <div className={styles.termsContent}>
+                <h4 className={styles.termsSectionTitle}>ĐỐI TÁC:</h4>
+                <ol className={styles.termsList}>
+                  <li>Mọi thông tin liên quan đến khách hàng, tài khoản giao dịch đều được bảo mật tuyệt đối.</li>
+                  <li>Mọi hành vi vi phạm bảo mật gây thiệt hại sẽ hoàn toàn chịu trách nhiệm pháp lý.</li>
+                  {/* <li>Đối tác không phải nhận viên, không đại diện pháp lý cho công ty.</li> */}
+                  {/* <li>Tradi có quyền chấm dứt hợp đồng với đối tác nếu đối tác vi phạm điều khoản.</li> */}
+                  <li>Bot VNCLC là Bot miễn phí, chỉ được chia sẻ Link Ref công đồng, không MUA - BÁN.</li>
+                  <li>Đối tác phải đạt cấp Bạc trở lên mới có thể sử dụng Partner System tìm nhanh dưới.</li>
+                  <li>Đối tác cung cấp Link Ref sàn và thông tin liên hệ để Tradi tạo hệ thống trên website.</li>
+                  {/* <li>Đối tác nên đạt ngưỡng cấp độ Kim Cương, để hệ thống đối tác được nâng lên Max 90%.</li> */}
+                </ol>
+
+                <h4 className={styles.termsSectionTitle}>ĐẠI LÍ ĐƯỢC GIỚI THIỆU :</h4>
+                <ol className={styles.termsList}>
+                  <li>Đại lí có thể chuyển đổi đại lí hệ thống khác (sau mỗi 30 ngày).</li>
+                  <li>Đại lí có thể chuyển đổi thức đại lí hệ thống thành đối tác mới (sau mỗi 30 ngày).</li>
+                  <li>Đối tác mới (có thể tăng cấp được):</li>
+                  <li className={styles.subItem}>+ Bắt đầu từ cấp độ Đồng 70%, chia sẻ hoa hồng cho người giới thiệu đến khi bằng cấp độ.</li>
+                  <li className={styles.subItem}>+ Khi bằng cấp độ, đối tác "không còn" trong hệ thống được giới thiệu nữa.</li>
+                  <li>Đại lí hệ thống (không tự thăng cấp được):</li>
+                  <li className={styles.subItem}>+ Hoa hồng luôn dưới hệ thống tổng 1 bậc.</li>
+                  <li className={styles.subItem}>+ Hệ thống tổng tăng lên 1 cấp, đại lí hệ thống được tăng theo 1 cấp.</li>
+                </ol>
+              </div>
+
+              {/* Checkboxes */}
+              <div className={styles.checkboxContainer}>
+                <div className={styles.checkboxWrapper}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={hasRead}
+                      onChange={(e) => {
+                        setHasRead(e.target.checked);
+                        if (!e.target.checked) {
+                          setHasConfirmed(false);
+                        }
+                      }}
+                      className={styles.checkbox}
+                    />
+                    <span>Tôi đã đọc và hiểu</span>
+                  </label>
+
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={hasAgreed}
+                      onChange={(e) => {
+                        setHasAgreed(e.target.checked);
+                        if (!e.target.checked) {
+                          setHasConfirmed(false);
+                        }
+                      }}
+                      className={styles.checkbox}
+                    />
+                    <span>Tôi đồng ý với các điều khoản trên</span>
+                  </label>
+                </div>
+
+                <button
+                  className={styles.confirmButton}
+                  onClick={handleConfirm}
+                  disabled={!canConfirm}
+                >
+                  Xác nhận
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -141,6 +141,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         <PartnerLogin 
           onLoginSuccess={() => setIsAuthenticated(true)} 
           selectedPlatform={selectedPlatform}
+          onAsideContentChange={onAsideContentChange}
         />
       ) : (
         <PartnerAgreement 

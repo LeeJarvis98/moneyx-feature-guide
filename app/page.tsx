@@ -84,12 +84,16 @@ export default function HomePage() {
     }
     // Close mobile menus when switching sections
     closeMobileAside();
+    // Reset partner agreement visibility
+    setShowPartnerAgreement(false);
   };
 
   // Close mobile menus when changing tabs
   const handleTabChange = (value: string | null) => {
     setActiveTab(value);
     closeMobileAside();
+    // Reset partner agreement visibility when changing tabs
+    setShowPartnerAgreement(false);
   };
 
   // Determine if navbar should be shown
@@ -494,6 +498,7 @@ export default function HomePage() {
 
         <AppShell.Main style={{
           backgroundColor: '#000000',
+          padding: showPartnerAgreement ? 'initial' : undefined,
         }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             {/* Features Section Tabs */}
@@ -506,7 +511,9 @@ export default function HomePage() {
                     onPlatformSelect={setSelectedPlatform}
                     isAuthenticated={isPartnerAuthenticated}
                     setIsAuthenticated={setIsPartnerAuthenticated}
-                    onAgreementVisibilityChange={setShowPartnerAgreement}                  partnerRank={partnerRank}                  />
+                    onAgreementVisibilityChange={setShowPartnerAgreement}
+                    partnerRank={partnerRank}
+                  />
                 </Tabs.Panel>
               </>
             )}

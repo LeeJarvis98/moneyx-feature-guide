@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       // Build query
       let query = supabase
         .from('licensed_accounts')
-        .select('email, uid, account_id, licensed_at')
-        .order('licensed_at', { ascending: false });
+        .select('email, uid, account_id, licensed_date')
+        .order('licensed_date', { ascending: false });
 
       // Filter by email if provided
       if (filterEmail) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         email: account.email,
         uid: account.uid,
         accountId: account.account_id,
-        timestamp: account.licensed_at,
+        timestamp: account.licensed_date,
       }));
 
       // Return just the account IDs array for filtering

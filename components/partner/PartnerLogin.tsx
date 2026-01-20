@@ -1,20 +1,73 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { exnessApi } from '@/lib/exness/api';
+import PartnerAside from './PartnerAside';
 import styles from './PartnerLogin.module.css';
 
 interface PartnerLoginProps {
   onLoginSuccess: () => void;
   selectedPlatform: string | null;
+  onAsideContentChange?: (content: React.ReactNode) => void;
 }
 
-export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: PartnerLoginProps) {
+interface PlatformRefLinks {
+  exness: string;
+  binance: string;
+  bingx: string;
+  bitget: string;
+  bybit: string;
+  gate: string;
+  htx: string;
+  kraken: string;
+  kucoin: string;
+  mexc: string;
+  okx: string;
+  upbit: string;
+}
+
+export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAsideContentChange }: PartnerLoginProps) {
   const [partnerId, setPartnerId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [platformRefLinks, setPlatformRefLinks] = useState<PlatformRefLinks>({
+    exness: '',
+    binance: '',
+    bingx: '',
+    bitget: '',
+    bybit: '',
+    gate: '',
+    htx: '',
+    kraken: '',
+    kucoin: '',
+    mexc: '',
+    okx: '',
+    upbit: '',
+  });
+
+  // Set aside content with PartnerAside component
+  useEffect(() => {
+    // Get logged-in user ID from storage
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    
+    if (userId && onAsideContentChange) {
+      onAsideContentChange(
+        <PartnerAside 
+          partnerId={userId} 
+          onRefLinksChange={setPlatformRefLinks}
+        />
+      );
+    }
+
+    // Clear aside content on unmount
+    return () => {
+      if (onAsideContentChange) {
+        onAsideContentChange(null);
+      }
+    };
+  }, [onAsideContentChange]);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,6 +77,13 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform }: Partn
     // Validate platform selection
     if (!selectedPlatform) {
       setError('Vui lòng chọn sàn giao dịch trước khi đăng nhập');
+      return;
+    }
+
+    // Check if platform has a referral link
+    const platformRefLink = platformRefLinks[selectedPlatform as keyof PlatformRefLinks];
+    if (!platformRefLink || platformRefLink.trim() === '') {
+      setError(`Vui lòng thêm link giới thiệu cho ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} trước khi đăng nhập`);
       return;
     }
 
