@@ -1,7 +1,9 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
-import { Stack, NavLink } from '@mantine/core';
+import { useState, useEffect, useMemo } from 'react';
+import { Stack, NavLink, TextInput } from '@mantine/core';
+import { DataTable, DataTableSortStatus } from 'mantine-datatable';
+import 'mantine-datatable/styles.layer.css';
 import { exnessApi } from '@/lib/exness/api';
 import type {
   ExnessApiError,
@@ -28,6 +30,13 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
   const [licensedAccountsDetails, setLicensedAccountsDetails] = useState<Array<{email: string; uid: string; accountId: string; timestamp: string | null}>>([]);
+  
+  // Sort and filter state
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+    columnAccessor: 'index',
+    direction: 'asc',
+  });
+  const [filterQuery, setFilterQuery] = useState('');
 
   // Update aside content when data changes
   useEffect(() => {
@@ -109,6 +118,64 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
       }
     }
   };
+
+  // Prepare and filter table records
+  const tableRecords = useMemo(() => {
+    if (!clientAccountsReport) return [];
+    
+    // Map data to table records
+    const records = clientAccountsReport.data.map((account, index) => {
+      const details = licensedAccountsDetails.find(
+        (d) => d.accountId === account.client_account
+      );
+      
+      return {
+        id: account.id,
+        index: index + 1,
+        client_account: account.client_account,
+        email: details?.email || 'N/A',
+        licensed_date: details?.timestamp || 'N/A',
+        volume_lots: account.volume_lots,
+        reward_usd: account.reward_usd,
+      };
+    });
+    
+    // Apply filter
+    const filtered = filterQuery
+      ? records.filter((record) => {
+          const query = filterQuery.toLowerCase();
+          return (
+            record.client_account.toLowerCase().includes(query) ||
+            record.email.toLowerCase().includes(query) ||
+            record.licensed_date.toLowerCase().includes(query)
+          );
+        })
+      : records;
+    
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      const accessor = sortStatus.columnAccessor as keyof typeof a;
+      const aValue = a[accessor];
+      const bValue = b[accessor];
+      
+      // Handle numeric sorting
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortStatus.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      // Handle string sorting
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+      
+      if (sortStatus.direction === 'asc') {
+        return aStr > bStr ? 1 : aStr < bStr ? -1 : 0;
+      } else {
+        return aStr < bStr ? 1 : aStr > bStr ? -1 : 0;
+      }
+    });
+    
+    return sorted;
+  }, [clientAccountsReport, licensedAccountsDetails, sortStatus, filterQuery]);
 
   // Render aside content
   const renderAsideContent = () => {
@@ -202,43 +269,85 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                   </div>
                 </div>
 
+                {/* Filter Input */}
+                <TextInput
+                  placeholder="Search by account, email, or date..."
+                  value={filterQuery}
+                  onChange={(e) => setFilterQuery(e.currentTarget.value)}
+                  style={{ 
+                    marginBottom: '1rem',
+                    maxWidth: '400px'
+                  }}
+                  styles={{
+                    input: {
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 184, 28, 0.3)',
+                      '&:focus': {
+                        borderColor: '#FFB81C',
+                      },
+                    },
+                  }}
+                />
+
                 {/* Client Accounts Table */}
-                <div className={styles.tableContainer}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th className={styles.orderColumn} />
-                        <th>Client Account</th>
-                        <th>Email</th>
-                        <th>Licensed Date</th>
-                        <th>Volume (Lots)</th>
-                        <th>Reward (USD)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clientAccountsReport.data.map((account, index) => {
-                        // Find matching licensed account details
-                        const details = licensedAccountsDetails.find(
-                          (d) => d.accountId === account.client_account
-                        );
-                        
-                        // Extract only the date part from timestamp (remove time)
-                        const licensedDate = details?.timestamp ? details.timestamp.split(' ')[0] : 'N/A';
-                        
-                        return (
-                          <tr key={account.id}>
-                            <td className={styles.orderColumn}>{index + 1}</td>
-                            <td>{account.client_account}</td>
-                            <td>{details?.email || 'N/A'}</td>
-                            <td>{licensedDate}</td>
-                            <td>{formatNumber(account.volume_lots, 2)}</td>
-                            <td>${formatNumber(account.reward_usd, 2)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={[
+                    { 
+                      accessor: 'index', 
+                      title: '#', 
+                      width: 60, 
+                      textAlign: 'center',
+                      sortable: true
+                    },
+                    { 
+                      accessor: 'client_account', 
+                      title: 'Client Account',
+                      width: 150,
+                      sortable: true
+                    },
+                    { 
+                      accessor: 'email', 
+                      title: 'Email',
+                      width: 200,
+                      sortable: true
+                    },
+                    { 
+                      accessor: 'licensed_date', 
+                      title: 'Licensed Date',
+                      width: 180,
+                      sortable: true
+                    },
+                    { 
+                      accessor: 'volume_lots', 
+                      title: 'Volume (Lots)',
+                      width: 130,
+                      sortable: true,
+                      render: (record) => formatNumber(record.volume_lots, 2)
+                    },
+                    { 
+                      accessor: 'reward_usd', 
+                      title: 'Reward (USD)',
+                      width: 130,
+                      sortable: true,
+                      render: (record) => `$${formatNumber(record.reward_usd, 2)}`
+                    },
+                  ]}
+                  records={tableRecords}
+                  sortStatus={sortStatus}
+                  onSortStatusChange={setSortStatus}
+                  noRecordsText=""
+                  noRecordsIcon={<></>}
+                  styles={{
+                    header: { 
+                      backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                    },
+                    table: {
+                      backgroundColor: 'transparent',
+                    }
+                  }}
+                  highlightOnHover
+                />
               </>
             )}
           </div>

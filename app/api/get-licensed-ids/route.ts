@@ -40,12 +40,29 @@ export async function GET(request: NextRequest) {
 
       console.log('[GET-LICENSED-IDS] Found', licensedAccounts?.length || 0, 'accounts');
 
+      // Helper function to format timestamp to dd/mm/yyyy hh:mm:ss
+      const formatTimestamp = (dateString: string | null): string | null => {
+        if (!dateString) return null;
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return null;
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+      };
+
       // Transform data
       const accountDetails = (licensedAccounts || []).map((account) => ({
         email: account.email,
         uid: account.uid,
         accountId: account.account_id,
-        timestamp: account.licensed_date,
+        timestamp: formatTimestamp(account.licensed_date),
       }));
 
       // Return just the account IDs array for filtering
