@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Gem, Diamond, Star, Award, Medal, Shield } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
+import CongratulationsModal from './CongratulationsModal';
 
 interface PartnerAgreementProps {
   onAccept: () => void;
@@ -29,6 +30,9 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [hasClickedTerms, setHasClickedTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
+  const [registeredPartnerType, setRegisteredPartnerType] = useState<'new' | 'system'>('new');
 
   const canProceed = hasConfirmed;
   const canConfirm = hasRead && hasAgreed;
@@ -61,7 +65,20 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
 
       console.log('[PartnerAgreement] Registration successful:', data);
       setPartnerType(type);
-      onAccept();
+      
+      // Store rank in localStorage for header update
+      if (data.rank) {
+        localStorage.setItem('partnerRank', data.rank);
+        // Dispatch custom event for same-window update
+        window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
+          detail: { rank: data.rank } 
+        }));
+      }
+      
+      // Show congratulations modal
+      setRegisteredRank(data.rank || (type === 'new' ? 'Đồng' : 'Ruby'));
+      setRegisteredPartnerType(type);
+      setShowCongratulations(true);
     } catch (error) {
       console.error('[PartnerAgreement] Registration error:', error);
       setRegistrationError(error instanceof Error ? error.message : 'Failed to register');
@@ -269,6 +286,23 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
             </div>
           </div>
         </div>
+      )}
+
+      {/* Congratulations Modal */}
+      {showCongratulations && (
+        <CongratulationsModal
+          rank={registeredRank}
+          partnerType={registeredPartnerType}
+          onNavigateToLogin={() => {
+            // This will be called when user clicks continue on stage 1
+            // The modal will stay open but show stage 2
+            // The parent component (onAccept) will be called when modal fully closes
+          }}
+          onClose={() => {
+            setShowCongratulations(false);
+            onAccept();
+          }}
+        />
       )}
     </div>
   );

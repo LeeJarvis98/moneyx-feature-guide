@@ -58,6 +58,28 @@
   font-weight: 700;
 }
 
+/* Rank Badge Styles */
+.rankBadge {
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 1rem !important;
+  text-transform: uppercase !important;
+}
+
+.rankBadgeContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  line-height: 1;
+}
+
+.rankIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .link {
     height: 42px;

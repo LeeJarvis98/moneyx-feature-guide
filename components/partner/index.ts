@@ -4,3 +4,4 @@ export { default as PartnerDashboard } from './PartnerDashboard';
 export { default as PartnerNavBar } from './PartnerNavBar';
 export { default as PartnerAgreement } from './PartnerAgreement';
 export { default as PartnerAside } from './PartnerAside';
+export { default as CongratulationsModal } from './CongratulationsModal';

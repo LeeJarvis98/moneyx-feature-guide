@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield } from 'lucide-react';
 import Image from 'next/image';
 import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
@@ -43,6 +43,44 @@ export default function HomePage() {
       // Check partner rank
       checkPartnerRank(userId);
     }
+
+    // Listen for localStorage changes for rank updates (different windows)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'partnerRank' && e.newValue) {
+        setPartnerRank(e.newValue);
+      }
+    };
+
+    // Listen for custom event for same-window updates
+    const handleRankUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.rank) {
+        setPartnerRank(e.detail.rank);
+      }
+    };
+
+    // Also check rank on focus (for same-window updates)
+    const handleFocus = () => {
+      const rank = localStorage.getItem('partnerRank');
+      if (rank) {
+        setPartnerRank(rank);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
+    window.addEventListener('focus', handleFocus);
+    
+    // Check rank immediately in case it was just set
+    const currentRank = localStorage.getItem('partnerRank');
+    if (currentRank) {
+      setPartnerRank(currentRank);
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Function to check partner rank from Google Sheets
@@ -196,21 +234,34 @@ export default function HomePage() {
                       <Title order={1} size="h2" c={theme.colors.accent[6]}>
                         Việt Nam Chất Lượng Cao
                       </Title>
-                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (
-                        <Badge
-                          variant="gradient"
-                          gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
-                          size="lg"
-                          style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 700,
-                            padding: '0.5rem 1rem',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {partnerRank}
-                        </Badge>
-                      )}
+                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
+                        const rankIcons: Record<string, typeof Diamond> = {
+                          'Kim Cương': Diamond,
+                          'Ruby': Gem,
+                          'Bạch Kim': Star,
+                          'Vàng': Award,
+                          'Bạc': Medal,
+                          'Đồng': Shield,
+                        };
+                        const RankIcon = rankIcons[partnerRank];
+                        return (
+                          <Badge
+                            variant="gradient"
+                            gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
+                            size="lg"
+                            className={classes.rankBadge}
+                          >
+                            <span className={classes.rankBadgeContent}>
+                              {RankIcon && (
+                                <span className={classes.rankIcon}>
+                                  <RankIcon size={18} />
+                                </span>
+                              )}
+                              <span>{partnerRank}</span>
+                            </span>
+                          </Badge>
+                        );
+                      })()}
                     </Group>
                   </Group>
                   <Group gap="md">

@@ -116,7 +116,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
             onMouseLeave={() => setHoveredPlatform(null)}
             disabled={platform.disabled}
             aria-label={`Select ${platform.label} trading platform`}
-            style={{ background: 'none', border: 'none', cursor: platform.disabled ? 'not-allowed' : 'pointer' }}
           >
             <div className={styles.imageWrapper}>
               <Image
@@ -143,7 +142,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
-          style={{ overscrollBehavior: 'contain' }}
         >
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>

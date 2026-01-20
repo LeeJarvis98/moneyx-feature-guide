@@ -57,13 +57,10 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         setIsPartner(true);
         console.log('[PartnerApp] User has partner rank badge, skipping partner status check');
       } else {
-        // Check partner status using logged-in userId first, fallback to partnerId
-        const idToCheck = userId || partnerId;
-        if (idToCheck) {
-          setCheckingPartnerStatus(true);
-          await checkPartnerStatus(idToCheck);
-          setCheckingPartnerStatus(false);
-        }
+        // If user doesn't have a badge, they're definitely not a partner
+        // Set to false immediately to avoid showing PartnerLogin briefly
+        console.log('[PartnerApp] No partner rank badge, user is not a partner');
+        setIsPartner(false);
       }
       
       if (token) {
@@ -102,7 +99,8 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
     setIsAuthenticated(false);
-    setIsPartner(false);
+    // Don't set isPartner to false - they're still a partner, just not authenticated
+    // This ensures they go back to PartnerLogin, not PartnerAgreement
   };
 
   const handleAcceptTerms = async () => {
