@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { exnessApi } from '@/lib/exness/api';
 import PartnerAside from './PartnerAside';
+import CongratulationsModal from './CongratulationsModal';
 import styles from './PartnerLogin.module.css';
 
 interface PartnerLoginProps {
@@ -32,6 +33,9 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
+  const [registeredPartnerType, setRegisteredPartnerType] = useState<'new' | 'system'>('new');
   const [platformRefLinks, setPlatformRefLinks] = useState<PlatformRefLinks>({
     exness: '',
     binance: '',
@@ -46,6 +50,21 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     okx: '',
     upbit: '',
   });
+
+  // Check if user just registered and show congratulations modal
+  useEffect(() => {
+    const justRegistered = sessionStorage.getItem('justRegistered');
+    const rank = localStorage.getItem('partnerRank');
+    const partnerType = sessionStorage.getItem('registeredPartnerType') as 'new' | 'system' | null;
+    
+    if (justRegistered === 'true' && rank && partnerType) {
+      setRegisteredRank(rank);
+      setRegisteredPartnerType(partnerType);
+      setShowCongratulations(true);
+      // Clear the flag
+      sessionStorage.removeItem('justRegistered');
+    }
+  }, []);
 
   // Set aside content with PartnerAside component
   useEffect(() => {
@@ -209,6 +228,33 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           </p>
         </div>
       </div>
+
+      {/* Congratulations Modal */}
+      {showCongratulations && (
+        <CongratulationsModal
+          rank={registeredRank}
+          partnerType={registeredPartnerType}
+          onNavigateToLogin={() => {
+            // Already on login page, just update badge
+            const rank = localStorage.getItem('partnerRank');
+            if (rank) {
+              window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
+                detail: { rank } 
+              }));
+            }
+          }}
+          onClose={() => {
+            setShowCongratulations(false);
+            // Trigger badge update when modal closes
+            const rank = localStorage.getItem('partnerRank');
+            if (rank) {
+              window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
+                detail: { rank } 
+              }));
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Diamond, Gem, Star, Award, Medal, Shield, X, Sparkles, ArrowRight, LogIn, Link as LinkIcon } from 'lucide-react';
 import styles from './CongratulationsModal.module.css';
 
@@ -31,10 +32,21 @@ const rankPercentages: Record<string, { partner: string; tradi: string }> = {
 
 export default function CongratulationsModal({ rank, partnerType, onClose, onNavigateToLogin }: CongratulationsModalProps) {
   const [stage, setStage] = useState<1 | 2>(1);
+  const [mounted, setMounted] = useState(false);
   const IconComponent = rankIcons[rank] || Shield;
   const percentages = rankPercentages[rank] || { partner: '70%', tradi: '30%' };
   
   const partnerTypeText = partnerType === 'new' ? 'Đối Tác Tradi' : 'Đại Lí Hệ Thống';
+
+  useEffect(() => {
+    setMounted(true);
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const handleContinue = () => {
     if (stage === 1) {
@@ -48,7 +60,7 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
     }
   };
 
-  return (
+  const modalContent = (
     <div className={styles.modalOverlay} onClick={(e) => {
       // Only allow closing on stage 2
       if (stage === 2) {
@@ -185,4 +197,11 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
       </div>
     </div>
   );
+
+  // Only render portal after component has mounted (client-side only)
+  if (!mounted) return null;
+  
+  return createPortal(modalContent, document.body);
 }
+  
+  

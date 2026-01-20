@@ -243,7 +243,16 @@ export default function HomePage() {
                           'Bạc': Medal,
                           'Đồng': Shield,
                         };
+                        const rankPercentages: Record<string, string> = {
+                          'Kim Cương': '95%',
+                          'Ruby': '90%',
+                          'Bạch Kim': '85%',
+                          'Vàng': '80%',
+                          'Bạc': '75%',
+                          'Đồng': '70%',
+                        };
                         const RankIcon = rankIcons[partnerRank];
+                        const percentage = rankPercentages[partnerRank];
                         return (
                           <Badge
                             variant="gradient"
@@ -257,7 +266,7 @@ export default function HomePage() {
                                   <RankIcon size={18} />
                                 </span>
                               )}
-                              <span>{partnerRank}</span>
+                              <span>{partnerRank}{percentage && ` - ${percentage}`}</span>
                             </span>
                           </Badge>
                         );
