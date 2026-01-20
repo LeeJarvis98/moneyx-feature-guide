@@ -192,7 +192,7 @@ export default function HomePage() {
                     <Title order={1} size="h2" c={theme.colors.accent[6]}>
                       Việt Nam Chất Lượng Cao
                     </Title>
-                    {isUserLoggedIn && partnerRank && (
+                    {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (
                       <Badge
                         variant="gradient"
                         gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
@@ -506,8 +506,7 @@ export default function HomePage() {
                     onPlatformSelect={setSelectedPlatform}
                     isAuthenticated={isPartnerAuthenticated}
                     setIsAuthenticated={setIsPartnerAuthenticated}
-                    onAgreementVisibilityChange={setShowPartnerAgreement}
-                  />
+                    onAgreementVisibilityChange={setShowPartnerAgreement}                  partnerRank={partnerRank}                  />
                 </Tabs.Panel>
               </>
             )}

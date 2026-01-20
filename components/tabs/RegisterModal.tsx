@@ -11,7 +11,7 @@ interface RegisterModalProps {
 
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [isClosing, setIsClosing] = useState(false);
-  const [regId, setRegPartnerId] = useState('');
+  const [regId, setRegrId] = useState('');
   const [regReferralId, setRegReferralId] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -28,10 +28,15 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [referralIdValid, setReferralIdValid] = useState<boolean | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [mouseDownOnOverlay, setMouseDownOnOverlay] = useState(false);
 
   // Registration form validation functions
   const validateId = (value: string): boolean => {
     return /^[a-zA-Z0-9]*$/.test(value);
+  };
+
+  const validateReferralId = (value: string): boolean => {
+    return /^[a-zA-Z0-9]+-[0-9]+$/.test(value);
   };
 
   const validateEmail = (value: string): boolean => {
@@ -69,7 +74,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   useEffect(() => {
     if (!isOpen) {
       // Reset all form fields when modal closes
-      setRegPartnerId('');
+      setRegrId('');
       setRegReferralId('');
       setRegEmail('');
       setRegPassword('');
@@ -98,9 +103,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }, 300); // Match animation duration
   };
 
-  const handlePartnerIdChange = (value: string) => {
+  const handleIdChange = (value: string) => {
     if (validateId(value)) {
-      setRegPartnerId(value);
+      setRegrId(value);
       // Reset availability when user modifies input
       if (idAvailable !== null) {
         setIdAvailable(null);
@@ -109,7 +114,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }
   };
 
-  const handleCheckPartnerId = async () => {
+  const handleCheckId = async () => {
     if (!regId) {
       setRegError('Vui lòng nhập ID');
       return;
@@ -150,7 +155,8 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   };
 
   const handleReferralIdChange = (value: string) => {
-    if (validateId(value)) {
+    // Allow typing alphanumeric characters and hyphen
+    if (/^[a-zA-Z0-9-]*$/.test(value)) {
       setRegReferralId(value);
       // Reset validity when user modifies input
       if (referralIdValid !== null) {
@@ -176,10 +182,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     setReferralIdValid(null);
 
     try {
-      const response = await fetch('/api/check-user-id', {
+      const response = await fetch('/api/check-referral-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: regReferralId }),
+        body: JSON.stringify({ referral_id: regReferralId }),
       });
 
       const data = await response.json();
@@ -188,9 +194,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         throw new Error(data.error || 'Failed to check referral ID');
       }
 
-      // For referral ID, we want it to EXIST (opposite of availability check)
-      setReferralIdValid(!data.available);
-      if (data.available) {
+      // Check if the referral ID exists in the own_referral_id_list table
+      setReferralIdValid(data.exists);
+      if (!data.exists) {
         setRegError('ID giới thiệu không tồn tại trong hệ thống');
       }
     } catch (err) {
@@ -278,14 +284,19 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     setRegLoading(true);
 
     try {
+      // Get current time in GMT+7
+      const now = new Date();
+      const gmt7Time = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+      
       const response = await fetch('/api/user-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: regId,
-          referralId: regReferralId,
+          referral_id: regReferralId,
           email: regEmail,
           password: regPassword,
+          created_at: gmt7Time.toISOString(),
         }),
       });
 
@@ -311,10 +322,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   return (
     <div 
       className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ''}`}
-      onClick={(e) => {
+      onMouseDown={(e) => {
         if (e.target === e.currentTarget) {
+          setMouseDownOnOverlay(true);
+        }
+      }}
+      onMouseUp={(e) => {
+        if (e.target === e.currentTarget && mouseDownOnOverlay) {
           handleClose();
         }
+        setMouseDownOnOverlay(false);
       }}
     >
       <div className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
@@ -340,7 +357,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 type="text"
                 id="regId"
                 value={regId}
-                onChange={(e) => handlePartnerIdChange(e.target.value)}
+                onChange={(e) => handleIdChange(e.target.value)}
                 required
                 className={`${styles.input} ${
                   idAvailable === true
@@ -354,7 +371,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               />
               <button
                 type="button"
-                onClick={handleCheckPartnerId}
+                onClick={handleCheckId}
                 className={`${styles.checkButton} ${
                   idAvailable === true
                     ? styles.checkButtonVerified
@@ -416,11 +433,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 className={`${styles.checkButton} ${
                   referralIdValid === true
                     ? styles.checkButtonVerified
-                    : regReferralId.length >= 4 && validateId(regReferralId) && referralIdValid === null && !checkingReferralId
+                    : regReferralId.length >= 4 && validateReferralId(regReferralId) && referralIdValid === null && !checkingReferralId
                     ? styles.checkButtonActive
                     : ''
                 }`}
-                disabled={!regReferralId || regReferralId.length < 4 || !validateId(regReferralId) || checkingReferralId || regLoading || regSuccess}
+                disabled={!regReferralId || regReferralId.length < 4 || !validateReferralId(regReferralId) || checkingReferralId || regLoading || regSuccess}
               >
                 {checkingReferralId ? 'Kiểm tra...' : referralIdValid === true ? '✓' : 'Kiểm tra'}
               </button>
@@ -440,14 +457,14 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <X size={16} /> ID phải có ít nhất 4 ký tự
               </span>
             )}
-            {regReferralId && !validateId(regReferralId) && (
+            {regReferralId && regReferralId.length >= 4 && !validateReferralId(regReferralId) && (
               <span className={styles.errorText}>
-                <X size={16} /> ID chỉ được chứa chữ cái và số
+                <X size={16} /> Định dạng không đúng. Ví dụ: AndyBao24-8888
               </span>
             )}
             {!regReferralId && (
               <span className={styles.hint}>
-                Nhập ID của người giới thiệu bạn
+                Định dạng: [ID]-[số]. Ví dụ: AndyBao24-8888
               </span>
             )}
           </div>

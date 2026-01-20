@@ -51,7 +51,15 @@ export type Database = {
           id?: string
           own_referral_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "own_referral_id_list_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_rank_list: {
         Row: {
@@ -100,7 +108,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          partner_rank: string
+          partner_rank: string | null
           password: string
           referral_id: string
           status: string
@@ -110,7 +118,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
-          partner_rank?: string
+          partner_rank?: string | null
           password: string
           referral_id: string
           status?: string
@@ -120,7 +128,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          partner_rank?: string
+          partner_rank?: string | null
           password?: string
           referral_id?: string
           status?: string

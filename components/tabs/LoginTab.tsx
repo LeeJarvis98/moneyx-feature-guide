@@ -53,6 +53,11 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
         } else {
           sessionStorage.setItem('userId', data.userId);
         }
+        
+        // Store partner platform data if available
+        if (data.partnerPlatformData) {
+          sessionStorage.setItem('partnerPlatformData', JSON.stringify(data.partnerPlatformData));
+        }
       }
 
       setSuccess(true);

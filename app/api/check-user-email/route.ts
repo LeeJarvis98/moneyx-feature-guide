@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { USER_SHEET_ID } from '@/lib/config';
-
-const SPREADSHEET_ID = USER_SHEET_ID;
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,40 +23,24 @@ export async function POST(request: NextRequest) {
 
     console.log('[CHECK-USER-EMAIL] Checking availability for:', email);
 
-    // Initialize Google Sheets API with centralized credentials
-    const sheets = await getGoogleSheetsClient();
+    // Initialize Supabase client
+    const supabase = getSupabaseClient();
 
-    // Get spreadsheet metadata to determine the first sheet
-    const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId: SPREADSHEET_ID,
-    });
+    // Check if the email already exists in the database (case-insensitive)
+    const { data: existingUser, error } = await supabase
+      .from('users')
+      .select('email')
+      .ilike('email', email)
+      .single();
 
-    if (!spreadsheet.data.sheets || spreadsheet.data.sheets.length === 0) {
-      console.error('[CHECK-USER-EMAIL] No sheets found in the spreadsheet');
-      throw new Error('No sheets found in the spreadsheet');
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('[CHECK-USER-EMAIL] Error checking email:', error);
+      throw error;
     }
 
-    // Use the first sheet (default sheet)
-    const firstSheet = spreadsheet.data.sheets[0];
-    const sheetName = firstSheet.properties?.title || 'Sheet1';
-
-    console.log('[CHECK-USER-EMAIL] Using sheet:', sheetName);
-
-    // Read all emails from column D (starting from row 2 to skip header)
-    const range = `${sheetName}!D2:D`;
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: range,
-    });
-
-    const existingEmails = response.data.values?.flat().filter(Boolean) || [];
+    const isTaken = !!existingUser;
     
-    console.log('[CHECK-USER-EMAIL] Found existing emails:', existingEmails.length);
-
-    // Check if the email already exists (case-insensitive)
-    const isTaken = existingEmails.some(
-      (existingEmail) => existingEmail.toString().toLowerCase() === email.toLowerCase()
-    );
+    console.log('[CHECK-USER-EMAIL] Email taken status:', isTaken);
 
     if (isTaken) {
       console.log('[CHECK-USER-EMAIL] Email is taken:', email);

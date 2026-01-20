@@ -4,8 +4,10 @@ import type { User } from '@/types/database';
 
 interface UserSignupData {
   id: string;
+  referral_id: string;
   email: string;
   password: string;
+  created_at: string;
 }
 
 // Validation helper functions
@@ -70,11 +72,28 @@ function validatePassword(password: string): { valid: boolean; error?: string } 
   return { valid: true };
 }
 
+function validateReferralId(referralId: string): { valid: boolean; error?: string } {
+  if (!referralId || typeof referralId !== 'string') {
+    return { valid: false, error: 'Referral ID is required' };
+  }
+
+  if (referralId.length < 4) {
+    return { valid: false, error: 'Referral ID must be at least 4 characters long' };
+  }
+
+  if (!/^[a-zA-Z0-9]+-[0-9]+$/.test(referralId)) {
+    return { valid: false, error: 'Referral ID format is invalid. Format: [ID]-[numbers], e.g., AndyBao24-8888' };
+  }
+
+  return { valid: true };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const data: UserSignupData = await request.json();
     console.log('[USER-SIGNUP] Received signup data:', {
       id: data.id,
+      referral_id: data.referral_id,
       email: data.email,
     });
 
@@ -84,6 +103,16 @@ export async function POST(request: NextRequest) {
       console.error('[USER-SIGNUP] ID validation failed:', idValidation.error);
       return NextResponse.json(
         { error: idValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate Referral ID
+    const referralIdValidation = validateReferralId(data.referral_id);
+    if (!referralIdValidation.valid) {
+      console.error('[USER-SIGNUP] Referral ID validation failed:', referralIdValidation.error);
+      return NextResponse.json(
+        { error: referralIdValidation.error },
         { status: 400 }
       );
     }
@@ -158,10 +187,12 @@ export async function POST(request: NextRequest) {
     // Insert new user into database
     const insertData = {
       id: data.id,
+      referral_id: data.referral_id,
       email: data.email,
       password: data.password,
       status: 'active' as const,
-      partner_rank: '',
+      partner_rank: 'None',
+      created_at: data.created_at,
     };
     
     const { data: newUser, error: insertError } = (await (supabase as any)

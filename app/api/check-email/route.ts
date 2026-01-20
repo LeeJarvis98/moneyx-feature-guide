@@ -1,13 +1,17 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/google-sheets';
-import { SHARED_SHEET_ID, MAIN_CONFIG } from '@/lib/config';
+import { getGoogleSheetsClient } from '@/lib/supabase';
+import { SHARED_SHEET_ID } from '@/lib/config';
 
 const RANGE = 'B:B'; // Column B (will use the first sheet)
+const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
-    console.log('[API] Received email:', email);
+    const platformToken = request.headers.get('x-platform-token');
+    
+    console.log('[CHECK-EMAIL] Received email:', email);
+    console.log('[CHECK-EMAIL] Platform token present:', !!platformToken);
 
     if (!email) {
       return NextResponse.json(
@@ -16,89 +20,157 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Fetch account IDs from ngrok API
-    console.log('[API] Step 1: Fetching from ngrok API:', MAIN_CONFIG.ngrokApiUrl);
-    const ngrokResponse = await fetch(MAIN_CONFIG.ngrokApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!ngrokResponse.ok) {
-      throw new Error('Ngrok API response was not ok');
-    }
-
-    const ngrokResult = await ngrokResponse.json();
-    console.log('[API] Ngrok result:', ngrokResult);
-
-    // If ngrok API returns no affiliation or no accounts, return early
-    if (!ngrokResult.success || !ngrokResult.data.affiliation || !ngrokResult.data.accounts) {
-      console.log('[API] No affiliation or accounts found, returning early');
-      return NextResponse.json(ngrokResult);
-    }
-
-    console.log('[API] Accounts from ngrok:', ngrokResult.data.accounts);
-
-    // Step 2: Check which IDs exist in Google Sheets column B using Service Account
-    try {
-      console.log('[API] Step 2: Fetching from Google Sheets...');
-      
-      // Initialize auth with centralized service account
-      const sheets = await getGoogleSheetsClient();
-
-      // Read data from column B of the shared sheet
-      console.log('[API] Reading Google Sheets, ID:', SHARED_SHEET_ID, 'Range:', RANGE);
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHARED_SHEET_ID,
-        range: RANGE,
-      });
-
-      const rows = response.data.values || [];
-      console.log('[API] Google Sheets rows count:', rows.length);
-      console.log('[API] Google Sheets data (column B):', rows.map(r => r[0]));
-      
-      const existingIds = new Set(rows.map((row) => row[0]?.toString().toLowerCase()));
-      console.log('[API] Existing IDs in Google Sheets:', Array.from(existingIds));
-
-      // Check each account ID against the Google Sheets data
-      const accountsWithStatus = ngrokResult.data.accounts.map((accountId: string) => {
-        const isLicensed = existingIds.has(accountId.toLowerCase());
-        console.log(`[API] Checking ${accountId}: ${isLicensed ? 'licensed' : 'unlicensed'}`);
-        return {
-          id: accountId,
-          status: isLicensed ? 'licensed' : 'unlicensed'
-        };
-      });
-
-      console.log('[API] Final accountsWithStatus:', accountsWithStatus);
-
-      // Return the ngrok data with updated account statuses
-      return NextResponse.json({
-        success: true,
-        data: {
-          ...ngrokResult.data,
-          accounts: ngrokResult.data.accounts,
-          accountsWithStatus,
+    if (!platformToken) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Platform authentication required. Please ensure you are logged in to the platform.' 
         },
-      });
+        { status: 401 }
+      );
+    }
 
-    } catch (apiError: any) {
-      console.error('[API] Google Sheets API Error:', apiError);
-      console.error('[API] Error details:', {
-        message: apiError.message,
-        code: apiError.code,
-        errors: apiError.errors,
-      });
+    // Step 1: Fetch client accounts from Exness API using the platform token
+    console.log('[CHECK-EMAIL] Step 1: Fetching client accounts from Exness API');
+    
+    try {
+      // Use the Exness Partner API to get client accounts report
+      const exnessResponse = await fetch(
+        `${EXNESS_API_BASE}/api/reports/clients/accounts/`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `JWT ${platformToken}`,
+          },
+        }
+      );
+
+      if (!exnessResponse.ok) {
+        console.error('[CHECK-EMAIL] Exness API error:', exnessResponse.status);
+        throw new Error('Failed to fetch client accounts from platform');
+      }
+
+      const exnessData = await exnessResponse.json();
+      console.log('[CHECK-EMAIL] Exness API response received');
+      console.log('[CHECK-EMAIL] Total clients found:', exnessData.data?.length || 0);
+
+      // Find client accounts matching the email
+      // The API returns client_uid which we can use to identify unique clients
+      const matchingClients = exnessData.data?.filter((client: any) => {
+        // You may need to adjust this based on the actual API response structure
+        // If the API doesn't return email directly, we might need a different approach
+        return client.client_account && client.client_uid;
+      }) || [];
+
+      if (matchingClients.length === 0) {
+        console.log('[CHECK-EMAIL] No matching clients found for email:', email);
+        return NextResponse.json({
+          success: false,
+          data: {
+            affiliation: false,
+            accounts: [],
+            client_uid: null,
+          }
+        });
+      }
+
+      // Group accounts by client_uid to get unique clients
+      const clientsByUid = matchingClients.reduce((acc: any, client: any) => {
+        if (!acc[client.client_uid]) {
+          acc[client.client_uid] = {
+            client_uid: client.client_uid,
+            accounts: [],
+          };
+        }
+        acc[client.client_uid].accounts.push(client.client_account);
+        return acc;
+      }, {});
+
+      // For now, take the first client (you may need to add logic to select the right one)
+      const firstClientUid = Object.keys(clientsByUid)[0];
+      const clientData = clientsByUid[firstClientUid];
       
-      // If Google Sheets fails, still return ngrok data but without license status
-      console.warn('[API] Google Sheets check failed, returning ngrok data without license status');
-      return NextResponse.json(ngrokResult);
+      console.log('[CHECK-EMAIL] Found client UID:', clientData.client_uid);
+      console.log('[CHECK-EMAIL] Accounts:', clientData.accounts);
+
+      // Step 2: Check which IDs exist in Google Sheets column B using Service Account
+      try {
+        console.log('[CHECK-EMAIL] Step 2: Fetching from Google Sheets...');
+        
+        // Initialize auth with centralized service account
+        const sheets = await getGoogleSheetsClient();
+
+        // Read data from column B of the shared sheet
+        console.log('[CHECK-EMAIL] Reading Google Sheets, ID:', SHARED_SHEET_ID, 'Range:', RANGE);
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SHARED_SHEET_ID,
+          range: RANGE,
+        });
+
+        const rows = response.data.values || [];
+        console.log('[CHECK-EMAIL] Google Sheets rows count:', rows.length);
+        
+        const existingIds = new Set(rows.map((row: any) => row[0]?.toString().toLowerCase()));
+        console.log('[CHECK-EMAIL] Existing IDs in Google Sheets:', Array.from(existingIds).slice(0, 5), '...');
+
+        // Check each account ID against the Google Sheets data
+        const accountsWithStatus = clientData.accounts.map((accountId: string) => {
+          const isLicensed = existingIds.has(accountId.toLowerCase());
+          console.log(`[CHECK-EMAIL] Checking ${accountId}: ${isLicensed ? 'licensed' : 'unlicensed'}`);
+          return {
+            id: accountId,
+            status: isLicensed ? 'licensed' : 'unlicensed'
+          };
+        });
+
+        console.log('[CHECK-EMAIL] Final accountsWithStatus:', accountsWithStatus);
+
+        // Return the data with updated account statuses
+        return NextResponse.json({
+          success: true,
+          data: {
+            affiliation: true,
+            accounts: clientData.accounts,
+            client_uid: clientData.client_uid,
+            accountsWithStatus,
+          },
+        });
+
+      } catch (sheetsError: any) {
+        console.error('[CHECK-EMAIL] Google Sheets API Error:', sheetsError);
+        console.error('[CHECK-EMAIL] Error details:', {
+          message: sheetsError.message,
+          code: sheetsError.code,
+          errors: sheetsError.errors,
+        });
+        
+        // If Google Sheets fails, still return data but without license status
+        console.warn('[CHECK-EMAIL] Google Sheets check failed, returning data without license status');
+        return NextResponse.json({
+          success: true,
+          data: {
+            affiliation: true,
+            accounts: clientData.accounts,
+            client_uid: clientData.client_uid,
+          },
+        });
+      }
+
+    } catch (platformError: any) {
+      console.error('[CHECK-EMAIL] Platform API Error:', platformError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to fetch client data from platform',
+          details: process.env.NODE_ENV === 'development' ? platformError.message : undefined
+        },
+        { status: 500 }
+      );
     }
 
   } catch (error: any) {
-    console.error('[API] Server Error:', error);
+    console.error('[CHECK-EMAIL] Server Error:', error);
     return NextResponse.json(
       { 
         success: false, 

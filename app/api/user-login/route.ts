@@ -86,12 +86,45 @@ export async function POST(request: NextRequest) {
     // Login successful
     const isPartner = foundUser.partner_rank !== '';
     
+    // Check if user's referral_id matches any own_referral_id in own_referral_id_list
+    let partnerPlatformData = null;
+    if (foundUser.referral_id) {
+      try {
+        const { data: ownReferralMatch, error: referralError } = await supabase
+          .from('own_referral_id_list')
+          .select('id, own_referral_id')
+          .eq('own_referral_id', foundUser.referral_id)
+          .maybeSingle();
+
+        if (!referralError && ownReferralMatch) {
+          // Found a match, now fetch partner data using the id
+          const { data: partnerData, error: partnerError } = await supabase
+            .from('partners')
+            .select('id, platform_accounts, platform_ref_links')
+            .eq('id', ownReferralMatch.id)
+            .maybeSingle();
+
+          if (!partnerError && partnerData) {
+            partnerPlatformData = {
+              partnerId: partnerData.id,
+              platformAccounts: partnerData.platform_accounts,
+              platformRefLinks: partnerData.platform_ref_links,
+            };
+          }
+        }
+      } catch (err) {
+        console.error('[USER-LOGIN] Error fetching partner platform data:', err);
+        // Continue login even if partner data fetch fails
+      }
+    }
+    
     return NextResponse.json(
       {
         success: true,
         userId: foundUser.id,
         partnerRank: foundUser.partner_rank,
         isPartner: isPartner,
+        partnerPlatformData: partnerPlatformData,
         message: 'Đăng nhập thành công',
       },
       { status: 200 }

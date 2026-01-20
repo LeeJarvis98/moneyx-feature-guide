@@ -14,11 +14,14 @@ interface PartnerAppProps {
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
   onAgreementVisibilityChange?: (visible: boolean) => void;
+  partnerRank?: string;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
-  const [isPartner, setIsPartner] = useState(false);
+  // Check if user has partner rank badge (means they're already a partner)
+  const hasPartnerRank = partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN';
+  const [isPartner, setIsPartner] = useState(!!hasPartnerRank);
   const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
 
   // Function to check partner status from Google Sheets
@@ -49,12 +52,18 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
       const partnerId = sessionStorage.getItem('partnerId');
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       
-      // Check partner status using logged-in userId first, fallback to partnerId
-      const idToCheck = userId || partnerId;
-      if (idToCheck) {
-        setCheckingPartnerStatus(true);
-        await checkPartnerStatus(idToCheck);
-        setCheckingPartnerStatus(false);
+      // If user has partner rank badge, they're already a partner - skip check
+      if (hasPartnerRank) {
+        setIsPartner(true);
+        console.log('[PartnerApp] User has partner rank badge, skipping partner status check');
+      } else {
+        // Check partner status using logged-in userId first, fallback to partnerId
+        const idToCheck = userId || partnerId;
+        if (idToCheck) {
+          setCheckingPartnerStatus(true);
+          await checkPartnerStatus(idToCheck);
+          setCheckingPartnerStatus(false);
+        }
       }
       
       if (token) {
@@ -72,7 +81,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     };
 
     checkAuth();
-  }, [setIsAuthenticated]);
+  }, [setIsAuthenticated, hasPartnerRank]);
 
   // Clear aside content when not authenticated
   useEffect(() => {

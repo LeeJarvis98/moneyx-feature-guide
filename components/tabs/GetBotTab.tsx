@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   Box,
@@ -58,6 +58,39 @@ export function GetBotTab() {
   const [errorMessage, setErrorMessage] = useState('');
   const [grantingLicense, setGrantingLicense] = useState(false);
   const [userTypeModalOpen, setUserTypeModalOpen] = useState(false);
+  const [partnerPlatformUrls, setPartnerPlatformUrls] = useState<Record<string, string>>({});
+
+  // Load partner platform data on mount
+  useEffect(() => {
+    const loadPartnerData = () => {
+      try {
+        const storedData = sessionStorage.getItem('partnerPlatformData');
+        if (storedData) {
+          const platformData = JSON.parse(storedData);
+          if (platformData.platformRefLinks && Array.isArray(platformData.platformRefLinks)) {
+            const urlMap: Record<string, string> = {};
+            platformData.platformRefLinks.forEach((link: string) => {
+              // Split only on the first colon to handle URLs with colons (https://)
+              const colonIndex = link.indexOf(':');
+              if (colonIndex > -1) {
+                const platform = link.substring(0, colonIndex).trim();
+                const url = link.substring(colonIndex + 1).trim();
+                if (platform && url) {
+                  urlMap[platform.toLowerCase()] = url;
+                }
+              }
+            });
+            setPartnerPlatformUrls(urlMap);
+            console.log('[GetBotTab] Loaded partner platform URLs:', urlMap);
+          }
+        }
+      } catch (error) {
+        console.error('[GetBotTab] Error loading partner platform data:', error);
+      }
+    };
+
+    loadPartnerData();
+  }, []);
 
   // Function to check account status via API
   const checkAccountStatus = async () => {
@@ -68,6 +101,63 @@ export function GetBotTab() {
     setSelectedAccounts([]);
 
     try {
+      // Step 1: Authenticate with platform if needed
+      const partnerDataStr = sessionStorage.getItem('partnerPlatformData');
+      let platformAuth = null;
+      
+      if (partnerDataStr && selectedPlatform) {
+        try {
+          const platformData = JSON.parse(partnerDataStr);
+          
+          // Find platform credentials
+          if (platformData.platformAccounts && Array.isArray(platformData.platformAccounts)) {
+            const accountEntry = platformData.platformAccounts.find((acc: string) => 
+              acc.toLowerCase().startsWith(selectedPlatform.toLowerCase())
+            );
+            
+            if (accountEntry) {
+              // Parse account entry: "exness: email@example.com/password"
+              // Split only on the first colon to avoid issues with colons in passwords
+              const colonIndex = accountEntry.indexOf(':');
+              if (colonIndex > -1) {
+                const credentials = accountEntry.substring(colonIndex + 1).trim();
+                if (credentials) {
+                  const [login, password] = credentials.split('/');
+                  
+                  if (login && password && login !== 'null' && password !== 'null') {
+                    // Attempt platform authentication
+                    console.log('[GetBotTab] Authenticating with platform:', selectedPlatform);
+                    
+                    const authResponse = await fetch('/api/partner-login', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        partnerId: login,
+                        password: password,
+                        platform: selectedPlatform,
+                      }),
+                    });
+
+                    if (authResponse.ok) {
+                      const authData = await authResponse.json();
+                      platformAuth = {
+                        token: authData.platformToken,
+                        platform: selectedPlatform,
+                      };
+                      console.log('[GetBotTab] Platform authentication successful');
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (authError) {
+          console.error('[GetBotTab] Platform authentication error:', authError);
+          // Continue without auth if it fails
+        }
+      }
+
+      // Step 2: Check email status
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -75,6 +165,11 @@ export function GetBotTab() {
       // Add partner ID header if we're on a partner route
       if (partnerId) {
         headers['x-partner-id'] = partnerId;
+      }
+      
+      // Add platform auth token if available
+      if (platformAuth && platformAuth.token) {
+        headers['x-platform-token'] = platformAuth.token;
       }
 
       const response = await fetch('/api/check-email', {
@@ -253,7 +348,7 @@ export function GetBotTab() {
       disabled: false,
       image: '/getbot_section/exness.png',
       tutorialVideo: 'https://youtu.be/uAdKY9uNtIo?si=RgHExJAThIP4g7d4',
-      platformUrl: 'https://one.exnessonelink.com/a/ojl5148a7y',
+      platformUrl: partnerPlatformUrls['exness'] || 'https://one.exnessonelink.com/a/ojl5148a7y',
       feature: 'Hoàn phí $10/lot'
     },
     {
@@ -262,7 +357,7 @@ export function GetBotTab() {
       disabled: false,
       image: '/getbot_section/binance.png',
       tutorialVideo: 'https://youtu.be/WkYlawXn9HE?si=E7ej1Td9Q2IKql4l',
-      platformUrl: 'https://www.binance.com/',
+      platformUrl: partnerPlatformUrls['binance'] || 'https://www.binance.com/',
       feature: ''
     },
     {
@@ -271,7 +366,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/bingx.png',
       tutorialVideo: 'https://example.com/bingx-tutorial',
-      platformUrl: 'https://bingx.com/',
+      platformUrl: partnerPlatformUrls['bingx'] || 'https://bingx.com/',
       feature: ''
     },
     {
@@ -280,7 +375,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/bitget.png',
       tutorialVideo: 'https://example.com/bitget-tutorial',
-      platformUrl: 'https://www.bitget.com/',
+      platformUrl: partnerPlatformUrls['bitget'] || 'https://www.bitget.com/',
       feature: ''
     },
     {
@@ -289,7 +384,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/bybit.png',
       tutorialVideo: 'https://example.com/bybit-tutorial',
-      platformUrl: 'https://www.bybit.com/',
+      platformUrl: partnerPlatformUrls['bybit'] || 'https://www.bybit.com/',
       feature: ''
     },
     {
@@ -298,7 +393,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/gate.png',
       tutorialVideo: 'https://example.com/gate-tutorial',
-      platformUrl: 'https://www.gate.io/',
+      platformUrl: partnerPlatformUrls['gate'] || 'https://www.gate.io/',
       feature: ''
     },
     {
@@ -307,7 +402,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/mexc.png',
       tutorialVideo: 'https://example.com/mexc-tutorial',
-      platformUrl: 'https://www.mexc.com/',
+      platformUrl: partnerPlatformUrls['mexc'] || 'https://www.mexc.com/',
       feature: ''
     },
     {
@@ -316,7 +411,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/okx.png',
       tutorialVideo: 'https://example.com/okx-tutorial',
-      platformUrl: 'https://www.okx.com/',
+      platformUrl: partnerPlatformUrls['okx'] || 'https://www.okx.com/',
       feature: ''
     },
     {
@@ -325,7 +420,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/vantage.png',
       tutorialVideo: 'https://example.com/vantage-tutorial',
-      platformUrl: 'https://www.vantagemarkets.com/',
+      platformUrl: partnerPlatformUrls['vantage'] || 'https://www.vantagemarkets.com/',
       feature: ''
     },
     {
@@ -334,7 +429,7 @@ export function GetBotTab() {
       disabled: true,
       image: '/getbot_section/xm.png',
       tutorialVideo: 'https://example.com/xm-tutorial',
-      platformUrl: 'https://www.xm.com/',
+      platformUrl: partnerPlatformUrls['xm'] || 'https://www.xm.com/',
       feature: ''
     },
   ];
