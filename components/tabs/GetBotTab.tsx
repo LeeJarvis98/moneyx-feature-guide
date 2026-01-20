@@ -718,6 +718,20 @@ export function GetBotTab() {
                     >
                       Cấp bản quyền
                     </Button>
+
+                    <Button
+                      c="black"
+                      onClick={() => setActive(2)}
+                      disabled={
+                        accountStatus !== 'authorized' || 
+                        !accountRows.some(row => row.status === 'licensed')
+                      }
+                      size="lg"
+                      className={classes.glowButton}
+                      leftSection={<Download size={20} />}
+                    >
+                      Tải bot
+                    </Button>
                   </Group>
                 </Group>
               </Stack>

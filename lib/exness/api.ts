@@ -153,6 +153,49 @@ class ExnessApiClient {
 
   // === PARTNER ENDPOINTS ===
 
+  // Get client affiliation by email (POST /api/partner/affiliation/)
+  async getClientAffiliation(email: string): Promise<{
+    affiliation: boolean;
+    accounts: string[];
+    client_uid: string;
+  }> {
+    // Try POST method first (most RESTful APIs use POST for filtering)
+    try {
+      const endpoint = `/api/partner/affiliation/`;
+      console.log('[EXNESS API CLIENT] Requesting affiliation for email:', email);
+      
+      // Attempt POST with email in body
+      const response = await fetch(`${API_BASE}/partner`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint,
+          method: 'POST',
+          token: this.getToken() || undefined,
+          data: { email },
+        }),
+      });
+
+      if (response.ok) {
+        return response.json();
+      }
+
+      // If POST fails with 405, try GET with query parameter
+      if (response.status === 405) {
+        console.log('[EXNESS API CLIENT] POST not allowed, trying GET with query parameter');
+        const getEndpoint = `/api/partner/affiliation/?email=${encodeURIComponent(email)}`;
+        return this.request(getEndpoint, { method: 'GET' });
+      }
+
+      throw new Error(`Failed to get affiliation: ${response.status}`);
+    } catch (error) {
+      console.error('[EXNESS API CLIENT] Error getting affiliation:', error);
+      throw error;
+    }
+  }
+
   // Get client accounts report (GET /api/reports/clients/accounts/)
   async getClientAccountsReport(accountIds?: string[]): Promise<ClientAccountsReportResponse> {
     let endpoint = '/api/reports/clients/accounts/';

@@ -23,7 +23,7 @@
   transition: all 0.3s ease;
 }
 
-.glowButton:hover {
+.glowButton:hover:not(:disabled) {
   box-shadow: 0 6px 16px rgba(255, 201, 85, 0.808);
   transform: translateY(-1px);
 }

@@ -32,7 +32,7 @@
   transition: all 0.2s;
 }
 
-.logoutButton:hover {
+.logoutButton:hover:not(:disabled) {
   background-color: rgba(239, 68, 68, 0.3);
   border-color: #ef4444;
 }

@@ -30,41 +30,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Fetch client accounts from Exness API using the platform token
-    console.log('[CHECK-EMAIL] Step 1: Fetching client accounts from Exness API');
+    // Step 1: Fetch client affiliation from Exness API using the platform token and email
+    console.log('[CHECK-EMAIL] Step 1: Fetching client affiliation from Exness API');
+    console.log('[CHECK-EMAIL] Email:', email);
+    console.log('[CHECK-EMAIL] Token present:', !!platformToken);
     
     try {
-      // Use the Exness Partner API to get client accounts report
-      const exnessResponse = await fetch(
-        `${EXNESS_API_BASE}/api/reports/clients/accounts/`,
+      // Try POST method first (as affiliation endpoint might require POST)
+      let exnessResponse = await fetch(
+        `${EXNESS_API_BASE}/api/partner/affiliation/`,
         {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `JWT ${platformToken}`,
           },
+          body: JSON.stringify({ email }),
         }
       );
 
-      if (!exnessResponse.ok) {
-        console.error('[CHECK-EMAIL] Exness API error:', exnessResponse.status);
-        throw new Error('Failed to fetch client accounts from platform');
+      // If POST returns 405, try GET with query parameter
+      if (exnessResponse.status === 405) {
+        console.log('[CHECK-EMAIL] POST not allowed, trying GET...');
+        exnessResponse = await fetch(
+          `${EXNESS_API_BASE}/api/partner/affiliation/?email=${encodeURIComponent(email)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `JWT ${platformToken}`,
+            },
+          }
+        );
       }
 
-      const exnessData = await exnessResponse.json();
+      console.log('[CHECK-EMAIL] Exness API response status:', exnessResponse.status);
+
+      if (!exnessResponse.ok) {
+        const errorText = await exnessResponse.text();
+        console.error('[CHECK-EMAIL] Exness API error:', exnessResponse.status, errorText);
+        throw new Error('Failed to fetch client affiliation from platform');
+      }
+
+      const clientData = await exnessResponse.json();
       console.log('[CHECK-EMAIL] Exness API response received');
-      console.log('[CHECK-EMAIL] Total clients found:', exnessData.data?.length || 0);
+      console.log('[CHECK-EMAIL] Affiliation:', clientData.affiliation);
+      console.log('[CHECK-EMAIL] Client UID:', clientData.client_uid);
+      console.log('[CHECK-EMAIL] Accounts:', clientData.accounts);
 
-      // Find client accounts matching the email
-      // The API returns client_uid which we can use to identify unique clients
-      const matchingClients = exnessData.data?.filter((client: any) => {
-        // You may need to adjust this based on the actual API response structure
-        // If the API doesn't return email directly, we might need a different approach
-        return client.client_account && client.client_uid;
-      }) || [];
-
-      if (matchingClients.length === 0) {
-        console.log('[CHECK-EMAIL] No matching clients found for email:', email);
+      // Check if client has affiliation
+      if (!clientData.affiliation) {
+        console.log('[CHECK-EMAIL] No affiliation found for email:', email);
         return NextResponse.json({
           success: false,
           data: {
@@ -74,25 +90,6 @@ export async function POST(request: NextRequest) {
           }
         });
       }
-
-      // Group accounts by client_uid to get unique clients
-      const clientsByUid = matchingClients.reduce((acc: any, client: any) => {
-        if (!acc[client.client_uid]) {
-          acc[client.client_uid] = {
-            client_uid: client.client_uid,
-            accounts: [],
-          };
-        }
-        acc[client.client_uid].accounts.push(client.client_account);
-        return acc;
-      }, {});
-
-      // For now, take the first client (you may need to add logic to select the right one)
-      const firstClientUid = Object.keys(clientsByUid)[0];
-      const clientData = clientsByUid[firstClientUid];
-      
-      console.log('[CHECK-EMAIL] Found client UID:', clientData.client_uid);
-      console.log('[CHECK-EMAIL] Accounts:', clientData.accounts);
 
       // Step 2: Check which IDs exist in Google Sheets column B using Service Account
       try {

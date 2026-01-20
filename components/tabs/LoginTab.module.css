@@ -256,7 +256,7 @@
   transition: all 0.2s;
 }
 
-.userMenuButton:hover {
+.userMenuButton:hover:not(:disabled) {
   background: rgba(255, 184, 28, 0.15);
   border-color: rgba(255, 184, 28, 0.5);
   transform: translateY(-2px);
