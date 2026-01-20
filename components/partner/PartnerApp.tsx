@@ -130,6 +130,9 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     );
   }
 
+  // Get userId for PartnerAgreement
+  const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || '';
+
   return (
     <>
       {isAuthenticated ? (
@@ -148,6 +151,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onAccept={handleAcceptTerms}
           selectedPlatform={selectedPlatform}
           onPlatformSelect={onPlatformSelect}
+          userId={userId || ''}
         />
       )}
     </>

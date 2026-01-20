@@ -1,30 +1,34 @@
 'use client';
 
 import { useState } from 'react';
+import { Gem, Diamond, Star, Award, Medal, Shield } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
 
 interface PartnerAgreementProps {
   onAccept: () => void;
   selectedPlatform: string | null;
   onPlatformSelect: (platform: string) => void;
+  userId: string;
 }
 
 const partnerTiers = [
-  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot' },
-  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot' },
-  { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '600 lot' },
-  { name: 'Vàng', partner: '80%', tradi: '20%', condition: '300 lot' },
-  { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 lot' },
-  { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành' },
+  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot', icon: Diamond },
+  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot', icon: Gem },
+  { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '600 lot', icon: Star },
+  { name: 'Vàng', partner: '80%', tradi: '20%', condition: '300 lot', icon: Award },
+  { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 lot', icon: Medal },
+  { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Shield },
 ];
 
-export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect }: PartnerAgreementProps) {
+export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
   const [partnerType, setPartnerType] = useState<'new' | 'system' | null>(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasClickedTerms, setHasClickedTerms] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   const canProceed = hasConfirmed;
   const canConfirm = hasRead && hasAgreed;
@@ -36,10 +40,33 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
     }
   };
 
-  const handlePartnerTypeSelect = (type: 'new' | 'system') => {
-    if (canProceed) {
+  const handlePartnerTypeSelect = async (type: 'new' | 'system') => {
+    if (!canProceed || isRegistering) return;
+
+    setIsRegistering(true);
+    setRegistrationError(null);
+
+    try {
+      const response = await fetch('/api/register-partner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, partnerType: type }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to register as partner');
+      }
+
+      console.log('[PartnerAgreement] Registration successful:', data);
       setPartnerType(type);
       onAccept();
+    } catch (error) {
+      console.error('[PartnerAgreement] Registration error:', error);
+      setRegistrationError(error instanceof Error ? error.message : 'Failed to register');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -81,10 +108,12 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
 
                 {/* Table Body */}
                 <div className={styles.tableBody}>
-                  {partnerTiers.map((tier, index) => (
+                  {partnerTiers.map((tier, index) => {
+                    const IconComponent = tier.icon;
+                    return (
                     <div key={index} className={styles.tableRow}>
                       <div className={styles.tableCell}>
-                        <span className={styles.checkmark}>✓</span>
+                        <IconComponent size={18} className={styles.checkmark} />
                         <span className={styles.tierName}>{tier.name}</span>
                       </div>
                       <div className={styles.tableCell}>
@@ -97,13 +126,14 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                         <span className={styles.conditionText}>{tier.condition}</span>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
 
               {/* Terms Button */}
               <button
-                className={`${styles.termsButton} ${!hasClickedTerms ? styles.breathing : ''}`}
+                className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
                 onClick={() => {
                   setShowTermsModal(true);
                   setHasClickedTerms(true);
@@ -114,32 +144,39 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
 
               {/* Buttons */}
               <div className={styles.buttonContainer}>
-                <div className={styles.buttonWrapper}>
-                  <div className={styles.buttonInfo}>
-                    <span className={styles.commissionLabel}>Hoa hồng : 70%</span>
-                    <span className={styles.commissionSubtext}>( nâng được )</span>
+                {registrationError && (
+                  <div className={styles.errorMessage}>
+                    {registrationError}
                   </div>
-                  <button
-                    className={styles.partnerButton}
-                    onClick={() => handlePartnerTypeSelect('new')}
-                    disabled={!canProceed}
-                  >
-                    ĐỐI TÁC MỚI
-                  </button>
-                </div>
+                )}
+                <div className={styles.buttonGrid}>
+                  <div className={styles.buttonWrapper}>
+                    <div className={styles.buttonInfo}>
+                      <span className={styles.commissionLabel}>Hoa hồng: 70%</span>
+                      <span className={styles.commissionSubtext}>(nâng được)</span>
+                    </div>
+                    <button
+                      className={styles.partnerButton}
+                      onClick={() => handlePartnerTypeSelect('new')}
+                      disabled={!canProceed || isRegistering}
+                    >
+                      {isRegistering ? 'Đang đăng ký...' : 'ĐỐI TÁC TRADI'}
+                    </button>
+                  </div>
 
-                <div className={styles.buttonWrapper}>
-                  <div className={styles.buttonInfo}>
-                    <span className={styles.commissionLabel}>Hoa hồng hệ thống : 90%</span>
-                    <span className={styles.commissionSubtext}>( chỉ nâng khi hệ thống nâng cấp )</span>
+                  <div className={styles.buttonWrapper}>
+                    <div className={styles.buttonInfo}>
+                      <span className={styles.commissionLabel}>Hoa hồng hệ thống: 90%</span>
+                      <span className={styles.commissionSubtext}>(chỉ nâng khi hệ thống nâng cấp)</span>
+                    </div>
+                    <button
+                      className={styles.partnerButton}
+                      onClick={() => handlePartnerTypeSelect('system')}
+                      disabled={!canProceed || isRegistering}
+                    >
+                      {isRegistering ? 'Đang đăng ký...' : 'ĐẠI LÍ HỆ THỐNG'}
+                    </button>
                   </div>
-                  <button
-                    className={styles.partnerButton}
-                    onClick={() => handlePartnerTypeSelect('system')}
-                    disabled={!canProceed}
-                  >
-                    ĐẠI LÍ HỆ THỐNG
-                  </button>
                 </div>
               </div>
             </div>

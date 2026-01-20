@@ -54,9 +54,9 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partnerId: userId }),
       });
-      
+
       console.log('[HomePage] Partner status response:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('[HomePage] Partner status data:', data);
@@ -159,427 +159,432 @@ export default function HomePage() {
     <>
       <div className={`${classes.mainWrapper} ${isTransitioning ? classes.transitioning : ''}`}>
         <AppShell
-        transitionDuration={500}
-        transitionTimingFunction="ease"
-        header={{ height: navigationSection === 'login' ? 65 : 100 }}
-        footer={{ height: 60 }}
-        navbar={{
-          width: 300,
-          breakpoint: 'sm',
-          collapsed: { mobile: !shouldShowNavbar, desktop: !shouldShowNavbar }
-        }}
-        aside={{
-          width: 400,
-          breakpoint: 'md',
-          collapsed: { mobile: !mobileAsideOpened, desktop: !shouldShowAside }
-        }}
-        padding="md"
-      >
-        <AppShell.Header
-          style={{
-            backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
-            backdropFilter: 'blur(5px)',
+          transitionDuration={500}
+          transitionTimingFunction="ease"
+          header={{ height: navigationSection === 'login' ? 65 : 100 }}
+          footer={{ height: 60 }}
+          navbar={{
+            width: 300,
+            breakpoint: 'sm',
+            collapsed: { mobile: !shouldShowNavbar, desktop: !shouldShowNavbar }
           }}
+          aside={{
+            width: 400,
+            breakpoint: 'md',
+            collapsed: { mobile: !mobileAsideOpened, desktop: !shouldShowAside }
+          }}
+          padding="md"
         >
-          <Container size="100%" h="100%">
-            <Stack gap="md" justify={navigationSection === 'login' ? 'center' : 'end'} h="100%">
-              <Group justify="space-between" align="center">
-                <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
-                  <Image
-                    src="/vnclc-logo.png"
-                    alt="VNCLC Logo"
-                    width={90.53}
-                    height={20}
-                    priority
-                  />
-                  <Group gap="xs">
-                    <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                      Việt Nam Chất Lượng Cao
-                    </Title>
-                    {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (
-                      <Badge
-                        variant="gradient"
-                        gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
-                        size="lg"
-                        style={{
-                          fontSize: '0.9rem',
-                          fontWeight: 700,
-                          padding: '0.5rem 1rem',
-                          textTransform: 'uppercase',
-                        }}
+          <AppShell.Header
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
+              backdropFilter: 'blur(5px)',
+            }}
+          >
+            <Container size="100%" h="100%">
+              <Stack gap="md" justify={navigationSection === 'login' ? 'center' : 'end'} h="100%">
+                <Group justify="space-between" align="center">
+                  <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
+                    <Image
+                      src="/vnclc-logo.png"
+                      alt="VNCLC Logo"
+                      width={90.53}
+                      height={20}
+                      priority
+                    />
+                    <Group gap="xs">
+                      <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                        Việt Nam Chất Lượng Cao
+                      </Title>
+                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (
+                        <Badge
+                          variant="gradient"
+                          gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
+                          size="lg"
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            padding: '0.5rem 1rem',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {partnerRank}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Group>
+                  <Group gap="md">
+                    {isUserLoggedIn && (
+                      <button
+                        className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
+                        onClick={() => handleNavigationChange('features')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                       >
-                        {partnerRank}
-                      </Badge>
+                        Cổng đối tác
+                      </button>
+                    )}
+                    <button
+                      className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
+                      onClick={() => handleNavigationChange('library')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      Học viện
+                    </button>
+                    {!isUserLoggedIn ? (
+                      <Button
+                        variant={navigationSection === 'login' ? 'light' : 'filled'}
+                        c={navigationSection === 'login' ? undefined : 'black'}
+                        leftSection={<LogIn size={18} />}
+                        onClick={() => handleNavigationChange('login')}
+                        visibleFrom="sm"
+                        className={classes.glowButton}
+                      >
+                        Đăng nhập
+                      </Button>
+                    ) : (
+                      <Menu
+                        width={260}
+                        position="bottom-end"
+                        transitionProps={{ transition: 'pop-top-right' }}
+                      >
+                        <Menu.Target>
+                          <UnstyledButton
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              transition: 'background-color 0.2s',
+                              backgroundColor: 'transparent',
+                            }}
+                          >
+                            <Avatar
+                              radius="xl"
+                              size={32}
+                              style={{
+                                background: 'linear-gradient(135deg, #FFB81C 0%, #FFA000 100%)',
+                              }}
+                            >
+                              <User size={18} color="#000000" />
+                            </Avatar>
+                            <Text size="sm" fw={500} c="white" visibleFrom="sm">
+                              {loggedInUserId}
+                            </Text>
+                            <ChevronDown size={16} color="white" style={{ opacity: 0.6 }} />
+                          </UnstyledButton>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item leftSection={<User size={16} />}>
+                            Thông tin tài khoản
+                          </Menu.Item>
+                          <Menu.Item leftSection={<Settings size={16} />}>
+                            Cài đặt
+                          </Menu.Item>
+                          <Menu.Divider />
+                          <Menu.Item
+                            color="red"
+                            leftSection={<LogOut size={16} />}
+                            onClick={handleUserLogout}
+                          >
+                            Đăng xuất
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
                     )}
                   </Group>
                 </Group>
-                <Group gap="md">
-                  {isUserLoggedIn && (
-                    <button
-                      className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
-                      onClick={() => handleNavigationChange('features')}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      Cổng đối tác
-                    </button>
-                  )}
-                  <button
-                    className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
-                    onClick={() => handleNavigationChange('library')}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    Học viện
-                  </button>
-                  {!isUserLoggedIn ? (
-                    <Button
-                      variant={navigationSection === 'login' ? 'light' : 'filled'}
-                      c={navigationSection === 'login' ? undefined : 'black'}
-                      leftSection={<LogIn size={18} />}
-                      onClick={() => handleNavigationChange('login')}
-                      visibleFrom="sm"
-                      className={classes.glowButton}
-                    >
-                      Đăng nhập
-                    </Button>
-                  ) : (
-                    <Menu
-                      width={260}
-                      position="bottom-end"
-                      transitionProps={{ transition: 'pop-top-right' }}
-                    >
-                      <Menu.Target>
-                        <UnstyledButton
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            transition: 'background-color 0.2s',
-                            backgroundColor: 'transparent',
-                          }}
-                        >
-                          <Avatar
-                            radius="xl"
-                            size={32}
-                            style={{
-                              background: 'linear-gradient(135deg, #FFB81C 0%, #FFA000 100%)',
-                            }}
+                {navigationSection !== 'login' && (
+                  <Tabs value={activeTab} onChange={handleTabChange} radius="md">
+                    <Tabs.List>
+                      {navigationSection === 'features' && (
+                        <>
+                          <Tabs.Tab
+                            value="partner"
+                            c={activeTab === 'partner' ? theme.white : undefined}
+                            fw={activeTab === 'partner' ? 700 : undefined}
                           >
-                            <User size={18} color="#000000" />
-                          </Avatar>
-                          <Text size="sm" fw={500} c="white" visibleFrom="sm">
-                            {loggedInUserId}
-                          </Text>
-                          <ChevronDown size={16} color="white" style={{ opacity: 0.6 }} />
-                        </UnstyledButton>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item leftSection={<User size={16} />}>
-                          Thông tin tài khoản
-                        </Menu.Item>
-                        <Menu.Item leftSection={<Settings size={16} />}>
-                          Cài đặt
-                        </Menu.Item>
-                        <Menu.Divider />
-                        <Menu.Item
-                          color="red"
-                          leftSection={<LogOut size={16} />}
-                          onClick={handleUserLogout}
-                        >
-                          Đăng xuất
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  )}
-                </Group>
-              </Group>
-              {navigationSection !== 'login' && (
-                <Tabs value={activeTab} onChange={handleTabChange} radius="md">
-                  <Tabs.List>
-                    {navigationSection === 'features' && (
-                      <>
-                        <Tabs.Tab
-                        value="partner"
-                        c={activeTab === 'partner' ? theme.white : undefined}
-                        fw={activeTab === 'partner' ? 700 : undefined}
-                      >
-                        Partner
-                      </Tabs.Tab>
-                    </>
-                  )}
-                  {navigationSection === 'library' && (
-                    <>
-                      <Tabs.Tab
-                        value="documentation"
-                        c={activeTab === 'documentation' ? theme.white : undefined}
-                        fw={activeTab === 'documentation' ? 700 : undefined}
-                      >
-                        Tài liệu
-                      </Tabs.Tab>
-                      {isUserLoggedIn && (
-                        <Tabs.Tab
-                          value="get-bot"
-                          c={activeTab === 'get-bot' ? theme.white : undefined}
-                          fw={activeTab === 'get-bot' ? 700 : undefined}
-                        >
-                          Lấy Bot
-                        </Tabs.Tab>
+                            Partner
+                          </Tabs.Tab>
+                        </>
                       )}
-                    </>
+                      {navigationSection === 'library' && (
+                        <>
+                          <Tabs.Tab
+                            value="documentation"
+                            c={activeTab === 'documentation' ? theme.white : undefined}
+                            fw={activeTab === 'documentation' ? 700 : undefined}
+                          >
+                            Tài liệu
+                          </Tabs.Tab>
+                          {isUserLoggedIn && (
+                            <Tabs.Tab
+                              value="get-bot"
+                              c={activeTab === 'get-bot' ? theme.white : undefined}
+                              fw={activeTab === 'get-bot' ? 700 : undefined}
+                            >
+                              Lấy Bot
+                            </Tabs.Tab>
+                          )}
+                        </>
+                      )}
+                    </Tabs.List>
+                  </Tabs>
+                )}
+                {/* Mobile navigation links */}
+                <Group gap="md" hiddenFrom="sm" justify="center">
+                  {isUserLoggedIn && (
+                    <Anchor
+                      size="sm"
+                      fw={navigationSection === 'features' ? 700 : 500}
+                      c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavigationChange('features');
+                      }}
+                      href="#features"
+                      underline="always"
+                    >
+                      Đối tác
+                    </Anchor>
                   )}
-                  </Tabs.List>
-                </Tabs>
-              )}
-              {/* Mobile navigation links */}
-              <Group gap="md" hiddenFrom="sm" justify="center">
-                {isUserLoggedIn && (
                   <Anchor
                     size="sm"
-                    fw={navigationSection === 'features' ? 700 : 500}
-                    c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
+                    fw={navigationSection === 'library' ? 700 : 500}
+                    c={navigationSection === 'library' ? theme.colors.accent[6] : 'dimmed'}
                     onClick={(e) => {
                       e.preventDefault();
-                      handleNavigationChange('features');
+                      handleNavigationChange('library');
                     }}
-                    href="#features"
+                    href="#library"
                     underline="always"
                   >
-                    Đối tác
+                    Thư viện
                   </Anchor>
-                )}
-                <Anchor
-                  size="sm"
-                  fw={navigationSection === 'library' ? 700 : 500}
-                  c={navigationSection === 'library' ? theme.colors.accent[6] : 'dimmed'}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigationChange('library');
-                  }}
-                  href="#library"
-                  underline="always"
-                >
-                  Thư viện
-                </Anchor>
-              </Group>
-            </Stack>
-          </Container>
-        </AppShell.Header>
-
-        <AppShell.Navbar p="md">
-          {navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement && (
-            <PartnerNavBar
-              selectedPlatform={selectedPlatform}
-              onPlatformSelect={setSelectedPlatform}
-              isAuthenticated={isPartnerAuthenticated}
-              onLogout={() => setIsPartnerAuthenticated(false)}
-            />
-          )}
-          {navigationSection === 'library' && activeTab === 'documentation' && (
-            <ScrollArea h="100%" type="auto" offsetScrollbars>
-              <Stack gap="xs">
-                <Badge
-                  variant="gradient"
-                  gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
-                  size="lg">
-                  Hướng dẫn
-                </Badge>
-
-                <NavLink
-                  label="1. Thông tin và ý nghĩa Bot"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'lesson-1'}
-                  fw={selectedArticle === 'lesson-1' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('lesson-1')}
-                  color="blue"
-                />
-
-                <NavLink
-                  label="2. Bảng thông tin"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'lesson-2'}
-                  fw={selectedArticle === 'lesson-2' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('lesson-2')}
-                  color="blue"
-                />
-
-                <NavLink
-                  label="3. Bảng hỗ trợ Trade Tay"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'lesson-3'}
-                  fw={selectedArticle === 'lesson-3' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('lesson-3')}
-                  color="blue"
-                />
-
-                <NavLink
-                  label="4. Input chế độ DCA"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'lesson-4'}
-                  fw={selectedArticle === 'lesson-4' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('lesson-4')}
-                  color="blue"
-                />
-
-                <NavLink
-                  label="5. Thêm Bot + bản quyền"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'guide-1'}
-                  fw={selectedArticle === 'guide-1' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('guide-1')}
-                  color="blue"
-                />
-
-                <NavLink
-                  label="6. Mở Backtest"
-                  leftSection={<BookOpen size={16} color="#307fffff" />}
-                  active={selectedArticle === 'guide-2'}
-                  fw={selectedArticle === 'guide-2' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('guide-2')}
-                  color="blue"
-                />
-
-                <Badge
-                  variant="gradient"
-                  gradient={{ from: 'violet', to: 'pink', deg: 90 }}
-                  size="lg">
-                  Chiến lược
-                </Badge>
-
-                <NavLink
-                  label="1. CHỈ BUY VÀNG"
-                  leftSection={<TrendingUp size={16} color="violet" />}
-                  active={selectedArticle === 'strategy-1'}
-                  fw={selectedArticle === 'strategy-1' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('strategy-1')}
-                  color="violet"
-                />
-
-                <NavLink
-                  label="2. FULL MARGIN"
-                  leftSection={<TrendingUp size={16} color="violet" />}
-                  active={selectedArticle === 'strategy-2'}
-                  fw={selectedArticle === 'strategy-2' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('strategy-2')}
-                  color="violet"
-                />
-
-                <NavLink
-                  label="3. NHÂN & TỔNG"
-                  leftSection={<TrendingUp size={16} color="violet" />}
-                  active={selectedArticle === 'strategy-3'}
-                  fw={selectedArticle === 'strategy-3' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('strategy-3')}
-                  color="violet"
-                />
-
-                <NavLink
-                  label="4. CỘNG & TỈA"
-                  leftSection={<TrendingUp size={16} color="violet" />}
-                  active={selectedArticle === 'strategy-4'}
-                  fw={selectedArticle === 'strategy-4' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('strategy-4')}
-                  color="violet"
-                />
-
-                <NavLink
-                  label="5. CỘNG & TỔNG"
-                  leftSection={<TrendingUp size={16} color="violet" />}
-                  active={selectedArticle === 'strategy-5'}
-                  fw={selectedArticle === 'strategy-5' ? 700 : undefined}
-                  onClick={() => setSelectedArticle('strategy-5')}
-                  color="violet"
-                />
-
+                </Group>
               </Stack>
-            </ScrollArea>
-          )}
-        </AppShell.Navbar>
+            </Container>
+          </AppShell.Header>
 
-        <AppShell.Main style={{
-          backgroundColor: '#000000',
-          padding: showPartnerAgreement ? 'initial' : undefined,
-        }}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
-            {/* Features Section Tabs */}
-            {isUserLoggedIn && navigationSection === 'features' && (
-              <>
-                <Tabs.Panel value="partner">
-                  <PartnerApp
-                    onAsideContentChange={setPartnerAside}
-                    selectedPlatform={selectedPlatform}
-                    onPlatformSelect={setSelectedPlatform}
-                    isAuthenticated={isPartnerAuthenticated}
-                    setIsAuthenticated={setIsPartnerAuthenticated}
-                    onAgreementVisibilityChange={setShowPartnerAgreement}
-                    partnerRank={partnerRank}
-                  />
-                </Tabs.Panel>
-              </>
-            )}
-
-            {/* Library Section Tabs */}
-            {navigationSection === 'library' && (
-              <>
-                <Tabs.Panel value="documentation">
-                  <StepByStepTab selectedArticle={selectedArticle} />
-                </Tabs.Panel>
-                {isUserLoggedIn && (
-                  <Tabs.Panel value="get-bot">
-                    <GetBotTab />
-                  </Tabs.Panel>
-                )}
-              </>
-            )}
-
-            {/* Login Section */}
-            {navigationSection === 'login' && (
-              <LoginTab 
-                onLoginSuccess={(userId, partnerRank) => {
-                  // Update parent state
-                  setIsUserLoggedIn(true);
-                  setLoggedInUserId(userId);
-                  // Set partner rank from login response
-                  if (partnerRank) {
-                    setPartnerRank(partnerRank);
-                  }
-                  // Redirect to documentation
-                  handleNavigationChange('library');
-                  setActiveTab('documentation');
-                }}
+          <AppShell.Navbar p="md">
+            {navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement && (
+              <PartnerNavBar
+                selectedPlatform={selectedPlatform}
+                onPlatformSelect={setSelectedPlatform}
+                isAuthenticated={isPartnerAuthenticated}
+                onLogout={() => setIsPartnerAuthenticated(false)}
               />
             )}
-          </Tabs>
-        </AppShell.Main>
+            {navigationSection === 'library' && activeTab === 'documentation' && (
+              <ScrollArea h="100%" type="auto" offsetScrollbars>
+                <Stack gap="xs">
+                  <Badge
+                    variant="gradient"
+                    gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                    size="lg">
+                    Hướng dẫn
+                  </Badge>
 
-        <AppShell.Aside p="md">
-          {navigationSection === 'features' && activeTab === 'feature-guide' && (
-            featureGuideAside
-          )}
-          {navigationSection === 'features' && activeTab === 'partner' && (
-            partnerAside
-          )}
-        </AppShell.Aside>
+                  <NavLink
+                    label="1. Thông tin và ý nghĩa Bot"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'lesson-1'}
+                    fw={selectedArticle === 'lesson-1' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('lesson-1')}
+                    color="blue"
+                  />
 
-        <AppShell.Footer style={{
-          backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
-          backdropFilter: 'blur(5px)',
-        }}>
-          <Container size="100%" h="100%">
-            <Group justify="space-between" align="center" h="100%">
-              <Group gap="xs" align="center">
-                <Image
-                  src="/tradi-logo.png"
-                  alt="Tradi Logo"
-                  width={30}
-                  height={30}
-                  style={{ objectFit: 'contain' }}
+                  <NavLink
+                    label="2. Bảng thông tin"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'lesson-2'}
+                    fw={selectedArticle === 'lesson-2' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('lesson-2')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="3. Bảng hỗ trợ Trade Tay"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'lesson-3'}
+                    fw={selectedArticle === 'lesson-3' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('lesson-3')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="4. Input chế độ DCA"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'lesson-4'}
+                    fw={selectedArticle === 'lesson-4' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('lesson-4')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="5. Thêm Bot + bản quyền"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'guide-1'}
+                    fw={selectedArticle === 'guide-1' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('guide-1')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="6. Mở Backtest"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'guide-2'}
+                    fw={selectedArticle === 'guide-2' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('guide-2')}
+                    color="blue"
+                  />
+
+                  <Badge
+                    variant="gradient"
+                    gradient={{ from: 'violet', to: 'pink', deg: 90 }}
+                    size="lg">
+                    Chiến lược
+                  </Badge>
+
+                  <NavLink
+                    label="1. CHỈ BUY VÀNG"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-1'}
+                    fw={selectedArticle === 'strategy-1' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-1')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="2. FULL MARGIN"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-2'}
+                    fw={selectedArticle === 'strategy-2' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-2')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="3. NHÂN & TỔNG"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-3'}
+                    fw={selectedArticle === 'strategy-3' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-3')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="4. CỘNG & TỈA"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-4'}
+                    fw={selectedArticle === 'strategy-4' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-4')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="5. CỘNG & TỔNG"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-5'}
+                    fw={selectedArticle === 'strategy-5' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-5')}
+                    color="violet"
+                  />
+
+                </Stack>
+              </ScrollArea>
+            )}
+          </AppShell.Navbar>
+
+          <AppShell.Main style={{
+            backgroundColor: '#000000',
+            ...(showPartnerAgreement && {
+              paddingTop: '100px',
+              paddingLeft: '0px',
+              paddingRight: '0px',
+              paddingBottom: '60px',
+            }),
+          }}>
+            <Tabs value={activeTab} onChange={handleTabChange}>
+              {/* Features Section Tabs */}
+              {isUserLoggedIn && navigationSection === 'features' && (
+                <>
+                  <Tabs.Panel value="partner">
+                    <PartnerApp
+                      onAsideContentChange={setPartnerAside}
+                      selectedPlatform={selectedPlatform}
+                      onPlatformSelect={setSelectedPlatform}
+                      isAuthenticated={isPartnerAuthenticated}
+                      setIsAuthenticated={setIsPartnerAuthenticated}
+                      onAgreementVisibilityChange={setShowPartnerAgreement}
+                      partnerRank={partnerRank}
+                    />
+                  </Tabs.Panel>
+                </>
+              )}
+
+              {/* Library Section Tabs */}
+              {navigationSection === 'library' && (
+                <>
+                  <Tabs.Panel value="documentation">
+                    <StepByStepTab selectedArticle={selectedArticle} />
+                  </Tabs.Panel>
+                  {isUserLoggedIn && (
+                    <Tabs.Panel value="get-bot">
+                      <GetBotTab />
+                    </Tabs.Panel>
+                  )}
+                </>
+              )}
+
+              {/* Login Section */}
+              {navigationSection === 'login' && (
+                <LoginTab
+                  onLoginSuccess={(userId, partnerRank) => {
+                    // Update parent state
+                    setIsUserLoggedIn(true);
+                    setLoggedInUserId(userId);
+                    // Set partner rank from login response
+                    if (partnerRank) {
+                      setPartnerRank(partnerRank);
+                    }
+                    // Redirect to documentation
+                    handleNavigationChange('library');
+                    setActiveTab('documentation');
+                  }}
                 />
-                <Text size="sm" c="dimmed">
-                  © {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.
-                </Text>
-              </Group>
-              {/* <Group gap="md">
+              )}
+            </Tabs>
+          </AppShell.Main>
+
+          <AppShell.Aside p="md">
+            {navigationSection === 'features' && activeTab === 'feature-guide' && (
+              featureGuideAside
+            )}
+            {navigationSection === 'features' && activeTab === 'partner' && (
+              partnerAside
+            )}
+          </AppShell.Aside>
+
+          <AppShell.Footer style={{
+            backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
+            backdropFilter: 'blur(5px)',
+          }}>
+            <Container size="100%" h="100%">
+              <Group justify="space-between" align="center" h="100%">
+                <Group gap="xs" align="center">
+                  <Image
+                    src="/tradi-logo.png"
+                    alt="Tradi Logo"
+                    width={30}
+                    height={30}
+                    style={{ objectFit: 'contain' }}
+                  />
+                  <Text size="sm" c="dimmed">
+                    © {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.
+                  </Text>
+                </Group>
+                {/* <Group gap="md">
                 <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
                   {t('about')}
                 </Text>
@@ -590,34 +595,34 @@ export default function HomePage() {
                   {t('terms')}
                 </Text>
               </Group> */}
-            </Group>
-          </Container>
-        </AppShell.Footer>
+              </Group>
+            </Container>
+          </AppShell.Footer>
 
-        {/* Floating action button for Aside panel */}
-        <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="md">
-          <Transition transition="slide-up" mounted={shouldShowAside}>
-            {(transitionStyles) => (
-              <ActionIcon
-                size="xl"
-                radius="xl"
-                variant="filled"
-                color={theme.colors.accent[6]}
-                onClick={toggleMobileAside}
-                style={{
-                  ...transitionStyles,
-                  boxShadow: theme.shadows.lg,
-                  width: 56,
-                  height: 56,
-                }}
-                aria-label="Toggle side panel"
-              >
-                <PanelRight size={24} />
-              </ActionIcon>
-            )}
-          </Transition>
-        </Affix>
-      </AppShell>
+          {/* Floating action button for Aside panel */}
+          <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="md">
+            <Transition transition="slide-up" mounted={shouldShowAside}>
+              {(transitionStyles) => (
+                <ActionIcon
+                  size="xl"
+                  radius="xl"
+                  variant="filled"
+                  color={theme.colors.accent[6]}
+                  onClick={toggleMobileAside}
+                  style={{
+                    ...transitionStyles,
+                    boxShadow: theme.shadows.lg,
+                    width: 56,
+                    height: 56,
+                  }}
+                  aria-label="Toggle side panel"
+                >
+                  <PanelRight size={24} />
+                </ActionIcon>
+              )}
+            </Transition>
+          </Affix>
+        </AppShell>
       </div>
     </>
   );

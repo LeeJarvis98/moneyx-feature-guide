@@ -79,6 +79,7 @@ export type Database = {
       partners: {
         Row: {
           id: string
+          partner_rank: string
           platform_accounts: string[] | null
           platform_ref_links: string[] | null
           total_partner_com: number | null
@@ -86,6 +87,7 @@ export type Database = {
         }
         Insert: {
           id: string
+          partner_rank?: string
           platform_accounts?: string[] | null
           platform_ref_links?: string[] | null
           total_partner_com?: number | null
@@ -93,6 +95,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          partner_rank?: string
           platform_accounts?: string[] | null
           platform_ref_links?: string[] | null
           total_partner_com?: number | null
@@ -106,6 +109,13 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "partners_partner_rank_fkey"
+            columns: ["partner_rank"]
+            isOneToOne: false
+            referencedRelation: "partner_rank_list"
+            referencedColumns: ["partner_rank"]
+          },
         ]
       }
       users: {
@@ -115,7 +125,7 @@ export type Database = {
           id: string
           partner_rank: string | null
           password: string
-          referral_id: string
+          referral_id: string | null
           status: string
           updated_at: string | null
         }
@@ -125,7 +135,7 @@ export type Database = {
           id: string
           partner_rank?: string | null
           password: string
-          referral_id: string
+          referral_id?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -135,7 +145,7 @@ export type Database = {
           id?: string
           partner_rank?: string | null
           password?: string
-          referral_id?: string
+          referral_id?: string | null
           status?: string
           updated_at?: string | null
         }
