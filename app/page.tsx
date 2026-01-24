@@ -604,9 +604,13 @@ export default function HomePage() {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
-                    // Set partner rank from login response
+                    // Set partner rank from login response and save to localStorage
                     if (partnerRank) {
                       setPartnerRank(partnerRank);
+                      localStorage.setItem('partnerRank', partnerRank);
+                    } else {
+                      setPartnerRank('');
+                      localStorage.removeItem('partnerRank');
                     }
                     // Redirect to documentation
                     handleNavigationChange('library');

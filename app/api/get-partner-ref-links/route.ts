@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import type { PlatformRefLinks } from '@/types';
 
-interface PlatformRefLinks {
+interface PlatformRefLinksWithDefaults {
   exness: string;
   binance: string;
   bingx: string;
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Initialize empty refLinks object
-    const refLinks: PlatformRefLinks = {
+    const refLinks: PlatformRefLinksWithDefaults = {
       exness: '',
       binance: '',
       bingx: '',
@@ -61,16 +62,16 @@ export async function GET(request: NextRequest) {
       upbit: '',
     };
 
-    // Parse platform_ref_links array if it exists
+    // Parse platform_ref_links from JSON objects array
     if (partner && partner.platform_ref_links && Array.isArray(partner.platform_ref_links)) {
-      partner.platform_ref_links.forEach((link: string) => {
-        const colonIndex = link.indexOf(':');
-        if (colonIndex > 0) {
-          const platform = link.substring(0, colonIndex);
-          const url = link.substring(colonIndex + 1);
-          if (platform && url && platform in refLinks) {
-            refLinks[platform as keyof PlatformRefLinks] = url;
-          }
+      partner.platform_ref_links.forEach((linkObj: any) => {
+        if (linkObj && typeof linkObj === 'object') {
+          // Each item is an object like { "exness": "url", "binance": "url" }
+          Object.entries(linkObj).forEach(([platform, url]) => {
+            if (platform && url && typeof url === 'string' && platform in refLinks) {
+              refLinks[platform as keyof PlatformRefLinksWithDefaults] = url;
+            }
+          });
         }
       });
     }

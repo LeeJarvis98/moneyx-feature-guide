@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
-
-interface PlatformRefLinks {
-  exness: string;
-  binance: string;
-  bingx: string;
-  bitget: string;
-  bybit: string;
-  gate: string;
-  htx: string;
-  kraken: string;
-  kucoin: string;
-  mexc: string;
-  okx: string;
-  upbit: string;
-}
+import type { PlatformRefLinks } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,13 +22,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // Convert refLinks object to array format: ["platform:url", "platform:url"]
-    const refLinksArray: string[] = [];
+    // Convert refLinks object to JSON array format: [{ "platform": "url" }]
+    const refLinksArray: PlatformRefLinks[] = [];
+    const refLinksObj: PlatformRefLinks = {};
+    
     Object.entries(refLinks).forEach(([platform, url]) => {
       if (url && typeof url === 'string' && url.trim() !== '') {
-        refLinksArray.push(`${platform}:${url.trim()}`);
+        refLinksObj[platform] = url.trim();
       }
     });
+    
+    // Only add to array if there are any links
+    if (Object.keys(refLinksObj).length > 0) {
+      refLinksArray.push(refLinksObj);
+    }
 
     // Check if partner exists
     const { data: existingPartner, error: checkError } = await supabase

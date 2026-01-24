@@ -69,15 +69,14 @@ export function GetBotTab() {
           const platformData = JSON.parse(storedData);
           if (platformData.platformRefLinks && Array.isArray(platformData.platformRefLinks)) {
             const urlMap: Record<string, string> = {};
-            platformData.platformRefLinks.forEach((link: string) => {
-              // Split only on the first colon to handle URLs with colons (https://)
-              const colonIndex = link.indexOf(':');
-              if (colonIndex > -1) {
-                const platform = link.substring(0, colonIndex).trim();
-                const url = link.substring(colonIndex + 1).trim();
-                if (platform && url) {
-                  urlMap[platform.toLowerCase()] = url;
-                }
+            platformData.platformRefLinks.forEach((linkObj: any) => {
+              if (linkObj && typeof linkObj === 'object') {
+                // Each item is an object like { "exness": "url", "binance": "url" }
+                Object.entries(linkObj).forEach(([platform, url]) => {
+                  if (platform && url && typeof url === 'string') {
+                    urlMap[platform.toLowerCase()] = url;
+                  }
+                });
               }
             });
             setPartnerPlatformUrls(urlMap);
@@ -111,43 +110,40 @@ export function GetBotTab() {
           
           // Find platform credentials
           if (platformData.platformAccounts && Array.isArray(platformData.platformAccounts)) {
-            const accountEntry = platformData.platformAccounts.find((acc: string) => 
-              acc.toLowerCase().startsWith(selectedPlatform.toLowerCase())
-            );
+            // platformAccounts is now an array of objects like [{ "exness": { "email": "...", "password": "..." } }]
+            let credentials = null;
             
-            if (accountEntry) {
-              // Parse account entry: "exness: email@example.com/password"
-              // Split only on the first colon to avoid issues with colons in passwords
-              const colonIndex = accountEntry.indexOf(':');
-              if (colonIndex > -1) {
-                const credentials = accountEntry.substring(colonIndex + 1).trim();
-                if (credentials) {
-                  const [login, password] = credentials.split('/');
-                  
-                  if (login && password && login !== 'null' && password !== 'null') {
-                    // Attempt platform authentication
-                    console.log('[GetBotTab] Authenticating with platform:', selectedPlatform);
-                    
-                    const authResponse = await fetch('/api/partner-login', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        partnerId: login,
-                        password: password,
-                        platform: selectedPlatform,
-                      }),
-                    });
-
-                    if (authResponse.ok) {
-                      const authData = await authResponse.json();
-                      platformAuth = {
-                        token: authData.platformToken,
-                        platform: selectedPlatform,
-                      };
-                      console.log('[GetBotTab] Platform authentication successful');
-                    }
-                  }
+            for (const accountObj of platformData.platformAccounts) {
+              if (accountObj && typeof accountObj === 'object') {
+                const platformKey = selectedPlatform.toLowerCase();
+                if (accountObj[platformKey]) {
+                  credentials = accountObj[platformKey];
+                  break;
                 }
+              }
+            }
+            
+            if (credentials && credentials.email && credentials.password) {
+              // Attempt platform authentication
+              console.log('[GetBotTab] Authenticating with platform:', selectedPlatform);
+              
+              const authResponse = await fetch('/api/partner-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  partnerId: credentials.email,
+                  password: credentials.password,
+                  platform: selectedPlatform,
+                }),
+              });
+
+              if (authResponse.ok) {
+                const authData = await authResponse.json();
+                platformAuth = {
+                  token: authData.platformToken,
+                  platform: selectedPlatform,
+                };
+                console.log('[GetBotTab] Platform authentication successful');
               }
             }
           }

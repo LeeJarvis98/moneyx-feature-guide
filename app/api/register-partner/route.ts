@@ -44,8 +44,15 @@ export async function POST(request: NextRequest) {
         partner_rank: rank,
         platform_accounts: [],
         platform_ref_links: [],
-        total_partner_com: 0,
-        total_tradi_com: 0,
+        sub_partners: [],
+        total_clients: 0,
+        total_reward: 0,
+        total_sub_partners: 0,
+        accum_reward: 0,
+        claim_reward: 0,
+        last_claim_reward: 0,
+        accum_time_remaining: 0,
+        claim_time_remaining: 0,
       })
       .select()
       .single();

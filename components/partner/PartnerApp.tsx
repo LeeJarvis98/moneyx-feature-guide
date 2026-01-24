@@ -20,8 +20,10 @@ interface PartnerAppProps {
 export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   // Check if user has partner rank badge (means they're already a partner)
+  // ADMIN users should also skip the agreement and go directly to login
   const hasPartnerRank = partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN';
-  const [isPartner, setIsPartner] = useState(!!hasPartnerRank);
+  const isAdmin = partnerRank === 'ADMIN';
+  const [isPartner, setIsPartner] = useState(!!hasPartnerRank || isAdmin);
   const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
 
   // Function to check partner status from Google Sheets
@@ -52,10 +54,10 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
       const partnerId = sessionStorage.getItem('partnerId');
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       
-      // If user has partner rank badge, they're already a partner - skip check
-      if (hasPartnerRank) {
+      // If user has partner rank badge or is ADMIN, they're already a partner - skip check
+      if (hasPartnerRank || isAdmin) {
         setIsPartner(true);
-        console.log('[PartnerApp] User has partner rank badge, skipping partner status check');
+        console.log('[PartnerApp] User has partner rank badge or is ADMIN, skipping partner status check');
       } else {
         // If user doesn't have a badge, they're definitely not a partner
         // Set to false immediately to avoid showing PartnerLogin briefly
@@ -78,7 +80,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     };
 
     checkAuth();
-  }, [setIsAuthenticated, hasPartnerRank]);
+  }, [setIsAuthenticated, hasPartnerRank, isAdmin]);
 
   // Clear aside content when not authenticated
   useEffect(() => {

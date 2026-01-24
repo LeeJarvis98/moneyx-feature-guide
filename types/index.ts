@@ -16,3 +16,17 @@ export interface CoreCombination {
   benefits: string[];
   synergy: string;
 }
+
+// Platform types for partner data
+export interface PlatformRefLinks {
+  [platform: string]: string;
+}
+
+export interface PlatformAccountCredentials {
+  email: string;
+  password: string;
+}
+
+export interface PlatformAccounts {
+  [platform: string]: PlatformAccountCredentials;
+}

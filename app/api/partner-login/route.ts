@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseClient } from '@/lib/supabase';
+import type { PlatformAccounts, PlatformAccountCredentials } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,6 +92,73 @@ export async function POST(request: NextRequest) {
           { error: `Platform ${platform} is not yet supported` },
           { status: 400 }
         );
+      }
+
+      // Store platform credentials in partners table
+      try {
+        const supabase = getSupabaseClient();
+        const userId = request.headers.get('x-user-id');
+        
+        // Get the user ID from the request or use the partnerId (email) to find the user
+        let userIdToUpdate = userId;
+        
+        if (!userIdToUpdate) {
+          // Try to find user by email (partnerId could be the email)
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', partnerId)
+            .maybeSingle();
+          
+          if (userData) {
+            userIdToUpdate = userData.id;
+          }
+        }
+
+        if (userIdToUpdate) {
+          // Fetch existing platform_accounts
+          const { data: partnerData } = await supabase
+            .from('partners')
+            .select('platform_accounts')
+            .eq('id', userIdToUpdate)
+            .maybeSingle();
+
+          let platformAccounts: any[] = [];
+          
+          if (partnerData && partnerData.platform_accounts && Array.isArray(partnerData.platform_accounts)) {
+            platformAccounts = partnerData.platform_accounts;
+          }
+
+          // Create or update the platform account credentials
+          const credentials: PlatformAccountCredentials = {
+            email: partnerId,
+            password: password
+          };
+
+          // Check if this platform already exists in the array
+          const existingIndex = platformAccounts.findIndex(acc => 
+            acc && typeof acc === 'object' && platform.toLowerCase() in acc
+          );
+
+          if (existingIndex >= 0) {
+            // Update existing platform credentials
+            platformAccounts[existingIndex] = { [platform.toLowerCase()]: credentials };
+          } else {
+            // Add new platform credentials
+            platformAccounts.push({ [platform.toLowerCase()]: credentials });
+          }
+
+          // Update the partners table
+          await supabase
+            .from('partners')
+            .update({ platform_accounts: platformAccounts as any })
+            .eq('id', userIdToUpdate);
+
+          console.log('[PARTNER-LOGIN] Platform credentials saved to database');
+        }
+      } catch (dbError) {
+        console.error('[PARTNER-LOGIN] Error saving credentials to database:', dbError);
+        // Don't fail the login if database update fails
       }
 
       // Return success with platform info

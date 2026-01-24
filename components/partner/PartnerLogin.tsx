@@ -109,9 +109,21 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     setLoading(true);
 
     try {
+      // Get logged-in user ID from storage
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add user ID header if available
+      if (userId) {
+        headers['x-user-id'] = userId;
+      }
+
       const response = await fetch('/api/partner-login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           partnerId,
           password,

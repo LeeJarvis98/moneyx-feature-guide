@@ -18,22 +18,36 @@ export type Database = {
         Row: {
           account_id: string
           email: string
+          id: string | null
           licensed_date: string
+          platform: string | null
           uid: string
         }
         Insert: {
           account_id: string
           email: string
+          id?: string | null
           licensed_date?: string
+          platform?: string | null
           uid: string
         }
         Update: {
           account_id?: string
           email?: string
+          id?: string | null
           licensed_date?: string
+          platform?: string | null
           uid?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "licensed_accounts_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       own_referral_id_list: {
         Row: {
@@ -78,28 +92,52 @@ export type Database = {
       }
       partners: {
         Row: {
+          accum_reward: number
+          accum_time_remaining: number
+          claim_reward: number
+          claim_time_remaining: number
+          created_at: string
           id: string
+          last_claim_reward: number
           partner_rank: string
-          platform_accounts: string[] | null
-          platform_ref_links: string[] | null
-          total_partner_com: number | null
-          total_tradi_com: number | null
+          platform_accounts: Json[]
+          platform_ref_links: Json[]
+          sub_partners: Json[]
+          total_clients: number
+          total_reward: number
+          total_sub_partners: number
         }
         Insert: {
+          accum_reward?: number
+          accum_time_remaining?: number
+          claim_reward?: number
+          claim_time_remaining?: number
+          created_at?: string
           id: string
+          last_claim_reward?: number
           partner_rank?: string
-          platform_accounts?: string[] | null
-          platform_ref_links?: string[] | null
-          total_partner_com?: number | null
-          total_tradi_com?: number | null
+          platform_accounts?: Json[]
+          platform_ref_links?: Json[]
+          sub_partners?: Json[]
+          total_clients?: number
+          total_reward?: number
+          total_sub_partners?: number
         }
         Update: {
+          accum_reward?: number
+          accum_time_remaining?: number
+          claim_reward?: number
+          claim_time_remaining?: number
+          created_at?: string
           id?: string
+          last_claim_reward?: number
           partner_rank?: string
-          platform_accounts?: string[] | null
-          platform_ref_links?: string[] | null
-          total_partner_com?: number | null
-          total_tradi_com?: number | null
+          platform_accounts?: Json[]
+          platform_ref_links?: Json[]
+          sub_partners?: Json[]
+          total_clients?: number
+          total_reward?: number
+          total_sub_partners?: number
         }
         Relationships: [
           {
@@ -123,9 +161,9 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          partner_rank: string | null
+          partner_rank: string
           password: string
-          referral_id: string | null
+          referral_id: string
           status: string
           updated_at: string | null
         }
@@ -133,9 +171,9 @@ export type Database = {
           created_at?: string
           email: string
           id: string
-          partner_rank?: string | null
+          partner_rank?: string
           password: string
-          referral_id?: string | null
+          referral_id: string
           status?: string
           updated_at?: string | null
         }
@@ -143,9 +181,9 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          partner_rank?: string | null
+          partner_rank?: string
           password?: string
-          referral_id?: string | null
+          referral_id?: string
           status?: string
           updated_at?: string | null
         }
