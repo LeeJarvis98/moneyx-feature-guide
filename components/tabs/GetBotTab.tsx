@@ -276,6 +276,15 @@ export function GetBotTab() {
     setGrantingLicense(true);
 
     try {
+      // Get userId from storage
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      
+      if (!userId) {
+        console.error('[GRANT] User ID not found in storage');
+        alert('User session not found. Please log in again.');
+        return;
+      }
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -291,7 +300,8 @@ export function GetBotTab() {
         body: JSON.stringify({ 
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs
-          clientUid: accountData?.client_uid // Send client UID
+          clientUid: accountData?.client_uid, // Send client UID
+          userId: userId // Send user ID for the id field
         }),
       });
 

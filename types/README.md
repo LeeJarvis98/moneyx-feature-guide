@@ -37,7 +37,7 @@ npx supabase gen types typescript --project-id yctqvpgofipnaziqdxsz > types/data
 Your Supabase database has these tables (auto-detected):
 
 - **users** - User accounts with email, password, status, partner_rank
-- **licensed_accounts** - Licensed trading accounts
+- **licensed_accounts** - Licensed trading accounts with platform tracking (e.g., Exness)
 - **partners** - Partner information with referral links and commissions
 - **partner_rank_list** - Partner ranks with reward percentages
 - **own_referral_id_list** - List of referral IDs

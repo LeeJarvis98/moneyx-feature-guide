@@ -29,7 +29,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
 
   // Client accounts report state
   const [clientAccountsReport, setClientAccountsReport] = useState<ClientAccountsReportResponse | null>(null);
-  const [licensedAccountsDetails, setLicensedAccountsDetails] = useState<Array<{email: string; uid: string; accountId: string; timestamp: string | null}>>([]);
+  const [licensedAccountsDetails, setLicensedAccountsDetails] = useState<Array<{email: string; uid: string; accountId: string; platform: string; timestamp: string | null}>>([]);
   
   // Sort and filter state
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
@@ -68,10 +68,17 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
       const licensedIdsData = await licensedIdsResponse.json();
       
       let accountIds: string[] = [];
-      let accountDetails: Array<{email: string; uid: string; accountId: string; timestamp: string | null}> = [];
+      let accountDetails: Array<{email: string; uid: string; accountId: string; platform: string; timestamp: string | null}> = [];
       if (licensedIdsData.success && licensedIdsData.data) {
         accountIds = licensedIdsData.data;
-        accountDetails = licensedIdsData.details || [];
+        // Map API response to ensure platform field exists
+        accountDetails = (licensedIdsData.details || []).map((detail: any) => ({
+          email: detail.email,
+          uid: detail.uid,
+          accountId: detail.accountId,
+          platform: detail.platform || 'exness',
+          timestamp: detail.timestamp,
+        }));
       }
       
       // Check if there are any licensed accounts
@@ -134,6 +141,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         index: index + 1,
         client_account: account.client_account,
         email: details?.email || 'N/A',
+        platform: details?.platform || 'exness',
         licensed_date: details?.timestamp || 'N/A',
         volume_lots: account.volume_lots,
         reward_usd: account.reward_usd,
@@ -311,6 +319,16 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
                       title: 'Email',
                       width: 200,
                       sortable: true
+                    },
+                    { 
+                      accessor: 'platform', 
+                      title: 'Platform',
+                      width: 100,
+                      sortable: true,
+                      render: (record: any) => {
+                        const platform = String(record.platform || 'exness');
+                        return platform.charAt(0).toUpperCase() + platform.slice(1);
+                      }
                     },
                     { 
                       accessor: 'licensed_date', 

@@ -4,8 +4,8 @@ import { SHARED_SHEET_ID } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    const { accountIds, email, clientUid } = await request.json();
-    console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid);
+    const { accountIds, email, clientUid, userId } = await request.json();
+    console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid, 'User ID:', userId);
 
     if (!accountIds || !Array.isArray(accountIds) || accountIds.length === 0) {
       return NextResponse.json(
@@ -28,6 +28,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
     try {
       // Initialize clients
       const supabase = getSupabaseClient();
@@ -41,10 +48,12 @@ export async function POST(request: NextRequest) {
       // === WRITE TO SUPABASE (Detailed tracking) ===
       console.log('[GRANT] Writing to Supabase...');
       const licensedRecords = accountIds.map((accountId) => ({
+        id: userId, // Foreign key to users table
         email,
         uid: clientUid,
         account_id: accountId,
-        licensed_at: timestamp,
+        licensed_date: timestamp,
+        platform: 'exness', // Default platform
       }));
 
       const { data: insertedRecords, error: insertError } = await supabase

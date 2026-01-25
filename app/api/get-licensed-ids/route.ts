@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       // Build query
       let query = supabase
         .from('licensed_accounts')
-        .select('email, uid, account_id, licensed_date')
+        .select('email, uid, account_id, licensed_date, platform')
         .order('licensed_date', { ascending: false });
 
       // Filter by email if provided
@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
         email: account.email,
         uid: account.uid,
         accountId: account.account_id,
+        platform: account.platform || 'exness',
         timestamp: formatTimestamp(account.licensed_date),
       }));
 
