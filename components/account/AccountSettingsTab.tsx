@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Stack, Card, Text, TextInput, Button, Group, Title, Divider, Alert, PasswordInput } from '@mantine/core';
-import { Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle, Check, X } from 'lucide-react';
 import classes from './AccountSettingsTab.module.css';
 
 interface AccountSettingsTabProps {
@@ -17,6 +17,18 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
+  const passwordCriteria = {
+    minLength: newPassword.length >= 8,
+    hasUppercase: /[A-Z]/.test(newPassword),
+    hasLowercase: /[a-z]/.test(newPassword),
+    hasNumber: /[0-9]/.test(newPassword),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+  };
+
+  const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
+  const passwordsMatch = confirmPassword && newPassword === confirmPassword;
+  const passwordsDontMatch = confirmPassword && newPassword !== confirmPassword;
+
   const handlePasswordChange = async () => {
     // Reset messages
     setError('');
@@ -28,8 +40,8 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('Mật khẩu mới phải có ít nhất 6 ký tự');
+    if (!isPasswordStrong) {
+      setError('Mật khẩu mới không đủ mạnh');
       return;
     }
 
@@ -78,11 +90,11 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
 
   return (
     <Stack gap="xl" className={classes.container}>
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ backgroundColor: 'var(--mantine-color-dark-7)' }}>
         <Stack gap="md">
           <Group align="center" gap="sm">
             <Lock size={24} />
-            <Title order={2} size="h3">
+            <Title order={2} size="h3" c="white">
               Thay đổi mật khẩu
             </Title>
           </Group>
@@ -108,27 +120,74 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
             size="md"
+            className={classes.glowInput}
+            error={
+              !currentPassword && error
+                ? 'Vui lòng nhập mật khẩu hiện tại'
+                : currentPassword && newPassword && currentPassword === newPassword
+                ? 'Mật khẩu mới phải khác mật khẩu hiện tại'
+                : undefined
+            }
           />
 
           <PasswordInput
             label="Mật khẩu mới"
-            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+            placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
             size="md"
-            description="Mật khẩu phải có ít nhất 6 ký tự"
+            description="Mật khẩu phải có ít nhất 8 ký tự"
+            className={classes.glowInput}
+            error={newPassword && !isPasswordStrong ? 'Mật khẩu chưa đủ mạnh' : undefined}
           />
 
-          <PasswordInput
-            label="Xác nhận mật khẩu mới"
-            placeholder="Nhập lại mật khẩu mới"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            size="md"
-            error={confirmPassword && newPassword !== confirmPassword ? 'Mật khẩu không khớp' : undefined}
-          />
+          <div className={passwordsMatch ? classes.inputSuccess : ''}>
+            <PasswordInput
+              label="Xác nhận mật khẩu mới"
+              placeholder="Nhập lại mật khẩu mới"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              size="md"
+              error={passwordsDontMatch ? 'Mật khẩu không khớp' : undefined}
+              className={classes.glowInput}
+            />
+          </div>
+
+          {passwordsMatch && (
+            <Text size="sm" c="green" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={16} /> Mật khẩu khớp
+            </Text>
+          )}
+
+          {newPassword && (
+            <div className={classes.passwordCriteria}>
+              <Text size="sm" fw={600} mb="xs">
+                Mật khẩu phải chứa:
+              </Text>
+              <div className={passwordCriteria.minLength ? classes.criteriaValid : classes.criteriaInvalid}>
+                {passwordCriteria.minLength ? <Check size={14} /> : <X size={14} />}
+                <span>Ít nhất 8 ký tự</span>
+              </div>
+              <div className={passwordCriteria.hasUppercase ? classes.criteriaValid : classes.criteriaInvalid}>
+                {passwordCriteria.hasUppercase ? <Check size={14} /> : <X size={14} />}
+                <span>Một chữ cái viết hoa (A-Z)</span>
+              </div>
+              <div className={passwordCriteria.hasLowercase ? classes.criteriaValid : classes.criteriaInvalid}>
+                {passwordCriteria.hasLowercase ? <Check size={14} /> : <X size={14} />}
+                <span>Một chữ cái viết thường (a-z)</span>
+              </div>
+              <div className={passwordCriteria.hasNumber ? classes.criteriaValid : classes.criteriaInvalid}>
+                {passwordCriteria.hasNumber ? <Check size={14} /> : <X size={14} />}
+                <span>Một chữ số (0-9)</span>
+              </div>
+              <div className={passwordCriteria.hasSpecial ? classes.criteriaValid : classes.criteriaInvalid}>
+                {passwordCriteria.hasSpecial ? <Check size={14} /> : <X size={14} />}
+                <span>Một ký tự đặc biệt (!@#$%^&*...)</span>
+              </div>
+            </div>
+          )}
 
           <Group justify="flex-end" mt="md">
             <Button
@@ -137,33 +196,21 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
               onClick={handlePasswordChange}
               loading={loading}
               leftSection={<Lock size={18} />}
+              className={classes.glowButton}
+              c="black"
+              fullWidth
+              disabled={
+                !currentPassword ||
+                !newPassword ||
+                !confirmPassword ||
+                !isPasswordStrong ||
+                !passwordsMatch ||
+                loading
+              }
             >
               Cập nhật mật khẩu
             </Button>
           </Group>
-        </Stack>
-      </Card>
-
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Stack gap="md">
-          <Title order={3} size="h4">
-            Lưu ý bảo mật
-          </Title>
-          <Divider />
-          <Stack gap="xs">
-            <Text size="sm" c="dimmed">
-              • Sử dụng mật khẩu mạnh với ít nhất 6 ký tự
-            </Text>
-            <Text size="sm" c="dimmed">
-              • Không chia sẻ mật khẩu của bạn với bất kỳ ai
-            </Text>
-            <Text size="sm" c="dimmed">
-              • Thay đổi mật khẩu định kỳ để bảo vệ tài khoản
-            </Text>
-            <Text size="sm" c="dimmed">
-              • Sử dụng các mật khẩu khác nhau cho các dịch vụ khác nhau
-            </Text>
-          </Stack>
         </Stack>
       </Card>
     </Stack>

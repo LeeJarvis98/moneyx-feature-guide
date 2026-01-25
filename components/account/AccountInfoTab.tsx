@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Stack, Card, Text, Group, Badge, Loader, Table, Title, Divider, ThemeIcon } from '@mantine/core';
+import { Stack, Card, Text, Group, Badge, Loader, Table, Title, Divider, ThemeIcon, SimpleGrid } from '@mantine/core';
 import { User, Mail, Calendar, Award, Shield, CreditCard } from 'lucide-react';
 import classes from './AccountInfoTab.module.css';
 
@@ -89,10 +89,10 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
   return (
     <Stack gap="xl" className={classes.container}>
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ backgroundColor: 'var(--mantine-color-dark-7)' }}>
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Title order={2} size="h3">
+            <Title order={2} size="h3" c="white">
               Thông tin tài khoản
             </Title>
             <Badge
@@ -106,86 +106,85 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
           <Divider />
 
-          <Group gap="md" align="flex-start">
-            <ThemeIcon size="xl" radius="md" variant="light" color="blue">
-              <User size={24} />
-            </ThemeIcon>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Mã người dùng
-              </Text>
-              <Text fw={600} size="lg">
-                {userData.id}
-              </Text>
-            </Stack>
-          </Group>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+            <Group gap="md" align="flex-start">
+              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
+                <User size={24} />
+              </ThemeIcon>
+              <Stack gap={4}>
+                <Text size="sm" c="dimmed">
+                  ID người dùng
+                </Text>
+                <Text fw={600} size="lg">
+                  {userData.id}
+                </Text>
+              </Stack>
+            </Group>
 
-          <Group gap="md" align="flex-start">
-            <ThemeIcon size="xl" radius="md" variant="light" color="cyan">
-              <Mail size={24} />
-            </ThemeIcon>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Email
-              </Text>
-              <Text fw={600} size="lg">
-                {userData.email}
-              </Text>
-            </Stack>
-          </Group>
+            <Group gap="md" align="flex-start">
+              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
+                <Mail size={24} />
+              </ThemeIcon>
+              <Stack gap={4}>
+                <Text size="sm" c="dimmed">
+                  Email
+                </Text>
+                <Text fw={600} size="lg">
+                  {userData.email}
+                </Text>
+              </Stack>
+            </Group>
 
-          <Group gap="md" align="flex-start">
-            <ThemeIcon size="xl" radius="md" variant="light" color="violet">
-              <CreditCard size={24} />
-            </ThemeIcon>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Mã giới thiệu
-              </Text>
-              <Text fw={600} size="lg" style={{ fontFamily: 'monospace' }}>
-                {userData.referral_id}
-              </Text>
-            </Stack>
-          </Group>
+            <Group gap="md" align="flex-start">
+              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
+                <CreditCard size={24} />
+              </ThemeIcon>
+              <Stack gap={4}>
+                <Text size="sm" c="dimmed">
+                  Mã giới thiệu
+                </Text>
+                <Text fw={600} size="lg">
+                  {userData.referral_id}
+                </Text>
+              </Stack>
+            </Group>
 
-          <Group gap="md" align="flex-start">
-            <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
-              <Award size={24} />
-            </ThemeIcon>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Cấp bậc đối tác
-              </Text>
-              <Text fw={600} size="lg">
-                {userData.partner_rank === 'None' ? 'Chưa là đối tác' : userData.partner_rank}
-              </Text>
-            </Stack>
-          </Group>
+            <Group gap="md" align="flex-start">
+              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
+                <Award size={24} />
+              </ThemeIcon>
+              <Stack gap={4}>
+                <Text size="sm" c="dimmed">
+                  Cấp bậc đối tác
+                </Text>
+                <Text fw={600} size="lg">
+                  {userData.partner_rank === 'None' ? 'Chưa là đối tác' : userData.partner_rank}
+                </Text>
+              </Stack>
+            </Group>
 
-          <Group gap="md" align="flex-start">
-            <ThemeIcon size="xl" radius="md" variant="light" color="green">
-              <Calendar size={24} />
-            </ThemeIcon>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Ngày tạo tài khoản
-              </Text>
-              <Text fw={600} size="lg">
-                {formatDate(userData.created_at)}
-              </Text>
-            </Stack>
-          </Group>
+            <Group gap="md" align="flex-start">
+              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
+                <Calendar size={24} />
+              </ThemeIcon>
+              <Stack gap={4}>
+                <Text size="sm" c="dimmed">
+                  Ngày tạo tài khoản
+                </Text>
+                <Text fw={600} size="lg">
+                  {formatDate(userData.created_at)}
+                </Text>
+              </Stack>
+            </Group>
+          </SimpleGrid>
         </Stack>
       </Card>
 
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ backgroundColor: 'var(--mantine-color-dark-7)' }}>
         <Stack gap="md">
           <Group align="center" gap="sm">
-            <ThemeIcon size="lg" radius="md" variant="light" color="teal">
-              <Shield size={20} />
-            </ThemeIcon>
-            <Title order={3} size="h4">
-              Tài khoản được cấp phép ({licensedAccounts.length})
+            <Title order={3} size="h4" c="white">
+              Tài khoản khách được cấp bản quyền ({licensedAccounts.length})
             </Title>
           </Group>
 
@@ -193,13 +192,13 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
           {licensedAccounts.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
-              Bạn chưa có tài khoản nào được cấp phép
+              Bạn chưa có tài khoản khách nào được cấp bản quyền
             </Text>
           ) : (
             <Table striped highlightOnHover withTableBorder withColumnBorders>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>ID tài khoản</Table.Th>
+                  <Table.Th>ID</Table.Th>
                   <Table.Th>Email</Table.Th>
                   <Table.Th>Nền tảng</Table.Th>
                   <Table.Th>Ngày cấp phép</Table.Th>

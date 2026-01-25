@@ -316,7 +316,7 @@ export default function HomePage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Text size="sm" fw={600} c="yellow">
-                            Mã giới thiệu:
+                            Mã giới thiệu của bạn:
                           </Text>
                           <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
                             {referralId}

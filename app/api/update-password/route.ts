@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
-import bcrypt from 'bcrypt';
+
+// Password validation function
+function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (!password || typeof password !== 'string') {
+    return { valid: false, error: 'Password is required' };
+  }
+
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters long' };
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one uppercase letter' };
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one lowercase letter' };
+  }
+
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one number' };
+  }
+
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return { valid: false, error: 'Password must contain at least one special character' };
+  }
+
+  return { valid: true };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +41,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (newPassword.length < 6) {
+    // Validate new password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
       return NextResponse.json(
-        { error: 'New password must be at least 6 characters' },
+        { error: passwordValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Check that new password is different from current password
+    if (currentPassword === newPassword) {
+      return NextResponse.json(
+        { error: 'New password must be different from current password' },
         { status: 400 }
       );
     }
@@ -37,8 +75,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Compare current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, userData.password);
+    // Compare current password (plain text comparison)
+    const isPasswordValid = currentPassword === userData.password;
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -47,14 +85,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password
+    // Update password (store as plain text)
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        password: hashedPassword,
+        password: newPassword,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);

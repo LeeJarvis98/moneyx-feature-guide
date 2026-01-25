@@ -3,3 +3,63 @@
   margin: 0 auto;
   padding: 1rem;
 }
+
+/* Glow effect for buttons */
+.glowButton {
+  transition: all 0.3s ease;
+}
+
+.glowButton:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(255, 184, 28, 0.5);
+  transform: translateY(-1px);
+}
+
+.glowButton:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(255, 184, 28, 0.3);
+}
+
+/* Glow effect for input fields on focus */
+.glowInput :global(.mantine-PasswordInput-input):focus,
+.glowInput :global(.mantine-TextInput-input):focus {
+  box-shadow: 0 0 0 2px rgba(255, 184, 28, 0.2), 0 4px 12px rgba(255, 184, 28, 0.4);
+  border-color: #FFB81C;
+  transition: all 0.3s ease;
+}
+
+/* Password criteria styles */
+.passwordCriteria {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.criteriaValid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #51cf66;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.criteriaInvalid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff6b6b;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+/* Success state for input fields */
+.inputSuccess :global(.mantine-PasswordInput-input) {
+  border-color: #51cf66 !important;
+}
+
+.inputSuccess :global(.mantine-PasswordInput-input):focus {
+  box-shadow: 0 0 0 2px rgba(81, 207, 102, 0.2), 0 4px 12px rgba(81, 207, 102, 0.4);
+  border-color: #51cf66 !important;
+}
