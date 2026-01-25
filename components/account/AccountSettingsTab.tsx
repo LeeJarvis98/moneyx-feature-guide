@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Stack, Card, Text, TextInput, Button, Group, Title, Divider, Alert, PasswordInput } from '@mantine/core';
 import { Lock, AlertCircle, CheckCircle, Check, X } from 'lucide-react';
+import { Turnstile } from '@/components/Turnstile';
 import classes from './AccountSettingsTab.module.css';
 
 interface AccountSettingsTabProps {
@@ -16,6 +17,7 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const passwordCriteria = {
     minLength: newPassword.length >= 8,
@@ -33,6 +35,12 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
     // Reset messages
     setError('');
     setSuccess('');
+
+    // Validate turnstile token
+    if (!turnstileToken) {
+      setError('Vui lòng hoàn thành xác minh bảo mật');
+      return;
+    }
 
     // Validation
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -65,6 +73,7 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
           userId,
           currentPassword,
           newPassword,
+          turnstileToken,
         }),
       });
 
@@ -137,7 +146,6 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
             onChange={(e) => setNewPassword(e.target.value)}
             required
             size="md"
-            description="Mật khẩu phải có ít nhất 8 ký tự"
             className={classes.glowInput}
             error={newPassword && !isPasswordStrong ? 'Mật khẩu chưa đủ mạnh' : undefined}
           />
@@ -188,6 +196,15 @@ export function AccountSettingsTab({ userId }: AccountSettingsTabProps) {
               </div>
             </div>
           )}
+
+          {/* Turnstile Captcha */}
+          <div className={classes.turnstileContainer}>
+            <Turnstile
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+            />
+          </div>
 
           <Group justify="flex-end" mt="md">
             <Button

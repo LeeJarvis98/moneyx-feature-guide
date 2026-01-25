@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import type { PlatformAccounts, PlatformAccountCredentials } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { partnerId, password, platform } = await request.json();
+    const { partnerId, password, platform, turnstileToken } = await request.json();
+
+    // Verify Turnstile token first
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Security verification is required' },
+        { status: 400 }
+      );
+    }
+
+    const isTurnstileValid = await verifyTurnstileToken(turnstileToken);
+    if (!isTurnstileValid) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please try again.' },
+        { status: 403 }
+      );
+    }
 
     // Validate input
     if (!partnerId || typeof partnerId !== 'string') {

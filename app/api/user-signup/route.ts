@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import type { User } from '@/types/database';
 
 interface UserSignupData {
@@ -8,6 +9,7 @@ interface UserSignupData {
   email: string;
   password: string;
   created_at: string;
+  turnstileToken: string;
 }
 
 // Validation helper functions
@@ -96,6 +98,22 @@ export async function POST(request: NextRequest) {
       referral_id: data.referral_id,
       email: data.email,
     });
+
+    // Verify Turnstile token first
+    if (!data.turnstileToken) {
+      return NextResponse.json(
+        { error: 'Xác minh bảo mật là bắt buộc' },
+        { status: 400 }
+      );
+    }
+
+    const isTurnstileValid = await verifyTurnstileToken(data.turnstileToken);
+    if (!isTurnstileValid) {
+      return NextResponse.json(
+        { error: 'Xác minh bảo mật thất bại. Vui lòng thử lại.' },
+        { status: 403 }
+      );
+    }
 
     // Validate ID
     const idValidation = validateId(data.id);

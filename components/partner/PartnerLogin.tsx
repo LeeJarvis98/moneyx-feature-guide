@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { exnessApi } from '@/lib/exness/api';
 import PartnerAside from './PartnerAside';
 import CongratulationsModal from './CongratulationsModal';
+import { Turnstile } from '@/components/Turnstile';
 import styles from './PartnerLogin.module.css';
 
 interface PartnerLoginProps {
@@ -33,6 +34,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
   const [registeredPartnerType, setRegisteredPartnerType] = useState<'new' | 'system'>('new');
@@ -93,6 +95,12 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     e.preventDefault();
     setError(null);
 
+    // Validate turnstile token
+    if (!turnstileToken) {
+      setError('Please complete the security verification');
+      return;
+    }
+
     // Validate platform selection
     if (!selectedPlatform) {
       setError('Vui lòng chọn sàn giao dịch trước khi đăng nhập');
@@ -128,6 +136,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           partnerId,
           password,
           platform: selectedPlatform,
+          turnstileToken,
         }),
       });
 
@@ -223,6 +232,15 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               Login successful! Redirecting...
             </div>
           )}
+
+          {/* Turnstile Captcha */}
+          <div className={styles.turnstileContainer}>
+            <Turnstile
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+            />
+          </div>
 
           {/* Submit Button */}
           <button

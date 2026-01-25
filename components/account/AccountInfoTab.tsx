@@ -201,7 +201,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
                   <Table.Th>ID</Table.Th>
                   <Table.Th>Email</Table.Th>
                   <Table.Th>Nền tảng</Table.Th>
-                  <Table.Th>Ngày cấp phép</Table.Th>
+                  <Table.Th>Ngày cấp bản quyền</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>

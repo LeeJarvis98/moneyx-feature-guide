@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { Turnstile } from '@/components/Turnstile';
 import styles from './LoginTab.module.css';
 import { RegisterModal } from './RegisterModal';
 
@@ -18,10 +19,16 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
   const [success, setSuccess] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!turnstileToken) {
+      setError('Vui lòng hoàn thành xác minh bảo mật');
+      return;
+    }
 
     if (!partnerId || !password) {
       setError('Vui lòng điền đầy đủ thông tin');
@@ -38,6 +45,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
           userId: partnerId,
           password,
           rememberMe,
+          turnstileToken,
         }),
       });
 
@@ -159,6 +167,15 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
               Đăng nhập thành công! Đang chuyển hướng...
             </div>
           )}
+
+          {/* Turnstile Captcha */}
+          <div className={styles.turnstileContainer}>
+            <Turnstile
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+            />
+          </div>
 
           <button
             type="submit"

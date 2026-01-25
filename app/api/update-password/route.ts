@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 // Password validation function
 function validatePassword(password: string): { valid: boolean; error?: string } {
@@ -32,7 +33,23 @@ function validatePassword(password: string): { valid: boolean; error?: string } 
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, currentPassword, newPassword } = await request.json();
+    const { userId, currentPassword, newPassword, turnstileToken } = await request.json();
+
+    // Verify Turnstile token first
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Security verification is required' },
+        { status: 400 }
+      );
+    }
+
+    const isTurnstileValid = await verifyTurnstileToken(turnstileToken);
+    if (!isTurnstileValid) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please try again.' },
+        { status: 403 }
+      );
+    }
 
     if (!userId || !currentPassword || !newPassword) {
       return NextResponse.json(

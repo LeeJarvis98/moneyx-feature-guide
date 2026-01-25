@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
+import { Turnstile } from '@/components/Turnstile';
 import styles from './RegisterModal.module.css';
 
 interface RegisterModalProps {
@@ -29,6 +30,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [mouseDownOnOverlay, setMouseDownOnOverlay] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Registration form validation functions
   const validateId = (value: string): boolean => {
@@ -92,6 +94,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setCheckingEmail(false);
       setEmailAvailable(null);
       setIsClosing(false);
+      setTurnstileToken(null);
     }
   }, [isOpen]);
 
@@ -251,6 +254,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     e.preventDefault();
     setRegError(null);
 
+    if (!turnstileToken) {
+      setRegError('Vui lòng hoàn thành xác minh bảo mật');
+      return;
+    }
+
     if (!regId || !regReferralId || !regEmail || !regPassword || !regConfirmPassword) {
       setRegError('Vui lòng điền đầy đủ thông tin');
       return;
@@ -297,6 +305,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           email: regEmail,
           password: regPassword,
           created_at: gmt7Time.toISOString(),
+          turnstileToken,
         }),
       });
 
@@ -644,6 +653,15 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 chính sách bảo mật
               </a>
             </label>
+          </div>
+
+          {/* Turnstile Captcha */}
+          <div className={styles.turnstileContainer}>
+            <Turnstile
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+            />
           </div>
 
           {regError && (

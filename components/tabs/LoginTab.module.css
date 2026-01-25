@@ -49,6 +49,12 @@
   color: #FFFFFF;
 }
 
+.turnstileContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
 .input {
   padding: 14px 16px;
   border: 2px solid rgba(255, 255, 255, 0.1);

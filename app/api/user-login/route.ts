@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import type { User } from '@/types/database';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, password, rememberMe } = await request.json();
+    const { userId, password, rememberMe, turnstileToken } = await request.json();
+
+    // Verify Turnstile token first
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Xác minh bảo mật là bắt buộc' },
+        { status: 400 }
+      );
+    }
+
+    const isTurnstileValid = await verifyTurnstileToken(turnstileToken);
+    if (!isTurnstileValid) {
+      return NextResponse.json(
+        { error: 'Xác minh bảo mật thất bại. Vui lòng thử lại.' },
+        { status: 403 }
+      );
+    }
 
     // Validate input
     if (!userId || typeof userId !== 'string') {
