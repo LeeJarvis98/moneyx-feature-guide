@@ -1,9 +1,9 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
 import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
@@ -32,6 +32,7 @@ export default function HomePage() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [partnerRank, setPartnerRank] = useState<string>('');
+  const [referralId, setReferralId] = useState<string>('');
   const theme = useMantineTheme();
 
   // Check if user is logged in on mount
@@ -58,6 +59,13 @@ export default function HomePage() {
       }
     };
 
+    // Listen for referral ID update
+    const handleReferralIdUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.referralId) {
+        setReferralId(e.detail.referralId);
+      }
+    };
+
     // Also check rank on focus (for same-window updates)
     const handleFocus = () => {
       const rank = localStorage.getItem('partnerRank');
@@ -68,6 +76,7 @@ export default function HomePage() {
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
+    window.addEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
     window.addEventListener('focus', handleFocus);
     
     // Check rank immediately in case it was just set
@@ -79,6 +88,7 @@ export default function HomePage() {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
+      window.removeEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
@@ -101,9 +111,14 @@ export default function HomePage() {
         if (data.isPartner && data.rank) {
           console.log('[HomePage] Setting partner rank:', data.rank);
           setPartnerRank(data.rank);
+          if (data.referralId) {
+            console.log('[HomePage] Setting referral ID:', data.referralId);
+            setReferralId(data.referralId);
+          }
         } else {
           console.log('[HomePage] User is not a partner or rank is empty');
           setPartnerRank('');
+          setReferralId('');
         }
       }
     } catch (error) {
@@ -178,6 +193,7 @@ export default function HomePage() {
     setIsUserLoggedIn(false);
     setLoggedInUserId(null);
     setPartnerRank('');
+    setReferralId('');
     // Navigate to documentation tab
     handleNavigationChange('library');
     setActiveTab('documentation');
@@ -271,6 +287,42 @@ export default function HomePage() {
                           </Badge>
                         );
                       })()}
+                      {isUserLoggedIn && referralId && (
+                        <Group 
+                          gap="xs" 
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                            border: '1px solid rgba(255, 184, 28, 0.3)',
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Text size="sm" fw={600} c="yellow">
+                            Mã giới thiệu:
+                          </Text>
+                          <Text size="sm" fw={600} c="yellow" style={{ fontFamily: 'monospace' }}>
+                            {referralId}
+                          </Text>
+                          <CopyButton value={referralId} timeout={2000}>
+                            {({ copied, copy }) => (
+                              <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
+                                <ActionIcon
+                                  color={copied ? 'teal' : 'yellow'}
+                                  variant="subtle"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copy();
+                                  }}
+                                  size="sm"
+                                >
+                                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </CopyButton>
+                        </Group>
+                      )}
                     </Group>
                   </Group>
                   <Group gap="md">
@@ -600,7 +652,7 @@ export default function HomePage() {
               {/* Login Section */}
               {navigationSection === 'login' && (
                 <LoginTab
-                  onLoginSuccess={(userId, partnerRank) => {
+                  onLoginSuccess={(userId, partnerRank, ownReferralId) => {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
@@ -611,6 +663,10 @@ export default function HomePage() {
                     } else {
                       setPartnerRank('');
                       localStorage.removeItem('partnerRank');
+                    }
+                    // Set referral ID if provided
+                    if (ownReferralId) {
+                      setReferralId(ownReferralId);
                     }
                     // Redirect to documentation
                     handleNavigationChange('library');

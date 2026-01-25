@@ -99,7 +99,6 @@ export type Database = {
           created_at: string
           id: string
           last_claim_reward: number
-          partner_rank: string
           platform_accounts: Json[]
           platform_ref_links: Json[]
           sub_partners: Json[]
@@ -115,7 +114,6 @@ export type Database = {
           created_at?: string
           id: string
           last_claim_reward?: number
-          partner_rank?: string
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           sub_partners?: Json[]
@@ -131,7 +129,6 @@ export type Database = {
           created_at?: string
           id?: string
           last_claim_reward?: number
-          partner_rank?: string
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           sub_partners?: Json[]
@@ -146,13 +143,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partners_partner_rank_fkey"
-            columns: ["partner_rank"]
-            isOneToOne: false
-            referencedRelation: "partner_rank_list"
-            referencedColumns: ["partner_rank"]
           },
         ]
       }

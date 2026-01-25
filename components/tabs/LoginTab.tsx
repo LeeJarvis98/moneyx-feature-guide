@@ -6,7 +6,7 @@ import styles from './LoginTab.module.css';
 import { RegisterModal } from './RegisterModal';
 
 interface LoginTabProps {
-  onLoginSuccess?: (userId: string, partnerRank?: string) => void;
+  onLoginSuccess?: (userId: string, partnerRank?: string, ownReferralId?: string) => void;
 }
 
 export function LoginTab({ onLoginSuccess }: LoginTabProps) {
@@ -64,7 +64,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
       
       setTimeout(() => {
         if (onLoginSuccess) {
-          onLoginSuccess(data.userId, data.partnerRank || '');
+          onLoginSuccess(data.userId, data.partnerRank || '', data.ownReferralId || '');
         }
       }, 1000);
     } catch (err) {

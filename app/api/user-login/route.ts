@@ -83,8 +83,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Login successful
+    // Login successful - check referral ID first
     const isPartner = foundUser.partner_rank !== '';
+    
+    // Get user's own referral ID if they are a partner (check early in flow)
+    let ownReferralId = null;
+    if (isPartner) {
+      const { data: ownReferralData, error: ownReferralError } = await supabase
+        .from('own_referral_id_list')
+        .select('own_referral_id')
+        .eq('id', foundUser.id)
+        .maybeSingle();
+
+      if (!ownReferralError && ownReferralData) {
+        ownReferralId = ownReferralData.own_referral_id;
+      } else {
+        // Log if partner doesn't have a referral ID
+        console.warn(`[USER-LOGIN] Partner ${foundUser.id} does not have a referral ID in own_referral_id_list`);
+      }
+    }
     
     // Check if user's referral_id matches any own_referral_id in own_referral_id_list
     let partnerPlatformData = null;
@@ -124,6 +141,7 @@ export async function POST(request: NextRequest) {
         userId: foundUser.id,
         partnerRank: foundUser.partner_rank,
         isPartner: isPartner,
+        ownReferralId: ownReferralId,
         partnerPlatformData: partnerPlatformData,
         message: 'Đăng nhập thành công',
       },

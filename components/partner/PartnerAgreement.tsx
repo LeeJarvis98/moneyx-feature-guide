@@ -62,14 +62,24 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       console.log('[PartnerAgreement] Registration successful:', data);
       setPartnerType(type);
       
-      // Store rank and registration info for PartnerLogin to show modal
+      // Store rank and referral ID for page update
       if (data.rank) {
         localStorage.setItem('partnerRank', data.rank);
         sessionStorage.setItem('justRegistered', 'true');
         sessionStorage.setItem('registeredPartnerType', type);
+        
         // Dispatch custom event for same-window update
         window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
           detail: { rank: data.rank } 
+        }));
+      }
+      
+      // Store and dispatch referral ID if provided
+      if (data.referralId) {
+        console.log('[PartnerAgreement] Setting referral ID:', data.referralId);
+        // Dispatch custom event for referral ID update
+        window.dispatchEvent(new CustomEvent('referralIdUpdated', { 
+          detail: { referralId: data.referralId } 
         }));
       }
       
