@@ -12,9 +12,11 @@ import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { AccountInfoTab } from '@/components/account/AccountInfoTab';
+import { AccountSettingsTab } from '@/components/account/AccountSettingsTab';
 import classes from './page.module.css';
 
-type NavigationSection = 'features' | 'library' | 'login';
+type NavigationSection = 'features' | 'library' | 'login' | 'account';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -134,6 +136,11 @@ export default function HomePage() {
       setActiveTab('partner');
     } else if (value === 'library') {
       setActiveTab('documentation');
+    } else if (value === 'account') {
+      // Keep the tab as set by menu item click
+      if (!activeTab || (!activeTab.startsWith('account'))) {
+        setActiveTab('account-info');
+      }
     }
     // Close mobile menus when switching sections
     closeMobileAside();
@@ -311,7 +318,7 @@ export default function HomePage() {
                           <Text size="sm" fw={600} c="yellow">
                             Mã giới thiệu:
                           </Text>
-                          <Text size="sm" fw={600} c="yellow" style={{ fontFamily: 'monospace' }}>
+                          <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
                             {referralId}
                           </Text>
                           <CopyButton value={referralId} timeout={2000}>
@@ -397,10 +404,22 @@ export default function HomePage() {
                           </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
-                          <Menu.Item leftSection={<User size={16} />}>
+                          <Menu.Item 
+                            leftSection={<User size={16} />}
+                            onClick={() => {
+                              handleNavigationChange('account');
+                              setActiveTab('account-info');
+                            }}
+                          >
                             Thông tin tài khoản
                           </Menu.Item>
-                          <Menu.Item leftSection={<Settings size={16} />}>
+                          <Menu.Item 
+                            leftSection={<Settings size={16} />}
+                            onClick={() => {
+                              handleNavigationChange('account');
+                              setActiveTab('account-settings');
+                            }}
+                          >
                             Cài đặt
                           </Menu.Item>
                           <Menu.Divider />
@@ -448,6 +467,24 @@ export default function HomePage() {
                               Lấy Bot
                             </Tabs.Tab>
                           )}
+                        </>
+                      )}
+                      {navigationSection === 'account' && (
+                        <>
+                          <Tabs.Tab
+                            value="account-info"
+                            c={activeTab === 'account-info' ? theme.white : undefined}
+                            fw={activeTab === 'account-info' ? 700 : undefined}
+                          >
+                            Thông tin chung
+                          </Tabs.Tab>
+                          <Tabs.Tab
+                            value="account-settings"
+                            c={activeTab === 'account-settings' ? theme.white : undefined}
+                            fw={activeTab === 'account-settings' ? 700 : undefined}
+                          >
+                            Cài đặt tài khoản
+                          </Tabs.Tab>
                         </>
                       )}
                     </Tabs.List>
@@ -683,6 +720,18 @@ export default function HomePage() {
                     setActiveTab('documentation');
                   }}
                 />
+              )}
+
+              {/* Account Section */}
+              {navigationSection === 'account' && loggedInUserId && (
+                <>
+                  <Tabs.Panel value="account-info">
+                    <AccountInfoTab userId={loggedInUserId} />
+                  </Tabs.Panel>
+                  <Tabs.Panel value="account-settings">
+                    <AccountSettingsTab userId={loggedInUserId} />
+                  </Tabs.Panel>
+                </>
               )}
             </Tabs>
           </AppShell.Main>
