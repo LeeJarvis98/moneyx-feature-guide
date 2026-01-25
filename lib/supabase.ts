@@ -74,6 +74,3 @@ export async function getGoogleSheetsClient() {
 
   return google.sheets({ version: 'v4', auth });
 }
-
-// Export singleton instance for server-side use
-export const supabase = getSupabaseClient();

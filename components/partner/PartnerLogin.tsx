@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { exnessApi } from '@/lib/exness/api';
 import PartnerAside from './PartnerAside';
 import CongratulationsModal from './CongratulationsModal';
@@ -58,7 +58,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     const justRegistered = sessionStorage.getItem('justRegistered');
     const rank = localStorage.getItem('partnerRank');
     const partnerType = sessionStorage.getItem('registeredPartnerType') as 'new' | 'system' | null;
-    
+
     if (justRegistered === 'true' && rank && partnerType) {
       setRegisteredRank(rank);
       setRegisteredPartnerType(partnerType);
@@ -68,16 +68,21 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     }
   }, []);
 
+  // Stable handler for ref links changes
+  const handleRefLinksChange = useCallback((refLinks: PlatformRefLinks) => {
+    setPlatformRefLinks(refLinks);
+  }, []);
+
   // Set aside content with PartnerAside component
   useEffect(() => {
-    // Get logged-in user ID from storage
+    // Get logged-in user ID from storage (only on client side)
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-    
+
     if (userId && onAsideContentChange) {
       onAsideContentChange(
-        <PartnerAside 
-          partnerId={userId} 
-          onRefLinksChange={setPlatformRefLinks}
+        <PartnerAside
+          partnerId={userId}
+          onRefLinksChange={handleRefLinksChange}
         />
       );
     }
@@ -88,7 +93,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
         onAsideContentChange(null);
       }
     };
-  }, [onAsideContentChange]);
+  }, [onAsideContentChange, handleRefLinksChange]);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
@@ -119,11 +124,11 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     try {
       // Get logged-in user ID from storage
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       // Add user ID header if available
       if (userId) {
         headers['x-user-id'] = userId;
@@ -169,19 +174,19 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     <div className={styles.container}>
       <div className={styles.card}>
         <h2 className={styles.title}>
-          {selectedPlatform 
+          {selectedPlatform
             ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Login`
             : 'Partner Login'}
         </h2>
         <p className={styles.subtitle}>
-          Login to access your partner dashboard
+          Connect directly with your Exness partner account credentials
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>
           {/* ID Input */}
           <div className={styles.inputGroup}>
             <label htmlFor="partnerId" className={styles.label}>
-              {selectedPlatform 
+              {selectedPlatform
                 ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
                 : 'Partner ID'}
             </label>
@@ -192,7 +197,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               onChange={(e) => setPartnerId(e.target.value)}
               required
               className={styles.input}
-              placeholder={selectedPlatform 
+              placeholder={selectedPlatform
                 ? `Enter your ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
                 : 'Enter your partner ID'}
               disabled={loading || success}
@@ -233,15 +238,6 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
             </div>
           )}
 
-          {/* Turnstile Captcha */}
-          <div className={styles.turnstileContainer}>
-            <Turnstile
-              onSuccess={(token) => setTurnstileToken(token)}
-              onError={() => setTurnstileToken(null)}
-              onExpire={() => setTurnstileToken(null)}
-            />
-          </div>
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -252,10 +248,13 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           </button>
         </form>
 
+        {/* Turnstile Captcha */}
         <div className={styles.footer}>
-          <p className={styles.footerText}>
-            Connect directly with your Exness partner account credentials
-          </p>
+          <Turnstile
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+          />
         </div>
       </div>
 
@@ -268,8 +267,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
             // Already on login page, just update badge
             const rank = localStorage.getItem('partnerRank');
             if (rank) {
-              window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
-                detail: { rank } 
+              window.dispatchEvent(new CustomEvent('partnerRankUpdated', {
+                detail: { rank }
               }));
             }
           }}
@@ -278,8 +277,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
             // Trigger badge update when modal closes
             const rank = localStorage.getItem('partnerRank');
             if (rank) {
-              window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
-                detail: { rank } 
+              window.dispatchEvent(new CustomEvent('partnerRankUpdated', {
+                detail: { rank }
               }));
             }
           }}

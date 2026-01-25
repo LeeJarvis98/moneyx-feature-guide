@@ -58,15 +58,28 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load existing ref links on mount
   useEffect(() => {
+    if (!isMounted || !partnerId) return;
+
     const loadRefLinks = async () => {
       try {
         const response = await fetch(`/api/get-partner-ref-links?partnerId=${partnerId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load referral links: ${response.status}`);
+        }
+        
         const data = await response.json();
 
-        if (response.ok && data.refLinks) {
+        if (data.refLinks) {
           setRefLinks(data.refLinks);
           if (onRefLinksChange) {
             onRefLinksChange(data.refLinks);
@@ -74,13 +87,14 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
         }
       } catch (err) {
         console.error('Error loading ref links:', err);
+        setError('Failed to load referral links. Please refresh the page.');
       } finally {
         setLoading(false);
       }
     };
 
     loadRefLinks();
-  }, [partnerId]);
+  }, [partnerId, isMounted, onRefLinksChange]);
 
   const handleInputChange = (platform: string, value: string) => {
     // Auto-prepend https:// if not present
