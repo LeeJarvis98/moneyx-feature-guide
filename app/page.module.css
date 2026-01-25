@@ -64,6 +64,52 @@
   font-weight: 700 !important;
   padding: 0.5rem 1rem !important;
   text-transform: uppercase !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+/* Light streak animation */
+.rankBadge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: lightStreak 3s infinite;
+}
+
+@keyframes lightStreak {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
+}
+
+/* Hover effects */
+.rankBadge:hover {
+  transform: scale(1.05);
+  animation: breathing 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 0 10px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+  }
 }
 
 .rankBadgeContent {
@@ -72,12 +118,66 @@
   justify-content: center;
   gap: 0.5rem;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .rankIcon {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Tier-specific colors */
+.rankBadgeDiamond {
+  color: #000000 !important;
+}
+
+.rankBadgeDiamond:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.4);
+}
+
+.rankBadgeRuby {
+  color: #ffffff !important;
+}
+
+.rankBadgeRuby:hover {
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 0 40px rgba(139, 92, 246, 0.4);
+}
+
+.rankBadgePlatinum {
+  color: #000000 !important;
+}
+
+.rankBadgePlatinum:hover {
+  box-shadow: 0 0 20px rgba(209, 213, 219, 0.8), 0 0 40px rgba(229, 231, 235, 0.6);
+}
+
+.rankBadgeGold {
+  color: #000000 !important;
+  background-color: #FFD700 !important;
+}
+
+.rankBadgeGold:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5);
+}
+
+.rankBadgeSilver {
+  color: #ffffff !important;
+  background-color: #4B5563 !important;
+}
+
+.rankBadgeSilver:hover {
+  box-shadow: 0 0 20px rgba(75, 85, 99, 0.6), 0 0 40px rgba(107, 114, 128, 0.4);
+}
+
+.rankBadgeBronze {
+  color: #ffffff !important;
+  background-color: #8B4513 !important;
+}
+
+.rankBadgeBronze:hover {
+  box-shadow: 0 0 20px rgba(139, 69, 19, 0.6), 0 0 40px rgba(160, 82, 45, 0.4);
 }
 
 @media (max-width: 768px) {

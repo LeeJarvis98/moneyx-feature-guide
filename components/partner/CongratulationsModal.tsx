@@ -13,8 +13,8 @@ interface CongratulationsModalProps {
 }
 
 const rankIcons: Record<string, typeof Diamond> = {
-  'Kim Cương': Diamond,
-  'Ruby': Gem,
+  'Kim Cương': Gem,
+  'Ruby': Diamond,
   'Bạch Kim': Star,
   'Vàng': Award,
   'Bạc': Medal,

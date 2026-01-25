@@ -78,7 +78,7 @@ export default function HomePage() {
     window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
     window.addEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
     window.addEventListener('focus', handleFocus);
-    
+
     // Check rank immediately in case it was just set
     const currentRank = localStorage.getItem('partnerRank');
     if (currentRank) {
@@ -246,14 +246,14 @@ export default function HomePage() {
                       height={20}
                       priority
                     />
-                    <Group gap="xs">
-                      <Title order={1} size="h2" c={theme.colors.accent[6]}>
-                        Việt Nam Chất Lượng Cao
-                      </Title>
+                    <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                      Việt Nam Chất Lượng Cao
+                    </Title>
+                    <Group gap="xs" onClick={(e) => e.stopPropagation()}>
                       {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
-                          'Kim Cương': Diamond,
-                          'Ruby': Gem,
+                          'Kim Cương': Gem,
+                          'Ruby': Diamond,
                           'Bạch Kim': Star,
                           'Vàng': Award,
                           'Bạc': Medal,
@@ -267,14 +267,24 @@ export default function HomePage() {
                           'Bạc': '75%',
                           'Đồng': '70%',
                         };
+                        const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
+                          'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
+                          'Ruby': { variant: 'gradient', gradient: { from: 'red', to: 'violet', deg: 90 }, className: classes.rankBadgeRuby },
+                          'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.4', deg: 90 }, className: classes.rankBadgeBachKim },
+                          'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
+                          'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
+                          'Đồng': { variant: 'filled', color: 'orange.9', className: classes.rankBadgeDong },
+                        };
                         const RankIcon = rankIcons[partnerRank];
                         const percentage = rankPercentages[partnerRank];
+                        const style = rankStyles[partnerRank];
                         return (
                           <Badge
-                            variant="gradient"
-                            gradient={{ from: 'yellow', to: 'orange', deg: 90 }}
+                            variant={style?.variant || 'gradient'}
+                            gradient={style?.gradient}
+                            color={style?.color}
                             size="lg"
-                            className={classes.rankBadge}
+                            className={`${classes.rankBadge} ${style?.className || ''}`}
                           >
                             <span className={classes.rankBadgeContent}>
                               {RankIcon && (
@@ -288,8 +298,8 @@ export default function HomePage() {
                         );
                       })()}
                       {isUserLoggedIn && referralId && (
-                        <Group 
-                          gap="xs" 
+                        <Group
+                          gap="xs"
                           style={{
                             padding: '6px 12px',
                             borderRadius: '8px',

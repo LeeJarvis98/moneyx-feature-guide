@@ -12,8 +12,8 @@ interface PartnerAgreementProps {
 }
 
 const partnerTiers = [
-  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot', icon: Diamond },
-  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot', icon: Gem },
+  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot', icon: Gem },
+  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot', icon: Diamond },
   { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '600 lot', icon: Star },
   { name: 'Vàng', partner: '80%', tradi: '20%', condition: '300 lot', icon: Award },
   { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 lot', icon: Medal },
