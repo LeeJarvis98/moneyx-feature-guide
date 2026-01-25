@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient } from '@/lib/supabase';
+import { getGoogleSheetsClient, getSupabaseClient } from '@/lib/supabase';
 import { SHARED_SHEET_ID } from '@/lib/config';
 
 const RANGE = 'B:B'; // Column B (will use the first sheet)
@@ -7,11 +7,13 @@ const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
-    const platformToken = request.headers.get('x-platform-token');
+    const { email, platform, referralId } = await request.json();
+    let platformToken = request.headers.get('x-platform-token');
     
     console.log('[CHECK-EMAIL] Received email:', email);
-    console.log('[CHECK-EMAIL] Platform token present:', !!platformToken);
+    console.log('[CHECK-EMAIL] Platform:', platform);
+    console.log('[CHECK-EMAIL] Referral ID:', referralId);
+    console.log('[CHECK-EMAIL] Platform token in header:', !!platformToken);
 
     if (!email) {
       return NextResponse.json(
@@ -20,15 +22,171 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!platform) {
+      return NextResponse.json(
+        { success: false, error: 'Platform is required' },
+        { status: 400 }
+      );
+    }
+
+    // If no token in header, retrieve credentials from database and authenticate
+    if (!platformToken) {
+      console.log('[CHECK-EMAIL] No token provided, retrieving credentials from database...');
+      
+      if (!referralId) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Referral ID is required for authentication.' 
+          },
+          { status: 401 }
+        );
+      }
+
+      try {
+        const supabase = getSupabaseClient();
+        
+        // Step 1: Look up in own_referral_id_list table using the referred ID from URL
+        console.log('[CHECK-EMAIL] Step 1: Looking up partner ID in own_referral_id_list with own_referral_id:', referralId);
+        const { data: referralData, error: referralError } = await supabase
+          .from('own_referral_id_list')
+          .select('id')
+          .eq('own_referral_id', referralId)
+          .maybeSingle();
+
+        if (referralError) {
+          console.error('[CHECK-EMAIL] Error querying own_referral_id_list:', referralError);
+        }
+
+        if (!referralData || !referralData.id) {
+          console.log('[CHECK-EMAIL] No partner found with referral ID:', referralId);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Partner not found. Please check the referral link.' 
+            },
+            { status: 404 }
+          );
+        }
+
+        const actualPartnerId = referralData.id;
+        console.log('[CHECK-EMAIL] Step 2: Found partner ID:', actualPartnerId);
+
+        // Step 2: Look up platform_accounts in partners table using the actual partner ID
+        console.log('[CHECK-EMAIL] Step 3: Looking up platform_accounts in partners table');
+        const { data: partnerData, error: partnerError } = await supabase
+          .from('partners')
+          .select('platform_accounts')
+          .eq('id', actualPartnerId)
+          .maybeSingle();
+
+        if (partnerError) {
+          console.error('[CHECK-EMAIL] Error querying partners table:', partnerError);
+        }
+
+        if (!partnerData || !partnerData.platform_accounts) {
+          console.log('[CHECK-EMAIL] No platform accounts found for partner ID:', actualPartnerId);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Partner platform credentials not configured. Please contact support.' 
+            },
+            { status: 404 }
+          );
+        }
+
+        // Step 3: Extract platform credentials
+        console.log('[CHECK-EMAIL] Step 4: Extracting credentials for platform:', platform);
+        const platformCredentials = extractPlatformCredentials(
+          partnerData.platform_accounts,
+          platform
+        );
+
+        if (!platformCredentials) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: `Partner credentials not found for platform: ${platform}. Please contact support.` 
+            },
+            { status: 404 }
+          );
+        }
+
+        // Step 4: Authenticate with platform using retrieved credentials
+        console.log('[CHECK-EMAIL] Step 5: Authenticating with platform using stored credentials...');
+        
+        if (platform.toLowerCase() === 'exness') {
+          const authResponse = await fetch(`${request.nextUrl.origin}/api/exness/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              login: platformCredentials.email,
+              password: platformCredentials.password,
+            }),
+          });
+
+          if (authResponse.ok) {
+            const authData = await authResponse.json();
+            platformToken = authData.token;
+            console.log('[CHECK-EMAIL] Platform authentication successful');
+          } else {
+            console.error('[CHECK-EMAIL] Platform authentication failed:', authResponse.status);
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Failed to authenticate with platform. Please check your platform credentials are up to date.' 
+              },
+              { status: 401 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { success: false, error: `Platform ${platform} authentication is not yet supported` },
+            { status: 400 }
+          );
+        }
+      } catch (authError) {
+        console.error('[CHECK-EMAIL] Platform authentication error:', authError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Platform authentication failed. Please try again.' 
+          },
+          { status: 500 }
+        );
+      }
+    }
+
     if (!platformToken) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Platform authentication required. Please ensure you are logged in to the platform.' 
+          error: 'Platform authentication required. Please ensure you are logged in as a partner.' 
         },
         { status: 401 }
       );
     }
+
+// Helper function to extract platform credentials from database structure
+function extractPlatformCredentials(platformAccounts: any, platform: string): any {
+  if (!platformAccounts || !Array.isArray(platformAccounts)) {
+    return null;
+  }
+
+  const platformKey = platform.toLowerCase();
+  
+  for (const accountObj of platformAccounts) {
+    if (accountObj && typeof accountObj === 'object') {
+      if (accountObj[platformKey]) {
+        return accountObj[platformKey];
+      }
+    }
+  }
+
+  return null;
+}
 
     // Step 1: Fetch client affiliation from Exness API using the platform token and email
     console.log('[CHECK-EMAIL] Step 1: Fetching client affiliation from Exness API');

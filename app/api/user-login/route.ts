@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import type { User } from '@/types/database';
+import { ref } from 'process';
 
 export async function POST(request: NextRequest) {
   try {
@@ -134,14 +135,13 @@ export async function POST(request: NextRequest) {
           // Found a match, now fetch partner data using the id
           const { data: partnerData, error: partnerError } = await supabase
             .from('partners')
-            .select('id, platform_accounts, platform_ref_links')
+            .select('id, platform_ref_links')
             .eq('id', ownReferralMatch.id)
             .maybeSingle();
 
           if (!partnerError && partnerData) {
             partnerPlatformData = {
               partnerId: partnerData.id,
-              platformAccounts: partnerData.platform_accounts,
               platformRefLinks: partnerData.platform_ref_links,
             };
           }
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
         success: true,
         userId: foundUser.id,
         partnerRank: foundUser.partner_rank,
+        referralId: foundUser.referral_id,
         isPartner: isPartner,
         ownReferralId: ownReferralId,
         partnerPlatformData: partnerPlatformData,

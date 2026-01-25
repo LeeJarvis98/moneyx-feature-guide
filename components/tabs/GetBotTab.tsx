@@ -26,6 +26,7 @@ import {
   Accordion,
 } from '@mantine/core';
 import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video } from 'lucide-react';
+import { Turnstile } from '../Turnstile';
 import classes from './GetBotTab.module.css';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
@@ -59,6 +60,7 @@ export function GetBotTab() {
   const [grantingLicense, setGrantingLicense] = useState(false);
   const [userTypeModalOpen, setUserTypeModalOpen] = useState(false);
   const [partnerPlatformUrls, setPartnerPlatformUrls] = useState<Record<string, string>>({});
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Load partner platform data on mount
   useEffect(() => {
@@ -100,78 +102,27 @@ export function GetBotTab() {
     setSelectedAccounts([]);
 
     try {
-      // Step 1: Authenticate with platform if needed
-      const partnerDataStr = sessionStorage.getItem('partnerPlatformData');
-      let platformAuth = null;
+      // Retrieve referral ID from sessionStorage
+      const referralId = sessionStorage.getItem('referralId');
       
-      if (partnerDataStr && selectedPlatform) {
-        try {
-          const platformData = JSON.parse(partnerDataStr);
-          
-          // Find platform credentials
-          if (platformData.platformAccounts && Array.isArray(platformData.platformAccounts)) {
-            // platformAccounts is now an array of objects like [{ "exness": { "email": "...", "password": "..." } }]
-            let credentials = null;
-            
-            for (const accountObj of platformData.platformAccounts) {
-              if (accountObj && typeof accountObj === 'object') {
-                const platformKey = selectedPlatform.toLowerCase();
-                if (accountObj[platformKey]) {
-                  credentials = accountObj[platformKey];
-                  break;
-                }
-              }
-            }
-            
-            if (credentials && credentials.email && credentials.password) {
-              // Attempt platform authentication
-              console.log('[GetBotTab] Authenticating with platform:', selectedPlatform);
-              
-              const authResponse = await fetch('/api/partner-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  partnerId: credentials.email,
-                  password: credentials.password,
-                  platform: selectedPlatform,
-                }),
-              });
-
-              if (authResponse.ok) {
-                const authData = await authResponse.json();
-                platformAuth = {
-                  token: authData.platformToken,
-                  platform: selectedPlatform,
-                };
-                console.log('[GetBotTab] Platform authentication successful');
-              }
-            }
-          }
-        } catch (authError) {
-          console.error('[GetBotTab] Platform authentication error:', authError);
-          // Continue without auth if it fails
-        }
+      if (!referralId) {
+        setAccountStatus('unauthorized');
+        setErrorMessage('Referral ID not found. Please access through a valid partner link.');
+        return;
       }
 
-      // Step 2: Check email status
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      
-      // Add partner ID header if we're on a partner route
-      if (partnerId) {
-        headers['x-partner-id'] = partnerId;
-      }
-      
-      // Add platform auth token if available
-      if (platformAuth && platformAuth.token) {
-        headers['x-platform-token'] = platformAuth.token;
-      }
-
+      // Call check-email API with referral ID in payload
+      // The backend will use this to look up partner credentials
       const response = await fetch('/api/check-email', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ email }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          platform: selectedPlatform,
+          referralId: referralId,
+        }),
       });
 
       if (!response.ok) {
@@ -181,6 +132,7 @@ export function GetBotTab() {
       const result = await response.json();
 
       if (result.success && result.data.affiliation) {
+        setCaptchaToken(null); // Reset captcha after successful check
         setAccountData(result.data);
         // Use accountsWithStatus if available (from Google Sheets check), otherwise use default status
         const rows: AccountRow[] = result.data.accountsWithStatus 
@@ -203,6 +155,7 @@ export function GetBotTab() {
         setErrorMessage('Email không tồn tại trong hệ thống hoặc chưa được liên kết với sàn ' + (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || ''));
       }
     } catch (error) {
+      setCaptchaToken(null); // Reset captcha on error
       setAccountStatus('unauthorized');
       setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
       console.error('API Error:', error);
@@ -276,8 +229,9 @@ export function GetBotTab() {
     setGrantingLicense(true);
 
     try {
-      // Get userId from storage
+      // Get userId and referralId from storage
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      const referralId = sessionStorage.getItem('referralId');
       
       if (!userId) {
         console.error('[GRANT] User ID not found in storage');
@@ -285,18 +239,17 @@ export function GetBotTab() {
         return;
       }
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      
-      // Add partner ID header if we're on a partner route
-      if (partnerId) {
-        headers['x-partner-id'] = partnerId;
+      if (!referralId) {
+        console.error('[GRANT] Referral ID not found in storage');
+        alert('Referral ID not found. Please access through a valid partner link.');
+        return;
       }
 
       const response = await fetch('/api/grant-license', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs
@@ -566,7 +519,7 @@ export function GetBotTab() {
                         c="black"
                         onClick={checkAccountStatus}
                         loading={accountStatus === 'checking'}
-                        disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+                        disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !captchaToken}
                         size="md"
                         className={classes.glowButton}
                       >
@@ -695,7 +648,13 @@ export function GetBotTab() {
                   </>
                 )}
 
-
+                {/* Captcha Verification */}
+                <Box mt="xl">
+                  <Text size="sm" fw={500} mb="xs">
+                    Xác thực bảo mật
+                  </Text>
+                  <Turnstile onSuccess={setCaptchaToken} />
+                </Box>
 
                 <Group justify="space-between" mt="xl">
                   <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
