@@ -111,7 +111,7 @@ export function GetBotTab() {
         return;
       }
 
-      // Call check-email API with referral ID in payload
+      // Call check-email API with referral ID and captcha token in payload
       // The backend will use this to look up partner credentials
       const response = await fetch('/api/check-email', {
         method: 'POST',
@@ -122,6 +122,7 @@ export function GetBotTab() {
           email,
           platform: selectedPlatform,
           referralId: referralId,
+          captchaToken: captchaToken,
         }),
       });
 
@@ -525,7 +526,7 @@ export function GetBotTab() {
                       >
                         Kiểm tra
                       </Button>
-                    </Group>
+                    </Group>                    
 
                     {accountStatus === 'unauthorized' && (
                       <Alert
@@ -648,57 +649,55 @@ export function GetBotTab() {
                   </>
                 )}
 
-                {/* Captcha Verification */}
                 <Box mt="xl">
-                  <Text size="sm" fw={500} mb="xs">
-                    Xác thực bảo mật
-                  </Text>
-                  <Turnstile onSuccess={setCaptchaToken} />
-                </Box>
-
-                <Group justify="space-between" mt="xl">
-                  <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
-                    Quay lại
-                  </Button>
-                  <Group gap="md" align="center">
-                    {accountStatus === 'authorized' && accountData && (
-                      <Text size="sm" c="dimmed">
-                        Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
-                      </Text>
-                    )}
-
-                    <Button
-                      c="black"
-                      onClick={grantLicense}
-                      loading={grantingLicense}
-                      disabled={
-                        accountStatus !== 'authorized' || 
-                        selectedAccounts.filter(id => {
-                          const row = accountRows.find(r => r.id === id);
-                          return row && row.status === 'unlicensed';
-                        }).length === 0
-                      }
-                      size="lg"
-                      className={classes.glowButton}
-                    >
-                      Cấp bản quyền
-                    </Button>
-
-                    <Button
-                      c="black"
-                      onClick={() => setActive(2)}
-                      disabled={
-                        accountStatus !== 'authorized' || 
-                        !accountRows.some(row => row.status === 'licensed')
-                      }
-                      size="lg"
-                      className={classes.glowButton}
-                      leftSection={<Download size={20} />}
-                    >
-                      Tải bot
-                    </Button>
+                  <Group justify="right" mb="md">
+                    <Turnstile onSuccess={setCaptchaToken} />
                   </Group>
-                </Group>
+                  
+                  <Group justify="space-between">
+                    <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
+                      Quay lại
+                    </Button>
+                    <Group gap="md" align="center">
+                      {accountStatus === 'authorized' && accountData && (
+                        <Text size="sm" c="dimmed">
+                          Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
+                        </Text>
+                      )}
+
+                      <Button
+                        c="black"
+                        onClick={grantLicense}
+                        loading={grantingLicense}
+                        disabled={
+                          accountStatus !== 'authorized' || 
+                          selectedAccounts.filter(id => {
+                            const row = accountRows.find(r => r.id === id);
+                            return row && row.status === 'unlicensed';
+                          }).length === 0
+                        }
+                        size="lg"
+                        className={classes.glowButton}
+                      >
+                        Cấp bản quyền
+                      </Button>
+
+                      <Button
+                        c="black"
+                        onClick={() => setActive(2)}
+                        disabled={
+                          accountStatus !== 'authorized' || 
+                          !accountRows.some(row => row.status === 'licensed')
+                        }
+                        size="lg"
+                        className={classes.glowButton}
+                        leftSection={<Download size={20} />}
+                      >
+                        Tải bot
+                      </Button>
+                    </Group>
+                  </Group>
+                </Box>
               </Stack>
             </Paper>
           </Stepper.Step>

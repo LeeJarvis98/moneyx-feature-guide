@@ -1,19 +1,40 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { getGoogleSheetsClient, getSupabaseClient } from '@/lib/supabase';
 import { SHARED_SHEET_ID } from '@/lib/config';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 const RANGE = 'B:B'; // Column B (will use the first sheet)
 const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, platform, referralId } = await request.json();
+    const { email, platform, referralId, captchaToken } = await request.json();
     let platformToken = request.headers.get('x-platform-token');
     
     console.log('[CHECK-EMAIL] Received email:', email);
     console.log('[CHECK-EMAIL] Platform:', platform);
     console.log('[CHECK-EMAIL] Referral ID:', referralId);
+    console.log('[CHECK-EMAIL] Captcha token present:', !!captchaToken);
     console.log('[CHECK-EMAIL] Platform token in header:', !!platformToken);
+
+    // Verify captcha token first
+    if (!captchaToken) {
+      return NextResponse.json(
+        { success: false, error: 'Captcha verification is required' },
+        { status: 400 }
+      );
+    }
+
+    const isCaptchaValid = await verifyTurnstileToken(captchaToken);
+    if (!isCaptchaValid) {
+      console.log('[CHECK-EMAIL] Captcha verification failed');
+      return NextResponse.json(
+        { success: false, error: 'Captcha verification failed. Please try again.' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[CHECK-EMAIL] Captcha verified successfully');
 
     if (!email) {
       return NextResponse.json(
