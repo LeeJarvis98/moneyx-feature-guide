@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function POST(request: NextRequest) {
   try {
-    const { referral_id } = await request.json();
+    const { referral_id, turnstileToken } = await request.json();
+
+    // Validate Turnstile token
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Captcha token is required' },
+        { status: 400 }
+      );
+    }
+
+    const isValidToken = await verifyTurnstileToken(turnstileToken);
+    if (!isValidToken) {
+      return NextResponse.json(
+        { error: 'Invalid captcha token' },
+        { status: 400 }
+      );
+    }
 
     // Validate referral ID
     if (!referral_id || typeof referral_id !== 'string') {

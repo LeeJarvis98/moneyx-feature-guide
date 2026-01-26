@@ -128,6 +128,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       return;
     }
 
+    if (!turnstileToken) {
+      setRegError('Vui lòng hoàn thành xác minh bảo mật trước');
+      return;
+    }
+
     setRegError(null);
     setCheckingId(true);
     setIdAvailable(null);
@@ -136,7 +141,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       const response = await fetch('/api/check-user-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: regId }),
+        body: JSON.stringify({ id: regId, turnstileToken }),
       });
 
       const data = await response.json();
@@ -180,6 +185,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       return;
     }
 
+    if (!turnstileToken) {
+      setRegError('Vui lòng hoàn thành xác minh bảo mật trước');
+      return;
+    }
+
     setRegError(null);
     setCheckingReferralId(true);
     setReferralIdValid(null);
@@ -188,7 +198,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       const response = await fetch('/api/check-referral-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ referral_id: regReferralId }),
+        body: JSON.stringify({ referral_id: regReferralId, turnstileToken }),
       });
 
       const data = await response.json();
@@ -221,6 +231,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       return;
     }
 
+    if (!turnstileToken) {
+      setRegError('Vui lòng hoàn thành xác minh bảo mật trước');
+      return;
+    }
+
     setRegError(null);
     setCheckingEmail(true);
     setEmailAvailable(null);
@@ -229,7 +244,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       const response = await fetch('/api/check-user-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: regEmail }),
+        body: JSON.stringify({ email: regEmail, turnstileToken }),
       });
 
       const data = await response.json();

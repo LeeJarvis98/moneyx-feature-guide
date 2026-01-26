@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function POST(request: NextRequest) {
   try {
-    const { id } = await request.json();
+    const { id, turnstileToken } = await request.json();
+
+    // Validate Turnstile token
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Captcha token is required' },
+        { status: 400 }
+      );
+    }
+
+    const isValidToken = await verifyTurnstileToken(turnstileToken);
+    if (!isValidToken) {
+      return NextResponse.json(
+        { error: 'Invalid captcha token' },
+        { status: 400 }
+      );
+    }
 
     // Validate ID
     if (!id || typeof id !== 'string') {
