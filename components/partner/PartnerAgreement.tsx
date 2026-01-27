@@ -24,7 +24,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
-  const [partnerType, setPartnerType] = useState<'new' | 'system' | null>(null);
+  const [partnerType, setPartnerType] = useState<'DTT' | 'DLHT' | null>(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasClickedTerms, setHasClickedTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -40,7 +40,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
     }
   };
 
-  const handlePartnerTypeSelect = async (type: 'new' | 'system') => {
+  const handlePartnerTypeSelect = async (type: 'DTT' | 'DLHT') => {
     if (!canProceed || isRegistering) return;
 
     setIsRegistering(true);
@@ -182,7 +182,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     </div>
                     <button
                       className={styles.partnerButton}
-                      onClick={() => handlePartnerTypeSelect('new')}
+                      onClick={() => handlePartnerTypeSelect('DTT')}
                       disabled={!canProceed || isRegistering}
                     >
                       {isRegistering ? 'Đang đăng ký...' : 'ĐỐI TÁC TRADI'}
@@ -196,7 +196,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     </div>
                     <button
                       className={styles.partnerButton}
-                      onClick={() => handlePartnerTypeSelect('system')}
+                      onClick={() => handlePartnerTypeSelect('DLHT')}
                       disabled={!canProceed || isRegistering}
                     >
                       {isRegistering ? 'Đang đăng ký...' : 'ĐẠI LÍ HỆ THỐNG'}

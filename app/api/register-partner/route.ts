@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!partnerType || (partnerType !== 'new' && partnerType !== 'system')) {
+    if (!partnerType || (partnerType !== 'DTT' && partnerType !== 'DLHT')) {
       return NextResponse.json(
         { error: 'Invalid partner type' },
         { status: 400 }
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine rank based on partner type
-    const rank = partnerType === 'new' ? 'Đồng' : 'Ruby';
+    const rank = partnerType === 'DTT' ? 'Đồng' : 'Ruby';
 
     // Check if user already exists as a partner
     const { data: existingPartner, error: checkError } = await supabase
@@ -70,17 +70,28 @@ export async function POST(request: NextRequest) {
       .from('partners')
       .insert({
         id: userId,
+        partner_type: partnerType,
         platform_accounts: [],
         platform_ref_links: [],
-        sub_partners: [],
+        partner_list: [],
         total_clients: 0,
-        total_reward: 0,
-        total_sub_partners: 0,
-        accum_reward: 0,
-        claim_reward: 0,
-        last_claim_reward: 0,
+        total_client_lots: 0,
+        total_client_reward: 0,
+        total_partners: 0,
+        total_partner_lots: 0,
+        total_partner_reward: 0,
+        total_refer_reward: 0,
+        accum_client_reward: 0,
+        accum_partner_reward: 0,
+        accum_refer_reward: 0,
         accum_time_remaining: 0,
+        claim_client_reward: 0,
+        claim_partner_reward: 0,
+        claim_refer_reward: 0,
         claim_time_remaining: 0,
+        last_claim_client_reward: 0,
+        last_claim_partner_reward: 0,
+        last_claim_refer_reward: 0,
       })
       .select()
       .single();
@@ -122,7 +133,7 @@ export async function POST(request: NextRequest) {
       partner,
       rank,
       referralId,
-      message: `Successfully registered as ${partnerType === 'new' ? 'Đối tác Tradi' : 'Đại lí hệ thống'}`,
+      message: `Successfully registered as ${partnerType === 'DTT' ? 'Đối tác Tradi' : 'Đại lí hệ thống'}`,
     });
   } catch (error) {
     console.error('[register-partner] Error:', error);

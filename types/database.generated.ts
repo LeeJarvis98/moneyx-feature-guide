@@ -77,14 +77,17 @@ export type Database = {
       }
       partner_rank_list: {
         Row: {
+          lot_volume: number
           partner_rank: string
           reward_percentage: number
         }
         Insert: {
+          lot_volume?: number
           partner_rank: string
           reward_percentage: number
         }
         Update: {
+          lot_volume?: number
           partner_rank?: string
           reward_percentage?: number
         }
@@ -92,49 +95,88 @@ export type Database = {
       }
       partners: {
         Row: {
-          accum_reward: number
+          accum_client_reward: number
+          accum_partner_reward: number
+          accum_refer_reward: number
           accum_time_remaining: number
-          claim_reward: number
+          claim_client_reward: number
+          claim_partner_reward: number
+          claim_refer_reward: number
           claim_time_remaining: number
           created_at: string
           id: string
-          last_claim_reward: number
+          last_claim_client_reward: number
+          last_claim_partner_reward: number
+          last_claim_refer_reward: number
+          partner_list: Json[]
+          partner_type: string | null
           platform_accounts: Json[]
           platform_ref_links: Json[]
-          sub_partners: Json[]
+          this_month_tradi_com: number
+          total_client_lots: number
+          total_client_reward: number
           total_clients: number
-          total_reward: number
-          total_sub_partners: number
+          total_partner_lots: number
+          total_partner_reward: number
+          total_partners: number
+          total_refer_reward: number
+          total_tradi_com: number
         }
         Insert: {
-          accum_reward?: number
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          accum_refer_reward?: number
           accum_time_remaining?: number
-          claim_reward?: number
+          claim_client_reward?: number
+          claim_partner_reward?: number
+          claim_refer_reward?: number
           claim_time_remaining?: number
           created_at?: string
           id: string
-          last_claim_reward?: number
+          last_claim_client_reward?: number
+          last_claim_partner_reward?: number
+          last_claim_refer_reward?: number
+          partner_list?: Json[]
+          partner_type?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
-          sub_partners?: Json[]
+          this_month_tradi_com?: number
+          total_client_lots?: number
+          total_client_reward?: number
           total_clients?: number
-          total_reward?: number
-          total_sub_partners?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          total_refer_reward?: number
+          total_tradi_com?: number
         }
         Update: {
-          accum_reward?: number
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          accum_refer_reward?: number
           accum_time_remaining?: number
-          claim_reward?: number
+          claim_client_reward?: number
+          claim_partner_reward?: number
+          claim_refer_reward?: number
           claim_time_remaining?: number
           created_at?: string
           id?: string
-          last_claim_reward?: number
+          last_claim_client_reward?: number
+          last_claim_partner_reward?: number
+          last_claim_refer_reward?: number
+          partner_list?: Json[]
+          partner_type?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
-          sub_partners?: Json[]
+          this_month_tradi_com?: number
+          total_client_lots?: number
+          total_client_reward?: number
           total_clients?: number
-          total_reward?: number
-          total_sub_partners?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          total_refer_reward?: number
+          total_tradi_com?: number
         }
         Relationships: [
           {
