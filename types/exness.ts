@@ -39,8 +39,6 @@ export interface ClientAccount {
   reward: number;
   reward_usd: number;
   comment: string;
-  tradi_commission?: number;
-  partner_commission?: number;
 }
 
 export interface ClientAccountsReportTotals {
@@ -51,8 +49,6 @@ export interface ClientAccountsReportTotals {
   reward: number;
   reward_usd: number;
   partner_account_currency: string[];
-  tradi_commission?: number;
-  partner_commission?: number;
 }
 
 export interface ClientAccountsReportResponse {

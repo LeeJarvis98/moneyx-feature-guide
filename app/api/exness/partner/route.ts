@@ -114,56 +114,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[EXNESS API] Checking endpoint for commission calculation. Endpoint:', endpoint);
-    console.log('[EXNESS API] Endpoint includes check:', endpoint.includes('/api/reports/clients/accounts/'));
-
-    // If this is a client accounts report, add commission calculations
-    if (endpoint.includes('/api/reports/clients/accounts/')) {
-      const TRADI_COMMISSION_PERCENTAGE = 10; // 10% for Tradi
-      
-      console.log('[EXNESS API] Processing client accounts report for commission calculations');
-      console.log('[EXNESS API] Data structure:', JSON.stringify(data).substring(0, 200));
-      console.log('[EXNESS API] Data has data array:', !!data.data);
-      console.log('[EXNESS API] Data has totals:', !!data.totals);
-      console.log('[EXNESS API] Totals object:', data.totals);
-      
-      if (data.data && Array.isArray(data.data)) {
-        data.data = data.data.map((account: any) => {
-          // Convert to number in case it's a string
-          const rewardUsd = Number(account.reward_usd);
-          const tradiCommission = rewardUsd * (TRADI_COMMISSION_PERCENTAGE / 100);
-          const partnerCommission = rewardUsd - tradiCommission;
-          
-          return {
-            ...account,
-            tradi_commission: tradiCommission,
-            partner_commission: partnerCommission,
-          };
-        });
-        
-        // Also update totals if present
-        if (data.totals && data.totals.reward_usd !== undefined) {
-          // Convert to number in case it's a string
-          const totalRewardUsd = Number(data.totals.reward_usd);
-          const totalTradiCommission = totalRewardUsd * (TRADI_COMMISSION_PERCENTAGE / 100);
-          const totalPartnerCommission = totalRewardUsd - totalTradiCommission;
-          
-          console.log('[EXNESS API] Total Reward USD:', data.totals.reward_usd, 'Type:', typeof data.totals.reward_usd);
-          console.log('[EXNESS API] Converted Total Reward USD:', totalRewardUsd);
-          console.log('[EXNESS API] Calculated Total Tradi Commission:', totalTradiCommission);
-          console.log('[EXNESS API] Calculated Total Partner Commission:', totalPartnerCommission);
-          
-          data.totals = {
-            ...data.totals,
-            tradi_commission: totalTradiCommission,
-            partner_commission: totalPartnerCommission,
-          };
-          
-          console.log('[EXNESS API] Updated totals:', data.totals);
-        }
-      }
-    }
-
     return NextResponse.json(data);
   } catch (error) {
     console.error('Exness partner API GET error:', error);

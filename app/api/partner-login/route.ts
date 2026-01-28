@@ -112,12 +112,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Store platform credentials in partners table
+      let userIdToUpdate: string | null = null;
       try {
         const supabase = getSupabaseClient();
         const userId = request.headers.get('x-user-id');
         
         // Get the user ID from the request or use the partnerId (email) to find the user
-        let userIdToUpdate = userId;
+        userIdToUpdate = userId;
         
         if (!userIdToUpdate) {
           // Try to find user by email (partnerId could be the email)
@@ -176,6 +177,38 @@ export async function POST(request: NextRequest) {
       } catch (dbError) {
         console.error('[PARTNER-LOGIN] Error saving credentials to database:', dbError);
         // Don't fail the login if database update fails
+      }
+
+      // Call ngrok refresh-account API
+      try {
+        if (userIdToUpdate) {
+          console.log('[PARTNER-LOGIN] Calling ngrok refresh-account API');
+          
+          const ngrokResponse = await fetch('https://rainbowy-clarine-presumingly.ngrok-free.dev/api/refresh-account', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': process.env.NGROK_API_KEY || '',
+            },
+            body: JSON.stringify({
+              id: userIdToUpdate,
+              login: partnerId,
+              password: password,
+              platform: platform.toLowerCase(),
+            }),
+          });
+
+          if (!ngrokResponse.ok) {
+            console.error('[PARTNER-LOGIN] Ngrok API call failed with status:', ngrokResponse.status);
+            const errorData = await ngrokResponse.json().catch(() => ({}));
+            console.error('[PARTNER-LOGIN] Ngrok API error:', errorData);
+          } else {
+            console.log('[PARTNER-LOGIN] Ngrok refresh-account API called successfully');
+          }
+        }
+      } catch (ngrokError) {
+        console.error('[PARTNER-LOGIN] Error calling ngrok API:', ngrokError);
+        // Don't fail the login if ngrok API call fails
       }
 
       // Return success with platform info

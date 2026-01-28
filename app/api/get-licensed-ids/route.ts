@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filterEmail = searchParams.get('email'); // Optional email filter
     
-    console.log('[GET-LICENSED-IDS] Fetching licensed account IDs from Google Sheets...');
     if (filterEmail) {
       console.log('[GET-LICENSED-IDS] Filtering by email:', filterEmail);
     }
