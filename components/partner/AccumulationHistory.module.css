@@ -1,0 +1,53 @@
+.container {
+  width: 100%;
+  height: 100%;
+}
+
+.paper {
+  padding: 24px;
+  background: #1a1b1e;
+  border-radius: 8px;
+  border: 1px solid #2c2e33;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.table {
+  margin-top: 16px;
+}
+
+.amount {
+  font-weight: 600;
+  color: #FFB81C;
+}
+
+.status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status.completed {
+  background: rgba(64, 192, 87, 0.1);
+  color: #40c057;
+}
+
+.status.pending {
+  background: rgba(255, 184, 28, 0.1);
+  color: #FFB81C;
+}
+
+.status.failed {
+  background: rgba(250, 82, 82, 0.1);
+  color: #fa5252;
+}

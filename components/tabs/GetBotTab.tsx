@@ -52,12 +52,14 @@ export function GetBotTab() {
   } | null>(null);
   const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [accountsMarkedForDeletion, setAccountsMarkedForDeletion] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [grantingLicense, setGrantingLicense] = useState(false);
+  const [deletingLicenses, setDeletingLicenses] = useState(false);
   const [userTypeModalOpen, setUserTypeModalOpen] = useState(false);
   const [partnerPlatformUrls, setPartnerPlatformUrls] = useState<Record<string, string>>({});
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -150,10 +152,13 @@ export function GetBotTab() {
           .map((row) => row.id);
         setSelectedAccounts(licensedAccounts.slice(0, 3)); // Limit to max 3
         
+        // Reset marked for deletion when checking new email
+        setAccountsMarkedForDeletion([]);
+        
         setAccountStatus('authorized');
       } else {
         setAccountStatus('unauthorized');
-        setErrorMessage('Email không tồn tại trong hệ thống hoặc chưa được liên kết với sàn ' + (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || ''));
+        setErrorMessage('Tài khoản ' + (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || '') + ' này chưa tồn tại trong hệ thống. \nXin hãy liên hệ Hỗ trợ.');
       }
     } catch (error) {
       setCaptchaToken(null); // Reset captcha on error
@@ -164,18 +169,34 @@ export function GetBotTab() {
   };
 
   const toggleAccountSelection = (accountId: string) => {
-    setSelectedAccounts((prev) => {
-      if (prev.includes(accountId)) {
-        // If already selected, remove it
-        return prev.filter((id) => id !== accountId);
-      } else {
-        // Only add if we haven't reached the limit of 3
-        if (prev.length < 3) {
+    const row = accountRows.find((r) => r.id === accountId);
+    
+    if (row?.status === 'licensed') {
+      // Handle licensed accounts - toggle for deletion
+      setAccountsMarkedForDeletion((prev) => {
+        if (prev.includes(accountId)) {
+          // Remove from marked for deletion
+          return prev.filter((id) => id !== accountId);
+        } else {
+          // Mark for deletion
           return [...prev, accountId];
         }
-        return prev;
-      }
-    });
+      });
+    } else {
+      // Handle unlicensed accounts - normal selection
+      setSelectedAccounts((prev) => {
+        if (prev.includes(accountId)) {
+          // If already selected, remove it
+          return prev.filter((id) => id !== accountId);
+        } else {
+          // Only add if we haven't reached the limit of 3
+          if (prev.length < 3) {
+            return [...prev, accountId];
+          }
+          return prev;
+        }
+      });
+    }
   };
 
   const toggleAllAccounts = () => {
@@ -213,6 +234,55 @@ export function GetBotTab() {
     }
   };
 
+  // Delete licenses from Google Sheets only (not from Supabase)
+  const deleteLicenses = async () => {
+    if (accountsMarkedForDeletion.length === 0) {
+      return;
+    }
+
+    setDeletingLicenses(true);
+
+    try {
+      const response = await fetch('/api/revoke-license', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          accountIds: accountsMarkedForDeletion,
+          email: email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete licenses');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update account rows to mark deleted accounts as unlicensed
+        setAccountRows((prev) =>
+          prev.map((row) =>
+            accountsMarkedForDeletion.includes(row.id) ? { ...row, status: 'unlicensed' } : row
+          )
+        );
+        
+        // Remove from selectedAccounts if they were selected
+        setSelectedAccounts((prev) => 
+          prev.filter((id) => !accountsMarkedForDeletion.includes(id))
+        );
+        
+        // Clear marked for deletion
+        setAccountsMarkedForDeletion([]);
+      }
+    } catch (error) {
+      console.error('Delete license error:', error);
+    } finally {
+      setDeletingLicenses(false);
+    }
+  };
+
   // Grant license for newly selected unlicensed accounts
   const grantLicense = async () => {
     // Filter only unlicensed accounts that are selected
@@ -236,13 +306,11 @@ export function GetBotTab() {
       
       if (!userId) {
         console.error('[GRANT] User ID not found in storage');
-        alert('User session not found. Please log in again.');
         return;
       }
 
       if (!referralId) {
         console.error('[GRANT] Referral ID not found in storage');
-        alert('Referral ID not found. Please access through a valid partner link.');
         return;
       }
 
@@ -275,12 +343,9 @@ export function GetBotTab() {
         
         // Proceed to next step
         setActive((current) => (current < 2 ? current + 1 : current));
-      } else {
-        alert('Không thể cấp bản quyền. Vui lòng thử lại.');
       }
     } catch (error) {
       console.error('Grant license error:', error);
-      alert('Lỗi khi cấp bản quyền. Vui lòng thử lại.');
     } finally {
       setGrantingLicense(false);
     }
@@ -573,7 +638,20 @@ export function GetBotTab() {
                             }}
                           />
                           <Text size="sm" c="dimmed">
-                            ID đã cấp bản quyền (không thể thay đổi)
+                            ID đã cấp bản quyền
+                          </Text>
+                        </Group>
+                        <Group gap="xs">
+                          <Box
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              backgroundColor: 'var(--mantine-color-red-6)',
+                            }}
+                          />
+                          <Text size="sm" c="dimmed">
+                            ID được chọn để xóa
                           </Text>
                         </Group>
                         <Group gap="xs">
@@ -617,22 +695,38 @@ export function GetBotTab() {
                           {accountRows.map((row) => {
                             const isLicensed = row.status === 'licensed';
                             const isSelected = selectedAccounts.includes(row.id);
+                            const isMarkedForDeletion = accountsMarkedForDeletion.includes(row.id);
+                            
+                            // Determine color and variant
+                            let badgeColor = 'gray';
+                            let badgeVariant: 'filled' | 'outline' = 'outline';
+                            
+                            if (isMarkedForDeletion) {
+                              badgeColor = 'red';
+                              badgeVariant = 'filled';
+                            } else if (isLicensed) {
+                              badgeColor = 'violet';
+                              badgeVariant = 'filled';
+                            } else if (isSelected) {
+                              badgeColor = '#FFB81C';
+                              badgeVariant = 'filled';
+                            }
                             
                             return (
                               <Badge
                                 key={row.id}
                                 size="lg"
-                                variant={isSelected ? 'filled' : 'outline'}
-                                color={isLicensed ? 'violet' : (isSelected ? '#FFB81C' : 'gray')}
+                                variant={badgeVariant}
+                                color={badgeColor}
                                 style={{
-                                  cursor: isLicensed ? 'not-allowed' : 'pointer',
+                                  cursor: 'pointer',
                                   transition: 'all 0.2s ease',
                                   padding: '10px 16px',
                                   fontSize: '16px',
-                                  color: isSelected && !isLicensed ? 'black' : undefined,
-                                  opacity: isLicensed ? 0.9 : 1,
+                                  color: (isSelected || isMarkedForDeletion) && !isLicensed ? 'black' : undefined,
+                                  opacity: 1,
                                 }}
-                                onClick={() => !isLicensed && toggleAccountSelection(row.id)}
+                                onClick={() => toggleAccountSelection(row.id)}
                               >
                                 {row.id}
                               </Badge>
@@ -664,6 +758,20 @@ export function GetBotTab() {
                           Bạn có thể tiếp tục sang bước tiếp theo để tải bot.
                         </Text>
                       )}
+
+                      <Button
+                        color="red"
+                        onClick={deleteLicenses}
+                        loading={deletingLicenses}
+                        disabled={
+                          accountStatus !== 'authorized' || 
+                          accountsMarkedForDeletion.length === 0
+                        }
+                        size="lg"
+                        className={classes.glowButton}
+                      >
+                        Xóa ({accountsMarkedForDeletion.length})
+                      </Button>
 
                       <Button
                         c="black"
@@ -797,7 +905,7 @@ export function GetBotTab() {
         opened={userTypeModalOpen}
         onClose={() => setUserTypeModalOpen(false)}
         size="lg"
-        title="Chọn tình trạng tài khoản của bạn"
+        title="Chọn tình trạng"
         centered
       >
         <Accordion
@@ -812,7 +920,7 @@ export function GetBotTab() {
 
           <Accordion.Item value="no-account">
             <Accordion.Control>
-              <Text fw={600} size="lg">Chưa có tài khoản</Text>
+              <Text fw={600} size="lg">Chưa có tài khoản <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="md">
@@ -849,7 +957,7 @@ export function GetBotTab() {
 
           <Accordion.Item value="has-account">
             <Accordion.Control>
-              <Text fw={600} size="lg">Đã có tài khoản</Text>
+              <Text fw={600} size="lg">Đã có tài khoản <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="md">

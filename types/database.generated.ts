@@ -20,6 +20,7 @@ export type Database = {
           email: string
           id: string | null
           licensed_date: string
+          licensed_status: string | null
           platform: string | null
           uid: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           email: string
           id?: string | null
           licensed_date?: string
+          licensed_status?: string | null
           platform?: string | null
           uid: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           email?: string
           id?: string | null
           licensed_date?: string
+          licensed_status?: string | null
           platform?: string | null
           uid?: string
         }

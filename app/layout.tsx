@@ -3,6 +3,7 @@ import '@mantine/core/styles.css';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
+import FloatingSupportButton from '@/components/FloatingSupportButton';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -59,7 +60,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body suppressHydrationWarning>
-        <MantineProvider theme={theme} defaultColorScheme="dark">{children}</MantineProvider>
+        <MantineProvider theme={theme} defaultColorScheme="dark">
+          {children}
+          <FloatingSupportButton />
+        </MantineProvider>
       </body>
     </html>
   );
