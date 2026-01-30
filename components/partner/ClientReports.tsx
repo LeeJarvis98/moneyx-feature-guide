@@ -70,7 +70,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
       
       // Check if there are any licensed accounts
       if (accountIds.length === 0) {
-        setError('No licensed accounts found. Please grant licenses first before fetching reports.');
+        setError('Không tìm thấy tài khoản được cấp phép. Vui lòng cấp phép trước khi tải báo cáo.');
         setLoading(false);
         return;
       }
@@ -88,7 +88,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
       setLicensedAccountsDetails(accountDetails);
     } catch (err) {
       const error = err as ExnessApiError;
-      setError(error.message || 'Failed to fetch client accounts report');
+      setError(error.message || 'Không thể tải báo cáo tài khoản khách hàng');
     } finally {
       setLoading(false);
     }
@@ -156,13 +156,13 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <h2>Client</h2>
+        <h2>Khách hàng</h2>
         <button
           onClick={fetchClientAccountsReport}
           disabled={loading}
           className={styles.fetchButton}
         >
-          {loading ? 'Loading...' : 'Refresh'}
+          {loading ? 'Đang tải...' : 'Làm mới'}
         </button>
       </div>
 
@@ -178,26 +178,28 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
           {/* Summary Cards */}
           <div className={styles.summaryCards}>
             <div className={styles.summaryCard}>
-              <h4>Total Accounts</h4>
-              <p className={styles.summaryValue}>{clientAccountsReport.totals.count}</p>
+              <h4>Tổng số khách hàng</h4>
+              <p className={styles.summaryValue}>{clientAccountsReport.totals.clients_count || 0}</p>
             </div>
             <div className={styles.summaryCard}>
-              <h4>Volume (Lots)</h4>
+              <h4>Khối lượng (Lô)</h4>
               <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.volume_lots, 2)}</p>
             </div>
             <div className={styles.summaryCard}>
-              <h4>Total Reward (USD)</h4>
+              <h4>Tổng thưởng (USD)</h4>
               <p className={styles.summaryValue}>${formatNumber(clientAccountsReport.totals.reward_usd, 2)}</p>
             </div>
           </div>
 
+          <h3 style={{ marginTop: '2rem', marginBottom: '-20px', fontSize: '1.25rem' }}>Danh sách tài khoản ({clientAccountsReport.totals.count})</h3>
+
           {/* Filter Input */}
           <TextInput
-            placeholder="Search by account, email, or date..."
+            placeholder="Tìm kiếm theo tài khoản, email hoặc ngày..."
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.currentTarget.value)}
             style={{ 
-              marginBottom: '1rem',
+              marginBottom: '-10px',
               maxWidth: '400px'
             }}
             styles={{
@@ -224,7 +226,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               },
               { 
                 accessor: 'client_account', 
-                title: 'Client Account',
+                title: 'Tài khoản khách hàng',
                 width: 150,
                 sortable: true
               },
@@ -236,7 +238,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               },
               { 
                 accessor: 'platform', 
-                title: 'Platform',
+                title: 'Nền tảng',
                 width: 100,
                 sortable: true,
                 render: (record: any) => {
@@ -246,20 +248,20 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               },
               { 
                 accessor: 'licensed_date', 
-                title: 'Licensed Date',
+                title: 'Ngày cấp phép',
                 width: 180,
                 sortable: true
               },
               { 
                 accessor: 'volume_lots', 
-                title: 'Volume (Lots)',
+                title: 'Khối lượng (Lô)',
                 width: 130,
                 sortable: true,
                 render: (record) => formatNumber(record.volume_lots, 2)
               },
               { 
                 accessor: 'reward_usd', 
-                title: 'Reward (USD)',
+                title: 'Thưởng (USD)',
                 width: 130,
                 sortable: true,
                 render: (record) => `$${formatNumber(record.reward_usd, 2)}`
