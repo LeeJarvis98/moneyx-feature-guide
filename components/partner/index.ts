@@ -5,3 +5,5 @@ export { default as PartnerNavBar } from './PartnerNavBar';
 export { default as PartnerAgreement } from './PartnerAgreement';
 export { default as PartnerAside } from './PartnerAside';
 export { default as CongratulationsModal } from './CongratulationsModal';
+export { default as ClientReports } from './ClientReports';
+export { default as PartnerSystem } from './PartnerSystem';

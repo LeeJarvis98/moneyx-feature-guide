@@ -38,6 +38,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
   const [registeredPartnerType, setRegisteredPartnerType] = useState<'new' | 'system'>('new');
+  const [userId, setUserId] = useState<string | null>(null);
   const [platformRefLinks, setPlatformRefLinks] = useState<PlatformRefLinks>({
     exness: '',
     binance: '',
@@ -52,6 +53,12 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     okx: '',
     upbit: '',
   });
+
+  // Get userId from storage after component mounts (client-side only)
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    setUserId(storedUserId);
+  }, []);
 
   // Check if user just registered and show congratulations modal
   useEffect(() => {
@@ -75,9 +82,6 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
 
   // Set aside content with PartnerAside component
   useEffect(() => {
-    // Get logged-in user ID from storage (only on client side)
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-
     if (userId && onAsideContentChange) {
       onAsideContentChange(
         <PartnerAside
@@ -93,7 +97,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
         onAsideContentChange(null);
       }
     };
-  }, [onAsideContentChange, handleRefLinksChange]);
+  }, [userId, onAsideContentChange, handleRefLinksChange]);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
