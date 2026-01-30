@@ -180,6 +180,34 @@
   box-shadow: 0 0 20px rgba(139, 69, 19, 0.6), 0 0 40px rgba(160, 82, 45, 0.4);
 }
 
+/* Scrolling banner animation */
+.countdownBanner {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  min-width: 200px;
+  max-width: 250px;
+  display: inline-block;
+  background: transparent !important;
+  border: none !important;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+}
+
+.scrollingText {
+  display: inline-block;
+  animation: scrollLeftToRight 8s linear infinite;
+}
+
+@keyframes scrollLeftToRight {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
 @media (max-width: 768px) {
   .link {
     height: 42px;

@@ -35,7 +35,42 @@ export default function HomePage() {
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [partnerRank, setPartnerRank] = useState<string>('');
   const [referralId, setReferralId] = useState<string>('');
+  const [partnerType, setPartnerType] = useState<string>('');
+  const [daysToMonthEnd, setDaysToMonthEnd] = useState<number | null>(null);
   const theme = useMantineTheme();
+
+  // Fetch Internet time and calculate days to month end
+  useEffect(() => {
+    const fetchInternetTime = async () => {
+      try {
+        const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+        const data = await response.json();
+        const currentDate = new Date(data.datetime);
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+        const currentDay = currentDate.getDate();
+        const daysRemaining = lastDayOfMonth - currentDay;
+        setDaysToMonthEnd(daysRemaining);
+      } catch (error) {
+        console.error('[HomePage] Error fetching Internet time:', error);
+        // Fallback to local time if Internet time fetch fails
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+        const currentDay = currentDate.getDate();
+        const daysRemaining = lastDayOfMonth - currentDay;
+        setDaysToMonthEnd(daysRemaining);
+      }
+    };
+
+    fetchInternetTime();
+    // Update every hour
+    const interval = setInterval(fetchInternetTime, 3600000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -95,7 +130,7 @@ export default function HomePage() {
     };
   }, []);
 
-  // Function to check partner rank from Google Sheets
+  // Function to check partner rank and partner type
   const checkPartnerRank = async (userId: string) => {
     console.log('[HomePage] Checking partner rank for userId:', userId);
     try {
@@ -117,10 +152,15 @@ export default function HomePage() {
             console.log('[HomePage] Setting referral ID:', data.referralId);
             setReferralId(data.referralId);
           }
+          if (data.partnerType) {
+            console.log('[HomePage] Setting partner type:', data.partnerType);
+            setPartnerType(data.partnerType);
+          }
         } else {
           console.log('[HomePage] User is not a partner or rank is empty');
           setPartnerRank('');
           setReferralId('');
+          setPartnerType('');
         }
       }
     } catch (error) {
@@ -201,6 +241,7 @@ export default function HomePage() {
     setLoggedInUserId(null);
     setPartnerRank('');
     setReferralId('');
+    setPartnerType('');
     // Navigate to documentation tab
     handleNavigationChange('library');
     setActiveTab('documentation');
@@ -305,39 +346,60 @@ export default function HomePage() {
                         );
                       })()}
                       {isUserLoggedIn && referralId && (
-                        <Group
-                          gap="xs"
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            backgroundColor: 'rgba(255, 184, 28, 0.1)',
-                            border: '1px solid rgba(255, 184, 28, 0.3)',
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Text size="sm" fw={600} c="yellow">
-                            Mã giới thiệu của bạn:
-                          </Text>
-                          <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
-                            {referralId}
-                          </Text>
-                          <CopyButton value={referralId} timeout={2000}>
-                            {({ copied, copy }) => (
-                              <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
-                                <ActionIcon
-                                  color={copied ? 'teal' : 'yellow'}
-                                  variant="subtle"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copy();
-                                  }}
-                                  size="sm"
-                                >
-                                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                                </ActionIcon>
-                              </Tooltip>
-                            )}
-                          </CopyButton>
+                        <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+                          <Group
+                            gap="xs"
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                              border: '1px solid rgba(255, 184, 28, 0.3)',
+                            }}
+                          >
+                            <Text size="sm" fw={600} c="yellow">
+                              {(() => {
+                                const partnerTypeDisplay = partnerType === 'DLHT' ? 'Đại lý Hệ Thống' : partnerType === 'DDT' ? 'Đối tác Tradi' : null;
+                                return partnerTypeDisplay ? `${partnerTypeDisplay} | Mã giới thiệu:` : 'Mã giới thiệu:';
+                              })()}
+                            </Text>
+                            <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
+                              {referralId}
+                            </Text>
+                            <CopyButton value={referralId} timeout={2000}>
+                              {({ copied, copy }) => (
+                                <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
+                                  <ActionIcon
+                                    color={copied ? 'teal' : 'yellow'}
+                                    variant="subtle"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copy();
+                                    }}
+                                    size="sm"
+                                  >
+                                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                                  </ActionIcon>
+                                </Tooltip>
+                              )}
+                            </CopyButton>
+                          </Group>
+                          {daysToMonthEnd !== null && (
+                            <Badge
+                              variant="light"
+                              color="gray"
+                              size="lg"
+                              className={classes.countdownBanner}
+                            >
+                              <span className={classes.scrollingText}>
+                                {daysToMonthEnd === 0 ? 'Ngày mai sẽ chốt hoa hồng' : (
+                                  <>
+                                    <span style={{ color: '#FFB81C', fontWeight: 700 }}>{daysToMonthEnd} ngày</span>
+                                    {' nữa đến kỳ chốt hoa hồng'}
+                                  </>
+                                )}
+                              </span>
+                            </Badge>
+                          )}
                         </Group>
                       )}
                     </Group>
@@ -699,7 +761,7 @@ export default function HomePage() {
               {/* Login Section */}
               {navigationSection === 'login' && (
                 <LoginTab
-                  onLoginSuccess={(userId, partnerRank, ownReferralId) => {
+                  onLoginSuccess={(userId, partnerRank, ownReferralId, partnerType) => {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
@@ -714,6 +776,10 @@ export default function HomePage() {
                     // Set referral ID if provided
                     if (ownReferralId) {
                       setReferralId(ownReferralId);
+                    }
+                    // Set partner type if provided
+                    if (partnerType) {
+                      setPartnerType(partnerType);
                     }
                     // Redirect to documentation
                     handleNavigationChange('library');
