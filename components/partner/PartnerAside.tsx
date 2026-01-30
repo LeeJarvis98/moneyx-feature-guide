@@ -59,11 +59,50 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [success, setSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [loadingPlatforms, setLoadingPlatforms] = useState(true);
 
   // Ensure we're on the client side
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Load selected platforms to filter which ref links to show
+  useEffect(() => {
+    if (!isMounted || !partnerId) {
+      setLoadingPlatforms(false);
+      return;
+    }
+
+    const loadSelectedPlatforms = async () => {
+      try {
+        setLoadingPlatforms(true);
+        const response = await fetch('/api/get-selected-platforms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partnerId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch selected platforms');
+        }
+
+        const data = await response.json();
+        const platforms = data.selectedPlatforms || [];
+        
+        console.log('[PartnerAside] Loaded selected platforms:', platforms);
+        setSelectedPlatforms(platforms);
+      } catch (error) {
+        console.error('[PartnerAside] Error loading selected platforms:', error);
+        // On error, show all platforms
+        setSelectedPlatforms([]);
+      } finally {
+        setLoadingPlatforms(false);
+      }
+    };
+
+    loadSelectedPlatforms();
+  }, [partnerId, isMounted]);
 
   // Load existing ref links on mount
   useEffect(() => {
@@ -87,7 +126,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
         }
       } catch (err) {
         console.error('Error loading ref links:', err);
-        setError('Failed to load referral links. Please refresh the page.');
+        setError('Không thể tải link giới thiệu. Vui lòng làm mới trang.');
       } finally {
         setLoading(false);
       }
@@ -140,60 +179,74 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
       setIsEditMode(false);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
+      setError(err instanceof Error ? err.message : 'Không thể lưu. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
+  if (loading || loadingPlatforms) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Loading...</div>
+        <div className={styles.loading}>Đang tải...</div>
       </div>
     );
   }
+
+  // Filter platforms based on selected platforms
+  const visiblePlatforms = selectedPlatforms.length > 0
+    ? PLATFORMS.filter(p => selectedPlatforms.includes(p.key))
+    : PLATFORMS;
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerTop}>
-          <h3 className={styles.title}>Platform Referral Links</h3>
+          <h3 className={styles.title}>Link Giới Thiệu Sàn</h3>
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             className={styles.editButton}
             disabled={saving}
           >
-            {isEditMode ? 'Cancel' : 'Edit'}
+            {isEditMode ? 'Hủy' : 'Chỉnh sửa'}
           </button>
         </div>
         <p className={styles.subtitle}>
-          {isEditMode ? 'Edit your referral links for each platform' : 'View your referral links for each platform'}
+          {isEditMode ? 'Chỉnh sửa link giới thiệu cho từng sàn' : 'Xem link giới thiệu cho từng sàn'}
         </p>
       </div>
 
       <div className={styles.formContainer}>
-        {PLATFORMS.map(({ key, label }) => (
-          <div key={key} className={styles.inputGroup}>
-            <label htmlFor={key} className={styles.label}>
-              {label}
-            </label>
-            <input
-              type="url"
-              id={key}
-              value={refLinks[key as keyof PlatformRefLinks]}
-              onChange={(e) => handleInputChange(key, e.target.value)}
-              placeholder={`Enter ${label} referral link`}
-              className={styles.input}
-              disabled={saving || !isEditMode}
-              readOnly={!isEditMode}
-            />
+        {visiblePlatforms.length > 0 ? (
+          visiblePlatforms.map(({ key, label }) => (
+            <div key={key} className={styles.inputGroup}>
+              <label htmlFor={key} className={styles.label}>
+                {label}
+              </label>
+              <input
+                type="url"
+                id={key}
+                value={refLinks[key as keyof PlatformRefLinks]}
+                onChange={(e) => handleInputChange(key, e.target.value)}
+                placeholder={`Nhập link giới thiệu ${label}`}
+                className={styles.input}
+                disabled={saving || !isEditMode}
+                readOnly={!isEditMode}
+              />
+            </div>
+          ))
+        ) : (
+          <div className={styles.emptyState}>
+            <p>Chưa chọn sàn nào</p>
+            <p className={styles.emptyStateHint}>
+              Vui lòng chọn sàn trong thanh điều hướng để thêm link giới thiệu
+            </p>
           </div>
-        ))}
+        )}
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
-      {success && <div className={styles.success}>Referral links saved successfully!</div>}
+      {success && <div className={styles.success}>Lưu link giới thiệu thành công!</div>}
 
       {isEditMode && (
         <button
@@ -201,7 +254,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
           disabled={saving}
           className={styles.saveButton}
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       )}
     </div>

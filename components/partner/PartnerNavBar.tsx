@@ -22,20 +22,79 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState<string | null>(null);
+  const [showAddPlatformModal, setShowAddPlatformModal] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [savingPlatforms, setSavingPlatforms] = useState(false);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [loadingPlatforms, setLoadingPlatforms] = useState(true);
 
-  // Handle escape key to close modal
+  // Get partnerId from storage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      setPartnerId(storedUserId);
+    }
+  }, []);
+
+  // Load selected platforms from database when authenticated
+  useEffect(() => {
+    const loadSelectedPlatforms = async () => {
+      if (!partnerId || !isAuthenticated) {
+        setLoadingPlatforms(false);
+        // If not authenticated, show all non-disabled platforms by default
+        if (!isAuthenticated) {
+          setSelectedPlatforms([]);
+        }
+        return;
+      }
+
+      try {
+        setLoadingPlatforms(true);
+        const response = await fetch('/api/get-selected-platforms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partnerId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch selected platforms');
+        }
+
+        const data = await response.json();
+        const platforms = data.selectedPlatforms || [];
+        
+        console.log('[PartnerNavBar] Loaded selected platforms:', platforms);
+        setSelectedPlatforms(platforms);
+      } catch (error) {
+        console.error('[PartnerNavBar] Error loading selected platforms:', error);
+        // On error, show all non-disabled platforms
+        setSelectedPlatforms([]);
+      } finally {
+        setLoadingPlatforms(false);
+      }
+    };
+
+    loadSelectedPlatforms();
+  }, [partnerId, isAuthenticated]);
+
+  // Handle escape key to close modals
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showModal) {
-        handleCancelSwitch();
+      if (e.key === 'Escape') {
+        if (showModal) {
+          handleCancelSwitch();
+        }
+        if (showAddPlatformModal) {
+          setShowAddPlatformModal(false);
+        }
       }
     };
     
-    if (showModal) {
+    if (showModal || showAddPlatformModal) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [showModal]);
+  }, [showModal, showAddPlatformModal]);
 
   const handlePlatformClick = (platform: string) => {
     if (isAuthenticated && selectedPlatform && selectedPlatform !== platform) {
@@ -60,6 +119,72 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const handleCancelSwitch = () => {
     setShowModal(false);
     setPendingPlatform(null);
+  };
+
+  const handleOpenAddPlatformModal = () => {
+    // Modal will show current selection, no need to reset
+    setShowAddPlatformModal(true);
+  };
+
+  const handleTogglePlatform = (platformValue: string) => {
+    setSelectedPlatforms(prev => {
+      if (prev.includes(platformValue)) {
+        return prev.filter(p => p !== platformValue);
+      } else {
+        return [...prev, platformValue];
+      }
+    });
+  };
+
+  const handleSavePlatforms = async () => {
+    if (!partnerId) {
+      console.error('[PartnerNavBar] No partner ID found');
+      return;
+    }
+
+    setSavingPlatforms(true);
+    try {
+      const response = await fetch('/api/update-selected-platforms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerId,
+          selectedPlatforms,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update selected platforms');
+      }
+
+      console.log('[PartnerNavBar] Successfully saved selected platforms:', selectedPlatforms);
+      setShowAddPlatformModal(false);
+    } catch (error) {
+      console.error('[PartnerNavBar] Error saving platforms:', error);
+      alert('Không thể lưu sàn đã chọn. Vui lòng thử lại.');
+    } finally {
+      setSavingPlatforms(false);
+    }
+  };
+
+  const handleCancelAddPlatform = async () => {
+    setShowAddPlatformModal(false);
+    // Reload the original selection from database
+    if (partnerId && isAuthenticated) {
+      try {
+        const response = await fetch('/api/get-selected-platforms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partnerId }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedPlatforms(data.selectedPlatforms || []);
+        }
+      } catch (error) {
+        console.error('[PartnerNavBar] Error reloading platforms:', error);
+      }
+    }
   };
 
   const tradingPlatforms: Platform[] = [
@@ -103,8 +228,54 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
 
   return (
     <div className={styles.navbar}>
+      {/* Add Platform Button - Only shown when authenticated */}
+      {isAuthenticated && (
+        <div className={styles.addPlatformButtonContainer}>
+          <button
+            type="button"
+            className={styles.addPlatformButton}
+            onClick={handleOpenAddPlatformModal}
+            aria-label="Add trading platforms"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Thêm sàn</span>
+          </button>
+        </div>
+      )}
+
       <div className={styles.platformGrid}>
-        {tradingPlatforms.map((platform) => (
+        {/* Show loading state */}
+        {loadingPlatforms && isAuthenticated && (
+          <div className={styles.loadingMessage}>Đang tải...</div>
+        )}
+        
+        {/* Filter platforms: show selected ones for authenticated users, all non-disabled for others */}
+        {!loadingPlatforms && tradingPlatforms
+          .filter(platform => {
+            // If not authenticated, show all non-disabled platforms
+            if (!isAuthenticated) {
+              return !platform.disabled;
+            }
+            // If authenticated but no platforms selected, show a message (handled below)
+            if (selectedPlatforms.length === 0) {
+              return false;
+            }
+            // Show only selected platforms
+            return selectedPlatforms.includes(platform.value);
+          })
+          .map((platform) => (
           <button
             key={platform.value}
             type="button"
@@ -132,6 +303,14 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
             )}
           </button>
         ))}
+        
+        {/* Show empty state when authenticated but no platforms selected */}
+        {!loadingPlatforms && isAuthenticated && selectedPlatforms.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>Chưa có sàn nào được chọn</p>
+            <p className={styles.emptyStateHint}>Nhấn "Thêm sàn" để chọn sàn giao dịch</p>
+          </div>
+        )}
       </div>
 
       {/* Modal for switching platforms */}
@@ -167,6 +346,74 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
                 onClick={handleLogoutAndSwitch}
               >
                 Đăng xuất & Chuyển sàn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for adding platforms */}
+      {showAddPlatformModal && (
+        <div 
+          className={styles.modalOverlay} 
+          onClick={handleCancelAddPlatform}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-platform-modal-title"
+        >
+          <div className={styles.addPlatformModalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 id="add-platform-modal-title">Chọn sàn giao dịch</h3>
+            </div>
+            <div className={styles.addPlatformModalBody}>
+              <p className={styles.modalDescription}>
+                Chọn các sàn giao dịch bạn muốn theo dõi. Bạn có thể chọn nhiều sàn cùng lúc.
+              </p>
+              <div className={styles.platformSelectGrid}>
+                {tradingPlatforms.map((platform) => (
+                  <button
+                    key={platform.value}
+                    type="button"
+                    className={`${styles.platformSelectCard} ${styles[`platform_${platform.value}`]} ${
+                      selectedPlatforms.includes(platform.value) ? styles.platformSelected : ''
+                    } ${platform.disabled ? styles.platformDisabled : ''}`}
+                    onClick={() => !platform.disabled && handleTogglePlatform(platform.value)}
+                    disabled={platform.disabled}
+                    aria-label={`${selectedPlatforms.includes(platform.value) ? 'Deselect' : 'Select'} ${platform.label}`}
+                  >
+                    <div className={styles.cardContent}>
+                      <div className={styles.checkboxIndicator}>
+                        {selectedPlatforms.includes(platform.value) && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.cardContent}>
+                      <div className={styles.platformSelectLabel}>{platform.label}</div>
+                      {platform.disabled && (
+                        <div className={styles.comingSoonBadge}>Sắp Ra Mắt</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelButton}
+                onClick={handleCancelAddPlatform}
+                disabled={savingPlatforms}
+              >
+                Hủy
+              </button>
+              <button 
+                className={styles.saveButton}
+                onClick={handleSavePlatforms}
+                disabled={savingPlatforms || selectedPlatforms.length === 0}
+              >
+                {savingPlatforms ? 'Đang lưu...' : `Lưu (${selectedPlatforms.length})`}
               </button>
             </div>
           </div>

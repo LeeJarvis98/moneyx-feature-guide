@@ -106,7 +106,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
 
     // Validate turnstile token
     if (!turnstileToken) {
-      setError('Please complete the security verification');
+      setError('Vui lòng hoàn thành xác minh bảo mật');
       return;
     }
 
@@ -152,7 +152,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed. Please check your credentials.');
+        throw new Error(data.error || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
       }
 
       // Store partner info in session storage or context
@@ -168,7 +168,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
         onLoginSuccess();
       }, 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -179,11 +179,13 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       <div className={styles.card}>
         <h2 className={styles.title}>
           {selectedPlatform
-            ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Login`
-            : 'Partner Login'}
+            ? `Đăng nhập ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
+            : 'Đăng nhập Partner'}
         </h2>
         <p className={styles.subtitle}>
-          Connect directly with your Exness partner account credentials
+          {selectedPlatform
+            ? `Kết nối trực tiếp với thông tin đăng nhập partner ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
+            : 'Kết nối trực tiếp với thông tin đăng nhập partner của bạn'}
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>
@@ -191,8 +193,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           <div className={styles.inputGroup}>
             <label htmlFor="partnerId" className={styles.label}>
               {selectedPlatform
-                ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
-                : 'Partner ID'}
+                ? `ID ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
+                : 'ID Partner'}
             </label>
             <input
               type="text"
@@ -202,8 +204,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               required
               className={styles.input}
               placeholder={selectedPlatform
-                ? `Enter your ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} ID`
-                : 'Enter your partner ID'}
+                ? `Nhập ID ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
+                : 'Nhập ID partner của bạn'}
               disabled={loading || success}
               autoComplete="username"
               inputMode="text"
@@ -213,7 +215,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           {/* Password Input */}
           <div className={styles.inputGroup}>
             <label htmlFor="password" className={styles.label}>
-              Password
+              Mật khẩu
             </label>
             <input
               type="password"
@@ -222,7 +224,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               onChange={(e) => setPassword(e.target.value)}
               required
               className={styles.input}
-              placeholder="Enter your password"
+              placeholder="Nhập mật khẩu của bạn"
               disabled={loading || success}
               autoComplete="current-password"
             />
@@ -238,7 +240,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           {/* Success Message */}
           {success && (
             <div className={styles.success} role="status">
-              Login successful! Redirecting...
+              Đăng nhập thành công! Đang chuyển hướng...
             </div>
           )}
 
@@ -248,7 +250,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
             className={styles.submitButton}
             disabled={loading || success}
           >
-            {loading ? 'Logging in…' : success ? 'Success!' : 'Login'}
+            {loading ? 'Đang đăng nhập…' : success ? 'Thành công!' : 'Đăng nhập'}
           </button>
         </form>
 

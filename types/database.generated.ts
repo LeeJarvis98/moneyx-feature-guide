@@ -115,6 +115,7 @@ export type Database = {
           partner_type: string | null
           platform_accounts: Json[]
           platform_ref_links: Json[]
+          selected_platform: Json[]
           this_month_tradi_com: number
           total_client_lots: number
           total_client_reward: number
@@ -143,6 +144,7 @@ export type Database = {
           partner_type?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
+          selected_platform?: Json[]
           this_month_tradi_com?: number
           total_client_lots?: number
           total_client_reward?: number
@@ -171,6 +173,7 @@ export type Database = {
           partner_type?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
+          selected_platform?: Json[]
           this_month_tradi_com?: number
           total_client_lots?: number
           total_client_reward?: number
