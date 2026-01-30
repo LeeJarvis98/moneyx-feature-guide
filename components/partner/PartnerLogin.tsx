@@ -179,13 +179,13 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       <div className={styles.card}>
         <h2 className={styles.title}>
           {selectedPlatform
-            ? `Đăng nhập ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
-            : 'Đăng nhập Partner'}
+            ? `Đăng nhập Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
+            : 'Đăng nhập Đối tác'}
         </h2>
         <p className={styles.subtitle}>
           {selectedPlatform
-            ? `Kết nối trực tiếp với thông tin đăng nhập partner ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
-            : 'Kết nối trực tiếp với thông tin đăng nhập partner của bạn'}
+            ? `Kết nối trực tiếp với thông tin đăng nhập Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
+            : 'Kết nối trực tiếp với thông tin đăng nhập Đối tác của bạn'}
         </p>
 
         <form onSubmit={handleLogin} className={styles.form}>
@@ -194,7 +194,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
             <label htmlFor="partnerId" className={styles.label}>
               {selectedPlatform
                 ? `ID ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
-                : 'ID Partner'}
+                : 'ID Đối tác'}
             </label>
             <input
               type="text"
@@ -204,8 +204,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               required
               className={styles.input}
               placeholder={selectedPlatform
-                ? `Nhập ID ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
-                : 'Nhập ID partner của bạn'}
+                ? `Nhập ID Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
+                : 'Nhập ID Đối tác của bạn'}
               disabled={loading || success}
               autoComplete="username"
               inputMode="text"

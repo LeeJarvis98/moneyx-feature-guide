@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
 import PartnerAgreement from './PartnerAgreement';
+import WelcomeScreen from './WelcomeScreen';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
@@ -15,9 +16,10 @@ interface PartnerAppProps {
   setIsAuthenticated: (value: boolean) => void;
   onAgreementVisibilityChange?: (visible: boolean) => void;
   partnerRank?: string;
+  loadingPlatforms?: boolean;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank, loadingPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   // Check if user has partner rank badge (means they're already a partner)
   // ADMIN users should also skip the agreement and go directly to login
@@ -25,6 +27,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
   const isAdmin = partnerRank === 'ADMIN';
   const [isPartner, setIsPartner] = useState(!!hasPartnerRank || isAdmin);
   const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
+  const [hasSelectedPlatforms, setHasSelectedPlatforms] = useState<boolean | null>(null);
 
   // Function to check partner status from Google Sheets
   const checkPartnerStatus = async (partnerId: string) => {
@@ -46,6 +49,42 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     }
     return false;
   };
+
+  // Check if user has selected platforms in database
+  useEffect(() => {
+    const checkSelectedPlatforms = async () => {
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (!userId) {
+        setHasSelectedPlatforms(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/get-selected-platforms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partnerId: userId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const platforms = data.selectedPlatforms || [];
+          console.log('[PartnerApp] User has selected platforms:', platforms.length > 0, platforms);
+          setHasSelectedPlatforms(platforms.length > 0);
+        } else {
+          setHasSelectedPlatforms(null);
+        }
+      } catch (error) {
+        console.error('[PartnerApp] Error checking selected platforms:', error);
+        setHasSelectedPlatforms(null);
+      }
+    };
+
+    // Only check when platform loading completes
+    if (!loadingPlatforms) {
+      checkSelectedPlatforms();
+    }
+  }, [loadingPlatforms]);
 
   // Check if user is already a partner and if authenticated on mount
   useEffect(() => {
@@ -122,10 +161,10 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     }
   }, [checking, isAuthenticated, isPartner, onAgreementVisibilityChange]);
 
-  if (checking) {
+  if (checking || loadingPlatforms || hasSelectedPlatforms === null) {
     return (
       <div className={styles.checkingAuth}>
-        Checking authentication...
+        {loadingPlatforms || hasSelectedPlatforms === null ? 'Đang tải...' : 'Checking authentication...'}
       </div>
     );
   }
@@ -141,11 +180,20 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onAsideContentChange={onAsideContentChange}
         />
       ) : isPartner ? (
-        <PartnerLogin 
-          onLoginSuccess={() => setIsAuthenticated(true)} 
-          selectedPlatform={selectedPlatform}
-          onAsideContentChange={onAsideContentChange}
-        />
+        !hasSelectedPlatforms ? (
+          <WelcomeScreen />
+        ) : selectedPlatform ? (
+          <PartnerLogin 
+            onLoginSuccess={() => setIsAuthenticated(true)} 
+            selectedPlatform={selectedPlatform}
+            onAsideContentChange={onAsideContentChange}
+          />
+        ) : (
+          <div className={styles.noPlatformMessage}>
+            <h3>Vui lòng chọn một sàn</h3>
+            <p>Nhấp vào một sàn trong thanh điều hướng để đăng nhập.</p>
+          </div>
+        )
       ) : (
         <PartnerAgreement 
           onAccept={handleAcceptTerms}

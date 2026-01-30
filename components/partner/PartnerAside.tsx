@@ -61,6 +61,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [isMounted, setIsMounted] = useState(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [loadingPlatforms, setLoadingPlatforms] = useState(true);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -92,10 +93,12 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
         
         console.log('[PartnerAside] Loaded selected platforms:', platforms);
         setSelectedPlatforms(platforms);
+        setHasLoadedData(true);
       } catch (error) {
         console.error('[PartnerAside] Error loading selected platforms:', error);
         // On error, show all platforms
         setSelectedPlatforms([]);
+        setHasLoadedData(false);
       } finally {
         setLoadingPlatforms(false);
       }
@@ -194,9 +197,11 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   }
 
   // Filter platforms based on selected platforms
-  const visiblePlatforms = selectedPlatforms.length > 0
+  const visiblePlatforms = !hasLoadedData
+    ? PLATFORMS // Show all platforms if data hasn't been loaded yet
+    : selectedPlatforms.length > 0
     ? PLATFORMS.filter(p => selectedPlatforms.includes(p.key))
-    : PLATFORMS;
+    : []; // Show nothing if loaded data is empty array
 
   return (
     <div className={styles.container}>

@@ -16,9 +16,10 @@ interface PartnerNavBarProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAuthenticated, onLogout }: PartnerNavBarProps) {
+export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAuthenticated, onLogout, onLoadingChange }: PartnerNavBarProps) {
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState<string | null>(null);
@@ -27,6 +28,7 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const [savingPlatforms, setSavingPlatforms] = useState(false);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [loadingPlatforms, setLoadingPlatforms] = useState(true);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
 
   // Get partnerId from storage
   useEffect(() => {
@@ -36,46 +38,50 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
     }
   }, []);
 
-  // Load selected platforms from database when authenticated
+  // Function to load platforms from database (reusable)
+  const loadPlatformsFromDatabase = async () => {
+    if (!partnerId) {
+      setLoadingPlatforms(false);
+      setSelectedPlatforms([]);
+      setHasLoadedData(false);
+      onLoadingChange?.(false);
+      return;
+    }
+
+    try {
+      setLoadingPlatforms(true);
+      onLoadingChange?.(true);
+      const response = await fetch('/api/get-selected-platforms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch selected platforms');
+      }
+
+      const data = await response.json();
+      const platforms = data.selectedPlatforms || [];
+      
+      console.log('[PartnerNavBar] Loaded selected platforms:', platforms);
+      setSelectedPlatforms(platforms);
+      setHasLoadedData(true);
+    } catch (error) {
+      console.error('[PartnerNavBar] Error loading selected platforms:', error);
+      // On error, show empty array and mark as not loaded
+      setSelectedPlatforms([]);
+      setHasLoadedData(false);
+    } finally {
+      setLoadingPlatforms(false);
+      onLoadingChange?.(false);
+    }
+  };
+
+  // Load selected platforms from database when partnerId is available
   useEffect(() => {
-    const loadSelectedPlatforms = async () => {
-      if (!partnerId || !isAuthenticated) {
-        setLoadingPlatforms(false);
-        // If not authenticated, show all non-disabled platforms by default
-        if (!isAuthenticated) {
-          setSelectedPlatforms([]);
-        }
-        return;
-      }
-
-      try {
-        setLoadingPlatforms(true);
-        const response = await fetch('/api/get-selected-platforms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partnerId }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch selected platforms');
-        }
-
-        const data = await response.json();
-        const platforms = data.selectedPlatforms || [];
-        
-        console.log('[PartnerNavBar] Loaded selected platforms:', platforms);
-        setSelectedPlatforms(platforms);
-      } catch (error) {
-        console.error('[PartnerNavBar] Error loading selected platforms:', error);
-        // On error, show all non-disabled platforms
-        setSelectedPlatforms([]);
-      } finally {
-        setLoadingPlatforms(false);
-      }
-    };
-
-    loadSelectedPlatforms();
-  }, [partnerId, isAuthenticated]);
+    loadPlatformsFromDatabase();
+  }, [partnerId]);
 
   // Handle escape key to close modals
   useEffect(() => {
@@ -158,6 +164,10 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
       }
 
       console.log('[PartnerNavBar] Successfully saved selected platforms:', selectedPlatforms);
+      
+      // Reload platforms from database to ensure UI is in sync
+      await loadPlatformsFromDatabase();
+      
       setShowAddPlatformModal(false);
     } catch (error) {
       console.error('[PartnerNavBar] Error saving platforms:', error);
@@ -170,7 +180,7 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const handleCancelAddPlatform = async () => {
     setShowAddPlatformModal(false);
     // Reload the original selection from database
-    if (partnerId && isAuthenticated) {
+    if (partnerId) {
       try {
         const response = await fetch('/api/get-selected-platforms', {
           method: 'POST',
@@ -228,8 +238,8 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
 
   return (
     <div className={styles.navbar}>
-      {/* Add Platform Button - Only shown when authenticated */}
-      {isAuthenticated && (
+      {/* Add Platform Button - Only shown when NOT authenticated */}
+      {!isAuthenticated && partnerId && (
         <div className={styles.addPlatformButtonContainer}>
           <button
             type="button"
@@ -257,23 +267,23 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
 
       <div className={styles.platformGrid}>
         {/* Show loading state */}
-        {loadingPlatforms && isAuthenticated && (
+        {loadingPlatforms && partnerId && (
           <div className={styles.loadingMessage}>Đang tải...</div>
         )}
         
-        {/* Filter platforms: show selected ones for authenticated users, all non-disabled for others */}
+        {/* Filter platforms: show selected ones if available, otherwise all non-disabled */}
         {!loadingPlatforms && tradingPlatforms
           .filter(platform => {
-            // If not authenticated, show all non-disabled platforms
-            if (!isAuthenticated) {
+            // If we haven't loaded data yet, show all non-disabled platforms
+            if (!hasLoadedData) {
               return !platform.disabled;
             }
-            // If authenticated but no platforms selected, show a message (handled below)
-            if (selectedPlatforms.length === 0) {
-              return false;
+            // If we have loaded data and have selected platforms, show only those
+            if (selectedPlatforms.length > 0) {
+              return selectedPlatforms.includes(platform.value);
             }
-            // Show only selected platforms
-            return selectedPlatforms.includes(platform.value);
+            // If loaded data is empty array [], don't show any platforms (user explicitly deselected all)
+            return false;
           })
           .map((platform) => (
           <button
@@ -304,8 +314,8 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
           </button>
         ))}
         
-        {/* Show empty state when authenticated but no platforms selected */}
-        {!loadingPlatforms && isAuthenticated && selectedPlatforms.length === 0 && (
+        {/* Show empty state when user has explicitly selected no platforms (loaded data is empty array) */}
+        {!loadingPlatforms && hasLoadedData && selectedPlatforms.length === 0 && (
           <div className={styles.emptyState}>
             <p>Chưa có sàn nào được chọn</p>
             <p className={styles.emptyStateHint}>Nhấn "Thêm sàn" để chọn sàn giao dịch</p>

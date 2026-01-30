@@ -37,6 +37,7 @@ export default function HomePage() {
   const [referralId, setReferralId] = useState<string>('');
   const [partnerType, setPartnerType] = useState<string>('');
   const [daysToMonthEnd, setDaysToMonthEnd] = useState<number | null>(null);
+  const [loadingPlatforms, setLoadingPlatforms] = useState(false);
   const theme = useMantineTheme();
 
   // Fetch Internet time and calculate days to month end
@@ -594,6 +595,7 @@ export default function HomePage() {
                 onPlatformSelect={setSelectedPlatform}
                 isAuthenticated={isPartnerAuthenticated}
                 onLogout={() => setIsPartnerAuthenticated(false)}
+                onLoadingChange={setLoadingPlatforms}
               />
             )}
             {navigationSection === 'library' && activeTab === 'documentation' && (
@@ -739,6 +741,7 @@ export default function HomePage() {
                       setIsAuthenticated={setIsPartnerAuthenticated}
                       onAgreementVisibilityChange={setShowPartnerAgreement}
                       partnerRank={partnerRank}
+                      loadingPlatforms={loadingPlatforms}
                     />
                   </Tabs.Panel>
                 </>

@@ -1,0 +1,116 @@
+.welcomeScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 0px;
+}
+
+.welcomeContent {
+  max-width: 600px;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.welcomeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFB81C 100%);
+  border-radius: 50%;
+  color: #000000;
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+}
+
+.welcomeContent h2 {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFD700 0%, #FFB81C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcomeDescription {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.welcomeSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.step:hover {
+  background: rgba(255, 215, 0, 0.08);
+  border-color: rgba(255, 215, 0, 0.4);
+  transform: translateX(8px);
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD700 0%, #FFB81C 100%);
+  color: #000000;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepText strong {
+  font-size: 16px;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.stepText span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.welcomeHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 10px;
+  background: rgba(255, 184, 28, 0.1);
+  border: 1px solid rgba(255, 184, 28, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.welcomeHint svg {
+  flex-shrink: 0;
+  color: #FFB81C;
+}
