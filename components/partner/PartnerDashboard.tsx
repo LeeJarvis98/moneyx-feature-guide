@@ -6,7 +6,6 @@ import { exnessApi } from '@/lib/exness/api';
 import ClientReports from './ClientReports';
 import PartnerSystem from './PartnerSystem';
 import AccumulationHistory from './AccumulationHistory';
-import BrokerSystem from './BrokerSystem';
 import ChangeForm from './ChangeForm';
 import styles from './PartnerDashboard.module.css';
 
@@ -16,7 +15,7 @@ interface PartnerDashboardProps {
 }
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
-  const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem' | 'accumulationHistory' | 'brokerSystem' | 'changeForm'>('reports');
+  const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem' | 'accumulationHistory' | 'changeForm'>('reports');
 
   // Update aside content when active section changes
   useEffect(() => {
@@ -75,14 +74,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             />
             
             <NavLink
-              label="Broker System"
-              active={activeSection === 'brokerSystem'}
-              fw={activeSection === 'brokerSystem' ? 700 : undefined}
-              onClick={() => setActiveSection('brokerSystem')}
-              color="#FFB81C"
-            />
-            
-            <NavLink
               label="Đổi hình thức"
               active={activeSection === 'changeForm'}
               fw={activeSection === 'changeForm' ? 700 : undefined}
@@ -114,7 +105,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         {activeSection === 'reports' && <ClientReports autoFetch={true} />}
         {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} />}
         {activeSection === 'accumulationHistory' && <AccumulationHistory autoFetch={true} />}
-        {activeSection === 'brokerSystem' && <BrokerSystem autoFetch={true} />}
         {activeSection === 'changeForm' && <ChangeForm autoFetch={true} />}
       </div>
     </div>
