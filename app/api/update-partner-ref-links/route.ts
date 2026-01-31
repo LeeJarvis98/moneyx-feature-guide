@@ -4,7 +4,7 @@ import type { PlatformRefLinks } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { partnerId, refLinks } = await request.json();
+    const { partnerId, refLinks, supportLink } = await request.json();
 
     if (!partnerId) {
       return NextResponse.json(
@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
       // Update existing partner
       const { error: updateError } = await supabase
         .from('partners')
-        .update({ platform_ref_links: refLinksArray })
+        .update({ 
+          platform_ref_links: refLinksArray,
+          support_link: supportLink || null,
+        })
         .eq('id', partnerId);
 
       if (updateError) {
@@ -73,6 +76,7 @@ export async function POST(request: NextRequest) {
         .insert({
           id: partnerId,
           platform_ref_links: refLinksArray,
+          support_link: supportLink || null,
           platform_accounts: [],
           total_partner_com: 0,
           total_tradi_com: 0,

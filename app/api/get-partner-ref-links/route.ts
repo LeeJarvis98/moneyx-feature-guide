@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch partner data
     const { data: partner, error } = await supabase
       .from('partners')
-      .select('platform_ref_links')
+      .select('platform_ref_links, support_link')
       .eq('id', partnerId)
       .single();
 
@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       refLinks,
+      supportLink: partner?.support_link || '',
     });
   } catch (error) {
     console.error('[get-partner-ref-links] Error:', error);

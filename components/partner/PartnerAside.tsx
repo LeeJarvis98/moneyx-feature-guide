@@ -62,6 +62,23 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [loadingPlatforms, setLoadingPlatforms] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
+  const [supportLink, setSupportLink] = useState('');
+  const [isSupportEditMode, setIsSupportEditMode] = useState(false);
+  const [originalRefLinks, setOriginalRefLinks] = useState<PlatformRefLinks>({
+    exness: '',
+    binance: '',
+    bingx: '',
+    bitget: '',
+    bybit: '',
+    gate: '',
+    htx: '',
+    kraken: '',
+    kucoin: '',
+    mexc: '',
+    okx: '',
+    upbit: '',
+  });
+  const [originalSupportLink, setOriginalSupportLink] = useState('');
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -123,9 +140,14 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
 
         if (data.refLinks) {
           setRefLinks(data.refLinks);
+          setOriginalRefLinks(data.refLinks);
           if (onRefLinksChange) {
             onRefLinksChange(data.refLinks);
           }
+        }
+        if (data.supportLink) {
+          setSupportLink(data.supportLink);
+          setOriginalSupportLink(data.supportLink);
         }
       } catch (err) {
         console.error('Error loading ref links:', err);
@@ -157,6 +179,29 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
     setError(null);
   };
 
+  const handleSupportLinkChange = (value: string) => {
+    // Auto-prepend https:// if not present
+    let processedValue = value.trim();
+    if (processedValue && !processedValue.startsWith('http://') && !processedValue.startsWith('https://')) {
+      processedValue = 'https://' + processedValue;
+    }
+    setSupportLink(processedValue);
+    setSuccess(false);
+    setError(null);
+  };
+
+  const hasChanges = () => {
+    // Check if support link has changed
+    const supportLinkChanged = supportLink !== originalSupportLink;
+    
+    // Check if any ref link has changed
+    const refLinksChanged = Object.keys(refLinks).some(
+      key => refLinks[key as keyof PlatformRefLinks] !== originalRefLinks[key as keyof PlatformRefLinks]
+    );
+    
+    return supportLinkChanged || refLinksChanged;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -169,6 +214,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
         body: JSON.stringify({
           partnerId,
           refLinks,
+          supportLink,
         }),
       });
 
@@ -180,6 +226,9 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
 
       setSuccess(true);
       setIsEditMode(false);
+      setIsSupportEditMode(false);
+      setOriginalRefLinks(refLinks);
+      setOriginalSupportLink(supportLink);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể lưu. Vui lòng thử lại.');
@@ -205,11 +254,57 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
 
   return (
     <div className={styles.container}>
+      {/* Support Link Section */}
       <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <h3 className={styles.title}>Link Hỗ Trợ Khách</h3>
+          <button
+            onClick={() => {
+              if (isSupportEditMode) {
+                setSupportLink(originalSupportLink);
+              }
+              setIsSupportEditMode(!isSupportEditMode);
+            }}
+            className={styles.editButton}
+            disabled={saving}
+          >
+            {isSupportEditMode ? 'Hủy' : 'Chỉnh sửa'}
+          </button>
+        </div>
+        <p className={styles.subtitle}>
+          {isSupportEditMode ? 'Chỉnh sửa link hỗ trợ khách hàng của bạn' : 'Xem link hỗ trợ khách hàng của bạn'}
+        </p>
+      </div>
+
+      <div className={styles.formContainer}>
+        <div className={styles.inputGroup}>
+          <label htmlFor="support-link" className={styles.label}>
+            Link Hỗ Trợ
+          </label>
+          <input
+            type="url"
+            id="support-link"
+            value={supportLink}
+            onChange={(e) => handleSupportLinkChange(e.target.value)}
+            placeholder="Nhập link hỗ trợ khách hàng (Telegram, WhatsApp, etc.)"
+            className={styles.input}
+            disabled={saving || !isSupportEditMode}
+            readOnly={!isSupportEditMode}
+          />
+        </div>
+      </div>
+
+      {/* Referral Links Section */}
+      <div className={styles.header} style={{ marginTop: '2rem' }}>
         <div className={styles.headerTop}>
           <h3 className={styles.title}>Link Giới Thiệu Sàn</h3>
           <button
-            onClick={() => setIsEditMode(!isEditMode)}
+            onClick={() => {
+              if (isEditMode) {
+                setRefLinks(originalRefLinks);
+              }
+              setIsEditMode(!isEditMode);
+            }}
             className={styles.editButton}
             disabled={saving}
           >
@@ -251,9 +346,9 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
-      {success && <div className={styles.success}>Lưu link giới thiệu thành công!</div>}
+      {success && <div className={styles.success}>Lưu thành công!</div>}
 
-      {isEditMode && (
+      {(isEditMode || isSupportEditMode) && hasChanges() && (
         <button
           onClick={handleSave}
           disabled={saving}
