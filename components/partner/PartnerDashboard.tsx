@@ -70,13 +70,13 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
   // Render aside content
   const renderAsideContent = () => {
     return (
-      <Stack gap="xs" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+      <Stack gap="xs" className={styles.dashboardStack}>
+        <div className={styles.dashboardFlex}>
+          <h2 className={styles.dashboardHeading}>
             Partner Dashboard
           </h2>
           
-          <Stack gap="xs" style={{ marginTop: '16px' }}>
+          <Stack gap="xs" className={styles.dashboardNavStack}>
             <NavLink
               label="Client"
               active={activeSection === 'reports'}
@@ -113,8 +113,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         
         <button 
           onClick={handleLogout} 
-          className={styles.logoutButton}
-          style={{ marginTop: 'auto', width: '100%' }}
+          className={`${styles.logoutButton} ${styles.logoutButtonWrapper}`}
         >
           Logout
         </button>

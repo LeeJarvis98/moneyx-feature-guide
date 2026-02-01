@@ -65,3 +65,28 @@
   font-weight: 700;
   line-height: 1.2;
 }
+
+/* Dynamic color via data attributes */
+.cardValue[data-color="#4ade80"] {
+  color: #4ade80;
+}
+
+.cardValue[data-color="#60a5fa"] {
+  color: #60a5fa;
+}
+
+.cardValue[data-color="#f472b6"] {
+  color: #f472b6;
+}
+
+.cardValue[data-color="#fbbf24"] {
+  color: #fbbf24;
+}
+
+.cardValue[data-color="#a78bfa"] {
+  color: #a78bfa;
+}
+
+.cardValue[data-color="#fb923c"] {
+  color: #fb923c;
+}

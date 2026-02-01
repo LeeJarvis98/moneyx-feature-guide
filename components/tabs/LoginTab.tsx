@@ -138,7 +138,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
           </div>
 
           <div className={styles.optionsRow}>
-            <button type="button" className={styles.forgotLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button type="button" className={`${styles.forgotLink} ${styles.buttonReset}`}>
               Quên mật khẩu?
             </button>
           </div>
@@ -178,9 +178,8 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
             Chưa có tài khoản?{' '}
             <button
               type="button"
-              className={styles.signUpLink}
+              className={`${styles.signUpLink} ${styles.buttonReset}`}
               onClick={() => setModalOpened(true)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Đăng ký ngay
             </button>

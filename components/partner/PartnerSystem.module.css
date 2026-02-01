@@ -74,3 +74,28 @@
   color: #FFFFFF;
   margin: 0;
 }
+
+/* Section heading styles */
+.sectionHeading {
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.sectionSubheading {
+  margin-top: -30px;
+  margin-bottom: -10px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.sectionListHeading {
+  margin-top: 2rem;
+  margin-bottom: -20px;
+  font-size: 1.25rem;
+}
+
+/* Highlighted strong text */
+.highlightedStrong {
+  color: #FFB81C;
+}

@@ -94,7 +94,7 @@ export default function AccumulationHistory({ autoFetch = false }: AccumulationH
             <Grid.Col key={index} span={{ base: 12, sm: 6, md: 4 }}>
               <div className={styles.rewardCard}>
                 <div className={styles.cardTitle}>{card.title}</div>
-                <div className={styles.cardValue} style={{ color: card.color }}>
+                <div className={styles.cardValue} data-color={card.color}>
                   {formatCurrency(card.value)}
                 </div>
               </div>

@@ -547,7 +547,7 @@ export function GetBotTab() {
                         aria-label={`Select ${platformOption.label} trading platform`}
                         aria-disabled={platformOption.disabled}
                       >
-                        <div className={classes.cardContent} style={{ marginTop: '-20px' }}>
+                        <div className={`${classes.cardContent} ${classes.cardContentAdjusted}`}>
                           <Title order={6} className={classes.platformTitle}>
                             {platformOption.label}
                           </Title>
@@ -582,16 +582,16 @@ export function GetBotTab() {
             <Paper shadow="sm" p="xl" radius="md" mt="xl">
               <Stack gap="xs">
                 <Group justify="space-between" align="flex-start">
-                  <Box style={{ flex: 1 }}>
+                  <Box className={classes.flexContainer}>
                     <Title order={3} mb="md">
                       Xác thực Email của bạn
                     </Title>
                     <Text c="dimmed" mb="lg">
-                      Nhập email đã đăng ký với <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong> để kiểm tra tình trạng cùng hệ thống
+                      Nhập email đã đăng ký với <strong className={classes.highlightedStrong}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong> để kiểm tra tình trạng cùng hệ thống
                     </Text>
                   </Box>
 
-                  <Stack style={{ flex: 1 }} gap="md">
+                  <Stack className={classes.flexContainer} gap="md">
                     <Group align="flex-end" gap="md">
                       <TextInput
                         type="email"
@@ -758,7 +758,7 @@ export function GetBotTab() {
                       </Paper>
                       {selectedAccounts.length > 0 && (
                         <Text size="sm" c="dimmed" mt="xs">
-                          Mỗi email chỉ được sử dụng tối đa <strong style={{ color: '#FFB81C' }}>{selectedAccounts.length}/3</strong> ID để cấp bản quyền Bot.
+                          Mỗi email chỉ được sử dụng tối đa <strong className={classes.highlightedStrong}>{selectedAccounts.length}/3</strong> ID để cấp bản quyền Bot.
                         </Text>
                       )}
                     </Box>
@@ -892,10 +892,10 @@ export function GetBotTab() {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 9 }}>
-                  <Paper withBorder radius="md" style={{ overflow: 'hidden', height: '100%', minHeight: 400 }}>
+                  <Paper withBorder radius="md" className={classes.iframeWrapper}>
                     <iframe
                       src="https://drive.google.com/file/d/1ekRrm-JRk-dmMsINBCp3ZiCWStsVxZpM/preview"
-                      style={{ width: '100%', height: '100%', minHeight: 400, border: 'none' }}
+                      className={classes.videoIframe}
                       allow="autoplay"
                       title="Video hướng dẫn tải Bot"
                       aria-label="Tutorial video for downloading the bot"
@@ -942,12 +942,12 @@ export function GetBotTab() {
 
           <Accordion.Item value="no-account">
             <Accordion.Control>
-              <Text fw={600} size="lg">Chưa có tài khoản <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
+              <Text fw={600} size="lg">Chưa có tài khoản <strong className={classes.highlightedStrong}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="md">
                 <Text size="sm" c="dimmed">
-                  Bạn chưa có tài khoản trên sàn <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>?
+                  Bạn chưa có tài khoản trên sàn <strong className={classes.highlightedStrong}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>?
                   Thực hiện các bước dưới đây.
                 </Text>
                 <Group grow>
@@ -979,13 +979,13 @@ export function GetBotTab() {
 
           <Accordion.Item value="has-account">
             <Accordion.Control>
-              <Text fw={600} size="lg">Đã có tài khoản <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
+              <Text fw={600} size="lg">Đã có tài khoản <strong className={classes.highlightedStrong}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong></Text>
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="md">
                 <Text size="sm" c="dimmed">
-                  Nếu đã có sẵn tài khoản tại <strong style={{ color: '#FFB81C' }}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>.
-                  Vui lòng <strong style={{ color: '#FFB81C' }}>nhắn support chuyển link</strong> sang hệ thống Tradi để tiến hành cấp bản quyền.
+                  Nếu đã có sẵn tài khoản tại <strong className={classes.highlightedStrong}>{tradingPlatforms.find((p) => p.value === selectedPlatform)?.label}</strong>.
+                  Vui lòng <strong className={classes.highlightedStrong}>nhắn support chuyển link</strong> sang hệ thống Tradi để tiến hành cấp bản quyền.
                 </Text>
                 <Group grow>
                   <Button

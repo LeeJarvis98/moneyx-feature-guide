@@ -223,9 +223,9 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
 
          {partnerData && (
             <>
-               <h3 style={{ marginTop: '2rem', marginBottom: '0.5rem', fontSize: '1.25rem' }}>Tổng Commission & Tích lũy</h3>
-               <p style={{ marginTop: '-30px', marginBottom: '-10px', fontSize: '0.9rem', opacity: 0.8 }}>
-                  Hiện đã tích lũy được <strong style={{ color: '#FFB81C' }}>{formatNumber(partnerData.accum_time_remaining, 0)}</strong> ngày, ngày 1 hằng tháng sẽ được làm mới.
+               <h3 className={styles.sectionHeading}>Tổng Commission & Tích lũy</h3>
+               <p className={styles.sectionSubheading}>
+                  Hiện đã tích lũy được <strong className={styles.highlightedStrong}>{formatNumber(partnerData.accum_time_remaining, 0)}</strong> ngày, ngày 1 hằng tháng sẽ được làm mới.
                </p>
                <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
@@ -257,7 +257,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                </div>
 
                {/* Partner List Table */}
-               <h3 style={{ marginTop: '2rem', marginBottom: '-20px', fontSize: '1.25rem' }}>Danh sách Đối Tác ({partnerData.total_partners})</h3>
+               <h3 className={styles.sectionListHeading}>Danh sách Đối Tác ({partnerData.total_partners})</h3>
 
                <TextInput
                   placeholder="Tìm kiếm theo ID, email, hạng hoặc loại..."

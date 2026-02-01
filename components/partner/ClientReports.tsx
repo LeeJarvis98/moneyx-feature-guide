@@ -191,17 +191,14 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
             </div>
           </div>
 
-          <h3 style={{ marginTop: '2rem', marginBottom: '-20px', fontSize: '1.25rem' }}>Danh sách tài khoản ({clientAccountsReport.totals.count})</h3>
+          <h3 className={styles.sectionListHeading}>Danh sách tài khoản ({clientAccountsReport.totals.count})</h3>
 
           {/* Filter Input */}
           <TextInput
             placeholder="Tìm kiếm theo tài khoản, email hoặc ngày..."
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.currentTarget.value)}
-            style={{ 
-              marginBottom: '-10px',
-              maxWidth: '400px'
-            }}
+            className={styles.filterInput}
             styles={{
               input: {
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',

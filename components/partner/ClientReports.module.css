@@ -74,3 +74,16 @@
   color: #FFFFFF;
   margin: 0;
 }
+
+/* Section heading styles */
+.sectionListHeading {
+  margin-top: 2rem;
+  margin-bottom: -20px;
+  font-size: 1.25rem;
+}
+
+/* Filter input styles */
+.filterInput {
+  margin-bottom: -10px;
+  max-width: 400px;
+}

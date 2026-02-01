@@ -99,6 +99,12 @@
   transition: all 0.2s;
 }
 
+.buttonReset {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
 .eyeButton:hover:not(:disabled) {
   color: #FFFFFF;
   background: rgba(255, 255, 255, 0.1);

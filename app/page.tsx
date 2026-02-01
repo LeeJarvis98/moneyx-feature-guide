@@ -461,12 +461,12 @@ export default function HomePage() {
                               <span className={classes.scrollingText}>
                                 {daysToMonthEnd === 0 ? (
                                   <>
-                                    <span style={{ color: '#FFB81C', fontWeight: 700 }}>Ngày mai</span>
+                                    <span className={classes.highlightText}>Ngày mai</span>
                                     {' sẽ chốt hoa hồng'}
                                   </>
                                 ) : (
                                   <>
-                                    <span style={{ color: '#FFB81C', fontWeight: 700 }}>{daysToMonthEnd} ngày</span>
+                                    <span className={classes.highlightText}>{daysToMonthEnd} ngày</span>
                                     {' nữa đến kỳ chốt hoa hồng'}
                                   </>
                                 )}
@@ -480,17 +480,15 @@ export default function HomePage() {
                   <Group gap="md">
                     {isUserLoggedIn && (
                       <button
-                        className={`${classes.link} ${navigationSection === 'features' ? classes.linkActive : ''}`}
+                        className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'features' ? classes.linkActive : ''}`}
                         onClick={() => handleNavigationChange('features')}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                       >
                         Cổng đối tác
                       </button>
                     )}
                     <button
-                      className={`${classes.link} ${navigationSection === 'library' ? classes.linkActive : ''}`}
+                      className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'library' ? classes.linkActive : ''}`}
                       onClick={() => handleNavigationChange('library')}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       Học viện
                     </button>

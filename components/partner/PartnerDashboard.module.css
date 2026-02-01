@@ -470,3 +470,52 @@
     font-size: 22px;
   }
 }
+
+/* Dashboard layout styles */
+.dashboardStack {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardFlex {
+  flex: 1;
+}
+
+.dashboardHeading {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.dashboardNavStack {
+  margin-top: 16px;
+}
+
+.dashboardActionButton {
+  padding: 8px 16px;
+  background: rgba(255, 184, 28, 0.1);
+  color: #FFB81C;
+  border: 1px solid #FFB81C;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboardActionButton:hover:not(:disabled) {
+  background: rgba(255, 184, 28, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 184, 28, 0.3);
+}
+
+.dashboardActionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.logoutButtonWrapper {
+  margin-top: auto;
+  width: 100%;
+}

@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       console.log('[GRANT] New accounts to insert:', newAccountIds);
 
       // === WRITE TO SUPABASE (Only new accounts) ===
-      let insertedRecords = [];
+      let insertedRecords: any[] = [];
       if (newAccountIds.length > 0) {
         console.log('[GRANT] Writing', newAccountIds.length, 'new accounts to Supabase...');
         const licensedRecords = newAccountIds.map((accountId) => ({
