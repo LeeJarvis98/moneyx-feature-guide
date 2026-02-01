@@ -17,7 +17,6 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -44,7 +43,6 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
         body: JSON.stringify({
           userId: partnerId,
           password,
-          rememberMe,
           turnstileToken,
         }),
       });
@@ -56,11 +54,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
       }
 
       if (data.userId) {
-        if (rememberMe) {
-          localStorage.setItem('userId', data.userId);
-        } else {
-          sessionStorage.setItem('userId', data.userId);
-        }
+        sessionStorage.setItem('userId', data.userId);
         
         // Store referral ID from the API response (user's referral_id from users table)
         if (data.referralId) {
@@ -91,15 +85,15 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h2 className={styles.title}>Đăng nhập</h2>
+        <h2 className={styles.title}>Đăng nhập VNCLC</h2>
         <p className={styles.subtitle}>
-          Đăng nhập vào tài khoản của bạn
+          Đăng nhập vào tài khoản VNCLC của bạn
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="partnerId" className={styles.label}>
-              ID
+              ID VNCLC
             </label>
             <input
               type="text"
@@ -144,19 +138,6 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
           </div>
 
           <div className={styles.optionsRow}>
-            <div className={styles.checkboxGroup}>
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className={styles.checkbox}
-                disabled={loading || success}
-              />
-              <label htmlFor="rememberMe" className={styles.checkboxLabel}>
-                Ghi nhớ đăng nhập
-              </label>
-            </div>
             <button type="button" className={styles.forgotLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
               Quên mật khẩu?
             </button>

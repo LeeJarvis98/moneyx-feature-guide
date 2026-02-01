@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           // Found a match, now fetch partner data using the id
           const { data: partnerData, error: partnerError } = await supabase
             .from('partners')
-            .select('id, platform_ref_links')
+            .select('id, platform_ref_links, support_link, selected_platform')
             .eq('id', ownReferralMatch.id)
             .maybeSingle();
 
@@ -155,6 +155,8 @@ export async function POST(request: NextRequest) {
             partnerPlatformData = {
               partnerId: partnerData.id,
               platformRefLinks: partnerData.platform_ref_links,
+              supportLink: partnerData.support_link,
+              selectedPlatform: partnerData.selected_platform,
             };
           }
         }

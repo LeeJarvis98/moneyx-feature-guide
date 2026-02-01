@@ -62,6 +62,8 @@ export function GetBotTab() {
   const [deletingLicenses, setDeletingLicenses] = useState(false);
   const [userTypeModalOpen, setUserTypeModalOpen] = useState(false);
   const [partnerPlatformUrls, setPartnerPlatformUrls] = useState<Record<string, string>>({});
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [supportLink, setSupportLink] = useState<string>('https://zalo.me/0353522252/');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Load partner platform data on mount
@@ -71,6 +73,8 @@ export function GetBotTab() {
         const storedData = sessionStorage.getItem('partnerPlatformData');
         if (storedData) {
           const platformData = JSON.parse(storedData);
+          
+          // Load platform URLs
           if (platformData.platformRefLinks && Array.isArray(platformData.platformRefLinks)) {
             const urlMap: Record<string, string> = {};
             platformData.platformRefLinks.forEach((linkObj: any) => {
@@ -85,6 +89,19 @@ export function GetBotTab() {
             });
             setPartnerPlatformUrls(urlMap);
             console.log('[GetBotTab] Loaded partner platform URLs:', urlMap);
+          }
+          
+          // Load selected platforms
+          if (platformData.selectedPlatform && Array.isArray(platformData.selectedPlatform)) {
+            const platforms = platformData.selectedPlatform.map((p: string) => p.toLowerCase());
+            setSelectedPlatforms(platforms);
+            console.log('[GetBotTab] Loaded selected platforms:', platforms);
+          }
+          
+          // Load support link
+          if (platformData.supportLink && typeof platformData.supportLink === 'string') {
+            setSupportLink(platformData.supportLink);
+            console.log('[GetBotTab] Loaded support link:', platformData.supportLink);
           }
         }
       } catch (error) {
@@ -492,7 +509,12 @@ export function GetBotTab() {
                 </Group>
 
                 <Grid gutter="md" justify="center">
-                  {tradingPlatforms.map((platformOption) => (
+                  {tradingPlatforms
+                    .filter((platformOption) => 
+                      selectedPlatforms.length === 0 || 
+                      selectedPlatforms.includes(platformOption.value.toLowerCase())
+                    )
+                    .map((platformOption) => (
                     <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 2.4 }}>
                       <Paper
                         shadow="md"
@@ -968,7 +990,7 @@ export function GetBotTab() {
                 <Group grow>
                   <Button
                     component="a"
-                    href="https://zalo.me/0353522252/"
+                    href={supportLink}
                     target="_blank"
                     size="md"
                     variant="outline"

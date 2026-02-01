@@ -236,13 +236,24 @@ export default function HomePage() {
 
   // Handle user logout
   const handleUserLogout = () => {
+    // Clear user session
     localStorage.removeItem('userId');
     sessionStorage.removeItem('userId');
+    
+    // Clear partner-related data
+    localStorage.removeItem('partnerRank');
+    sessionStorage.removeItem('referralId');
+    sessionStorage.removeItem('partnerPlatformData');
+    
+    // Reset all user and partner states
     setIsUserLoggedIn(false);
     setLoggedInUserId(null);
     setPartnerRank('');
     setReferralId('');
     setPartnerType('');
+    setIsPartnerAuthenticated(false);
+    setSelectedPlatform(null);
+    
     // Navigate to documentation tab
     handleNavigationChange('library');
     setActiveTab('documentation');
@@ -359,7 +370,7 @@ export default function HomePage() {
                           >
                             <Text size="sm" fw={600} c="yellow">
                               {(() => {
-                                const partnerTypeDisplay = partnerType === 'DLHT' ? 'Đại lý Hệ Thống' : partnerType === 'DDT' ? 'Đối tác Tradi' : null;
+                                const partnerTypeDisplay = partnerType === 'DLHT' ? 'Đại lý Hệ Thống' : partnerType === 'DTT' ? 'Đối tác Tradi' : null;
                                 return partnerTypeDisplay ? `${partnerTypeDisplay} | Mã giới thiệu:` : 'Mã giới thiệu:';
                               })()}
                             </Text>
@@ -392,7 +403,12 @@ export default function HomePage() {
                               className={classes.countdownBanner}
                             >
                               <span className={classes.scrollingText}>
-                                {daysToMonthEnd === 0 ? 'Ngày mai sẽ chốt hoa hồng' : (
+                                {daysToMonthEnd === 0 ? (
+                                  <>
+                                    <span style={{ color: '#FFB81C', fontWeight: 700 }}>Ngày mai</span>
+                                    {' sẽ chốt hoa hồng'}
+                                  </>
+                                ) : (
                                   <>
                                     <span style={{ color: '#FFB81C', fontWeight: 700 }}>{daysToMonthEnd} ngày</span>
                                     {' nữa đến kỳ chốt hoa hồng'}
