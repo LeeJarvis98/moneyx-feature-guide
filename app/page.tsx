@@ -14,6 +14,7 @@ import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { AccountInfoTab } from '@/components/account/AccountInfoTab';
 import { AccountSettingsTab } from '@/components/account/AccountSettingsTab';
+import { exnessApi } from '@/lib/exness/api';
 import classes from './page.module.css';
 
 type NavigationSection = 'features' | 'library' | 'login' | 'account';
@@ -175,6 +176,16 @@ export default function HomePage() {
     // Set default tab for each section
     if (value === 'features') {
       setActiveTab('partner');
+      // Clear partner authentication when clicking "Cổng đối tác"
+      console.log('[HomePage] Navigating to features, clearing partner session');
+      setIsPartnerAuthenticated(false);
+      // Clear partner session using exnessApi
+      exnessApi.clearToken();
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('partnerId');
+        sessionStorage.removeItem('platformToken');
+      }
+      console.log('[HomePage] Partner session cleared');
     } else if (value === 'library') {
       setActiveTab('documentation');
     } else if (value === 'account') {
@@ -244,6 +255,11 @@ export default function HomePage() {
     localStorage.removeItem('partnerRank');
     sessionStorage.removeItem('referralId');
     sessionStorage.removeItem('partnerPlatformData');
+    
+    // Clear partner authentication using exnessApi
+    exnessApi.clearToken();
+    sessionStorage.removeItem('partnerId');
+    sessionStorage.removeItem('platformToken');
     
     // Reset all user and partner states
     setIsUserLoggedIn(false);

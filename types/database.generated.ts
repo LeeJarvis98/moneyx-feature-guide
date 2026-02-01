@@ -113,6 +113,7 @@ export type Database = {
           last_claim_refer_reward: number
           partner_list: Json[]
           partner_type: string | null
+          partner_type_change_date: string | null
           platform_accounts: Json[]
           platform_ref_links: Json[]
           selected_platform: Json[]
@@ -143,6 +144,7 @@ export type Database = {
           last_claim_refer_reward?: number
           partner_list?: Json[]
           partner_type?: string | null
+          partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
@@ -173,6 +175,7 @@ export type Database = {
           last_claim_refer_reward?: number
           partner_list?: Json[]
           partner_type?: string | null
+          partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]

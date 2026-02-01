@@ -11,19 +11,19 @@ const API_BASE = '/api/exness';
 class ExnessApiClient {
   private token: string | null = null;
 
-  // Store token in memory and localStorage
+  // Store token in memory and sessionStorage (clears on tab/window close)
   setToken(token: string) {
     this.token = token;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('exness_token', token);
+      sessionStorage.setItem('exness_token', token);
     }
   }
 
-  // Retrieve token from memory or localStorage
+  // Retrieve token from memory or sessionStorage (clears on tab/window close)
   getToken(): string | null {
     if (this.token) return this.token;
     if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('exness_token');
+      this.token = sessionStorage.getItem('exness_token');
     }
     return this.token;
   }
@@ -32,7 +32,7 @@ class ExnessApiClient {
   clearToken() {
     this.token = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('exness_token');
+      sessionStorage.removeItem('exness_token');
     }
   }
 

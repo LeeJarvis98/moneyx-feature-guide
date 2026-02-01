@@ -159,10 +159,12 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
   }, [checking, isAuthenticated, onAsideContentChange]);
 
   const handleLogout = () => {
+    console.log('[PartnerApp] Logout called');
     exnessApi.clearToken();
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
     setIsAuthenticated(false);
+    console.log('[PartnerApp] Logout complete, isAuthenticated set to false');
     // Don't set isPartner to false - they're still a partner, just not authenticated
     // This ensures they go back to PartnerLogin, not PartnerAgreement
   };

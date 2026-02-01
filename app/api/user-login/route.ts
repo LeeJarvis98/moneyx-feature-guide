@@ -6,7 +6,7 @@ import { ref } from 'process';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, password, rememberMe, turnstileToken } = await request.json();
+    const { userId, password, turnstileToken } = await request.json();
 
     // Verify Turnstile token first
     if (!turnstileToken) {

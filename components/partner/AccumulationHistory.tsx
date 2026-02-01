@@ -1,114 +1,107 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Table, Paper, Text, LoadingOverlay } from '@mantine/core';
+import { Grid } from '@mantine/core';
 import styles from './AccumulationHistory.module.css';
 
 interface AccumulationHistoryProps {
   autoFetch?: boolean;
 }
 
-interface AccumulationRecord {
-  id: string;
-  date: string;
-  amount: number;
-  type: string;
-  status: string;
-  description: string;
+interface ClaimRewards {
+  last_claim_client_reward: number;
+  last_claim_partner_reward: number;
+  last_claim_refer_reward: number;
+  claim_client_reward: number;
+  claim_partner_reward: number;
+  claim_refer_reward: number;
 }
 
 export default function AccumulationHistory({ autoFetch = false }: AccumulationHistoryProps) {
   const [loading, setLoading] = useState(false);
-  const [records, setRecords] = useState<AccumulationRecord[]>([]);
+  const [rewards, setRewards] = useState<ClaimRewards | null>(null);
 
   useEffect(() => {
     if (autoFetch) {
-      fetchAccumulationHistory();
+      fetchClaimRewards();
     }
   }, [autoFetch]);
 
-  const fetchAccumulationHistory = async () => {
+  const fetchClaimRewards = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data for demonstration
-      const mockData: AccumulationRecord[] = [
-        {
-          id: '1',
-          date: '2026-01-30',
-          amount: 1500000,
-          type: 'Commission',
-          status: 'Completed',
-          description: 'Monthly commission'
-        },
-        {
-          id: '2',
-          date: '2026-01-25',
-          amount: 500000,
-          type: 'Bonus',
-          status: 'Completed',
-          description: 'Performance bonus'
-        }
-      ];
-      setRecords(mockData);
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (!userId) {
+        console.error('No user ID found');
+        return;
+      }
+
+      const response = await fetch('/api/check-partner-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId: userId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRewards({
+          last_claim_client_reward: data.last_claim_client_reward || 0,
+          last_claim_partner_reward: data.last_claim_partner_reward || 0,
+          last_claim_refer_reward: data.last_claim_refer_reward || 0,
+          claim_client_reward: data.claim_client_reward || 0,
+          claim_partner_reward: data.claim_partner_reward || 0,
+          claim_refer_reward: data.claim_refer_reward || 0,
+        });
+      }
     } catch (error) {
-      console.error('Error fetching accumulation history:', error);
+      console.error('Error fetching claim rewards:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
-  return (
-    <div className={styles.container}>
-      <Paper className={styles.paper} pos="relative">
-        <LoadingOverlay visible={loading} />
-        
-        <div className={styles.header}>
-          <h2 className={styles.title}>Lịch sử tích lũy</h2>
-        </div>
+  const rewardCards = rewards ? [
+    { title: 'Last Claim Client Reward', value: rewards.last_claim_client_reward, color: '#FFB81C' },
+    { title: 'Last Claim Partner Reward', value: rewards.last_claim_partner_reward, color: '#FFC82E' },
+    { title: 'Last Claim Refer Reward', value: rewards.last_claim_refer_reward, color: '#FFD54F' },
+    { title: 'Claim Client Reward', value: rewards.claim_client_reward, color: '#40c057' },
+    { title: 'Claim Partner Reward', value: rewards.claim_partner_reward, color: '#51cf66' },
+    { title: 'Claim Refer Reward', value: rewards.claim_refer_reward, color: '#69db7c' },
+  ] : [];
 
-        {records.length === 0 && !loading ? (
-          <Text c="dimmed" ta="center" py="xl">
-            Chưa có dữ liệu lịch sử tích lũy
-          </Text>
-        ) : (
-          <Table className={styles.table} striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Ngày</Table.Th>
-                <Table.Th>Loại</Table.Th>
-                <Table.Th>Số tiền</Table.Th>
-                <Table.Th>Trạng thái</Table.Th>
-                <Table.Th>Mô tả</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {records.map((record) => (
-                <Table.Tr key={record.id}>
-                  <Table.Td>{new Date(record.date).toLocaleDateString('vi-VN')}</Table.Td>
-                  <Table.Td>{record.type}</Table.Td>
-                  <Table.Td className={styles.amount}>{formatCurrency(record.amount)}</Table.Td>
-                  <Table.Td>
-                    <span className={`${styles.status} ${styles[record.status.toLowerCase()]}`}>
-                      {record.status}
-                    </span>
-                  </Table.Td>
-                  <Table.Td>{record.description}</Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        )}
-      </Paper>
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <h2>Lịch sử tích lũy</h2>
+      </div>
+
+      {loading ? (
+        <div className={styles.loading}>Đang tải...</div>
+      ) : !rewards ? (
+        <div className={styles.error}>Chưa có dữ liệu lịch sử tích lũy</div>
+      ) : (
+        <Grid gutter="md">
+          {rewardCards.map((card, index) => (
+            <Grid.Col key={index} span={{ base: 12, sm: 6, md: 4 }}>
+              <div className={styles.rewardCard}>
+                <div className={styles.cardTitle}>{card.title}</div>
+                <div className={styles.cardValue} style={{ color: card.color }}>
+                  {formatCurrency(card.value)}
+                </div>
+              </div>
+            </Grid.Col>
+          ))}
+        </Grid>
+      )}
     </div>
   );
 }

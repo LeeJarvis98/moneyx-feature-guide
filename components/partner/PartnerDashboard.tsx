@@ -16,6 +16,34 @@ interface PartnerDashboardProps {
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
   const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem' | 'accumulationHistory' | 'changeForm'>('reports');
+  const [partnerType, setPartnerType] = useState<'DTT' | 'DLHT' | null>(null);
+
+  // Fetch partner type on mount
+  useEffect(() => {
+    const fetchPartnerType = async () => {
+      try {
+        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+        if (!userId) return;
+
+        const response = await fetch('/api/check-partner-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partnerId: userId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.partnerType) {
+            setPartnerType(data.partnerType);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching partner type:', error);
+      }
+    };
+
+    fetchPartnerType();
+  }, []);
 
   // Update aside content when active section changes
   useEffect(() => {
@@ -105,7 +133,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         {activeSection === 'reports' && <ClientReports autoFetch={true} />}
         {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} />}
         {activeSection === 'accumulationHistory' && <AccumulationHistory autoFetch={true} />}
-        {activeSection === 'changeForm' && <ChangeForm autoFetch={true} />}
+        {activeSection === 'changeForm' && <ChangeForm autoFetch={true} partnerType={partnerType} />}
       </div>
     </div>
   );
