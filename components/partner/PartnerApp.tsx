@@ -1,6 +1,8 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { Progress } from '@mantine/core';
+import Image from 'next/image';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
 import PartnerAgreement from './PartnerAgreement';
@@ -21,6 +23,7 @@ interface PartnerAppProps {
 
 export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank, loadingPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   // Check if user has partner rank badge (means they're already a partner)
   // ADMIN users should also skip the agreement and go directly to login
   const hasPartnerRank = partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN';
@@ -59,6 +62,9 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         return;
       }
 
+      // Simulate progress for better UX
+      setLoadingProgress(30);
+
       try {
         const response = await fetch('/api/get-selected-platforms', {
           method: 'POST',
@@ -66,32 +72,43 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           body: JSON.stringify({ partnerId: userId }),
         });
 
+        setLoadingProgress(60);
+
         if (response.ok) {
           const data = await response.json();
           const platforms = data.selectedPlatforms || [];
           console.log('[PartnerApp] User has selected platforms:', platforms.length > 0, platforms);
           setHasSelectedPlatforms(platforms.length > 0);
+          setLoadingProgress(100);
         } else {
           setHasSelectedPlatforms(null);
+          setLoadingProgress(100);
         }
       } catch (error) {
         console.error('[PartnerApp] Error checking selected platforms:', error);
         setHasSelectedPlatforms(null);
+        setLoadingProgress(100);
       }
     };
 
     // Only check when platform loading completes
     if (!loadingPlatforms) {
       checkSelectedPlatforms();
+    } else {
+      // Simulate initial loading progress
+      setLoadingProgress(10);
     }
   }, [loadingPlatforms]);
 
   // Check if user is already a partner and if authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
+      setLoadingProgress(20);
       const token = exnessApi.getToken();
       const partnerId = sessionStorage.getItem('partnerId');
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      
+      setLoadingProgress(40);
       
       // If user has partner rank badge or is ADMIN, they're already a partner - skip check
       if (hasPartnerRank || isAdmin) {
@@ -104,16 +121,22 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         setIsPartner(false);
       }
       
+      setLoadingProgress(70);
+      
       if (token) {
         try {
           // Verify token is valid by making a test request
           await exnessApi.getTokenInfo();
           setIsAuthenticated(true);
+          setLoadingProgress(100);
         } catch (error) {
           // Token is invalid, clear it
           exnessApi.clearToken();
           setIsAuthenticated(false);
+          setLoadingProgress(100);
         }
+      } else {
+        setLoadingProgress(100);
       }
       setChecking(false);
     };
@@ -163,8 +186,34 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
 
   if (checking || loadingPlatforms || hasSelectedPlatforms === null) {
     return (
-      <div className={styles.checkingAuth}>
-        {loadingPlatforms || hasSelectedPlatforms === null ? 'Đang tải...' : 'Checking authentication...'}
+      <div className={styles.loadingScreen}>
+        <div className={styles.loadingContent}>
+          <Image
+            src="/vnclc-logo.png"
+            alt="VNCLC Logo"
+            width={181}
+            height={40}
+            priority
+            className={styles.loadingLogo}
+          />
+          
+          <div className={styles.loadingText}>
+            {loadingPlatforms ? 'Đang tải thông tin sàn...' : 
+             hasSelectedPlatforms === null ? 'Đang kiểm tra tài khoản...' : 
+             'Đang xác thực...'}
+          </div>
+          
+          <div className={styles.progressContainer}>
+            <Progress
+              value={loadingProgress}
+              size="md"
+              radius="xl"
+              color="rgba(255, 184, 28, 1)"
+              animated
+              className={styles.progress}
+            />
+          </div>
+        </div>
       </div>
     );
   }
