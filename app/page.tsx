@@ -1,11 +1,10 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Box, TypographyStylesProvider, Loader, Center } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
-import { StepByStepTab } from '@/components/tabs/DocumentationTab';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { LoginTab } from '@/components/tabs/LoginTab';
 import PartnerApp from '@/components/partner/PartnerApp';
@@ -19,13 +18,54 @@ import classes from './page.module.css';
 
 type NavigationSection = 'features' | 'library' | 'login' | 'account';
 
+// Article Viewer Component
+function ArticleViewer({ selectedArticle }: { selectedArticle: string }) {
+  const [htmlContent, setHtmlContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/articles/${selectedArticle}.html`)
+      .then((response) => response.text())
+      .then((html) => {
+        // Extract body content from HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        setHtmlContent(bodyContent);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error loading article:', error);
+        setHtmlContent('<p>Error loading article content.</p>');
+        setLoading(false);
+      });
+  }, [selectedArticle]);
+
+  if (loading) {
+    return (
+      <Center style={{ height: '400px' }}>
+        <Loader size="lg" />
+      </Center>
+    );
+  }
+
+  return (
+    <Box style={{ width: '100%' }}>
+      <TypographyStylesProvider>
+        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      </TypographyStylesProvider>
+    </Box>
+  );
+}
+
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showHero, setShowHero] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('library');
-  const [activeTab, setActiveTab] = useState<string | null>('documentation');
+  const [activeTab, setActiveTab] = useState<string | null>('guides');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
@@ -187,7 +227,7 @@ export default function HomePage() {
       }
       console.log('[HomePage] Partner session cleared');
     } else if (value === 'library') {
-      setActiveTab('documentation');
+      setActiveTab('guides');
     } else if (value === 'account') {
       // Keep the tab as set by menu item click
       if (!activeTab || (!activeTab.startsWith('account'))) {
@@ -210,7 +250,7 @@ export default function HomePage() {
 
   // Determine if navbar should be shown
   const shouldShowNavbar = (
-    (navigationSection === 'library' && activeTab === 'documentation') ||
+    (navigationSection === 'library' && (activeTab === 'guides' || activeTab === 'strategies')) ||
     (navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement)
   );
 
@@ -231,7 +271,7 @@ export default function HomePage() {
     setTimeout(() => {
       setShowHero(false);
       setNavigationSection('library');
-      setActiveTab('documentation');
+      setActiveTab('guides');
       setIsTransitioning(false);
     }, 500);
   };
@@ -272,7 +312,7 @@ export default function HomePage() {
     
     // Navigate to documentation tab
     handleNavigationChange('library');
-    setActiveTab('documentation');
+    setActiveTab('guides');
   };
 
   // Show loading screen first
@@ -547,11 +587,18 @@ export default function HomePage() {
                       {navigationSection === 'library' && (
                         <>
                           <Tabs.Tab
-                            value="documentation"
-                            c={activeTab === 'documentation' ? theme.white : undefined}
-                            fw={activeTab === 'documentation' ? 700 : undefined}
+                            value="guides"
+                            c={activeTab === 'guides' ? theme.white : undefined}
+                            fw={activeTab === 'guides' ? 700 : undefined}
                           >
-                            Tài liệu
+                            Hướng dẫn
+                          </Tabs.Tab>
+                          <Tabs.Tab
+                            value="strategies"
+                            c={activeTab === 'strategies' ? theme.white : undefined}
+                            fw={activeTab === 'strategies' ? 700 : undefined}
+                          >
+                            Chiến lược
                           </Tabs.Tab>
                           {isUserLoggedIn && (
                             <Tabs.Tab
@@ -630,7 +677,7 @@ export default function HomePage() {
                 onLoadingChange={setLoadingPlatforms}
               />
             )}
-            {navigationSection === 'library' && activeTab === 'documentation' && (
+            {navigationSection === 'library' && activeTab === 'guides' && (
               <ScrollArea h="100%" type="auto" offsetScrollbars>
                 <Stack gap="xs">
                   <Badge
@@ -693,7 +740,12 @@ export default function HomePage() {
                     onClick={() => setSelectedArticle('guide-2')}
                     color="blue"
                   />
-
+                </Stack>
+              </ScrollArea>
+            )}
+            {navigationSection === 'library' && activeTab === 'strategies' && (
+              <ScrollArea h="100%" type="auto" offsetScrollbars>
+                <Stack gap="xs">
                   <Badge
                     variant="gradient"
                     gradient={{ from: 'violet', to: 'pink', deg: 90 }}
@@ -745,7 +797,6 @@ export default function HomePage() {
                     onClick={() => setSelectedArticle('strategy-5')}
                     color="violet"
                   />
-
                 </Stack>
               </ScrollArea>
             )}
@@ -782,8 +833,11 @@ export default function HomePage() {
               {/* Library Section Tabs */}
               {navigationSection === 'library' && (
                 <>
-                  <Tabs.Panel value="documentation">
-                    <StepByStepTab selectedArticle={selectedArticle} />
+                  <Tabs.Panel value="guides">
+                    <ArticleViewer selectedArticle={selectedArticle} />
+                  </Tabs.Panel>
+                  <Tabs.Panel value="strategies">
+                    <ArticleViewer selectedArticle={selectedArticle} />
                   </Tabs.Panel>
                   {isUserLoggedIn && (
                     <Tabs.Panel value="get-bot">
@@ -818,7 +872,7 @@ export default function HomePage() {
                     }
                     // Redirect to documentation
                     handleNavigationChange('library');
-                    setActiveTab('documentation');
+                    setActiveTab('guides');
                   }}
                 />
               )}

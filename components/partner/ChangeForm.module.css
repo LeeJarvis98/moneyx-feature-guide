@@ -336,44 +336,64 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 20px;
+  padding: 2rem;
 }
 
 .modalContent {
-  background: #1a1b1e;
-  border-radius: 12px;
-  max-width: 700px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
   position: relative;
-  border: 1px solid #373a40;
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  max-width: 750px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 2px solid rgba(255, 215, 0, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 1.5rem;
+}
+
+.modalContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modalContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 4px;
+}
+
+.modalContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.5);
 }
 
 .modalClose {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 1rem;
+  right: 1rem;
   background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  width: 36px;
-  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   z-index: 10;
 }
 
@@ -383,103 +403,124 @@
 }
 
 .termsSection {
-  padding: 32px;
+  background: transparent;
+  border-radius: 12px;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .termsTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: bold;
   color: #FFD700;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
   text-align: center;
-  margin: 0 0 24px 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .termsContent {
-  margin-bottom: 24px;
-  color: #c1c2c5;
-  line-height: 1.6;
+  flex: 1;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .termsSectionTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #FFB81C;
-  margin: 20px 0 12px 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #FFD700;
+  margin-top: 0.75rem;
+  margin-bottom: 0.4rem;
 }
 
 .termsList {
-  padding-left: 24px;
-  margin: 12px 0;
+  list-style: decimal;
+  padding-left: 1.5rem;
+  color: #e0e0e0;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
 }
 
 .termsList li {
-  margin-bottom: 10px;
-  color: #c1c2c5;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
 }
 
 .subItem {
   list-style-type: none;
-  margin-left: 20px;
-  color: #909296;
+  padding-left: 1rem;
 }
 
 .checkboxContainer {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-  background: #25262b;
-  border-radius: 8px;
-  border: 1px solid #373a40;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
 }
 
 .checkboxWrapper {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.5rem;
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: #e0e0e0;
   cursor: pointer;
-  color: #fff;
-  font-size: 0.95rem;
+  padding: 0.4rem 0.65rem;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.checkboxLabel:hover {
+  background: rgba(59, 130, 246, 0.3);
 }
 
 .checkbox {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: #FFB81C;
+  accent-color: #3b82f6;
 }
 
 .confirmButton {
-  width: 100%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #000000;
-  background: #FFD700;
-  border: 2px solid #FFD700;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #FFD700, #FFA000);
+  border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
 }
 
 .confirmButton:hover:not(:disabled) {
-  background: #FFC700;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #FFA000, #FF8C00);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
 }
 
 .confirmButton:disabled {
-  opacity: 0.5;
+  background: #6b7280;
   cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
 }
 
 /* Confirmation Button Container */
