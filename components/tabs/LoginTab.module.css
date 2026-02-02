@@ -1,19 +1,42 @@
 ﻿.container {
-  display: flex;
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
   min-height: calc(100vh - 200px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.posterSection {
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  overflow: hidden;
+}
+
+.posterImage {
+  height: calc(100vh - 200px);
+  object-fit: fill;
+  object-position: center;
 }
 
 .card {
   background: #25282A;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 184, 28, 0.2);
-  padding: 48px;
-  max-width: 480px;
+  border-radius: 50px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 60px;
   width: 100%;
+  height: 100px;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .title {
@@ -376,6 +399,27 @@
 
 .logoutItem:hover {
   background: rgba(255, 107, 107, 0.1);
+}
+
+@media (max-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .posterSection {
+    display: none;
+  }
+
+  .card {
+    min-height: auto;
+    padding: 48px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 184, 28, 0.2);
+    max-width: 480px;
+    margin: 40px auto;
+  }
 }
 
 @media (max-width: 768px) {

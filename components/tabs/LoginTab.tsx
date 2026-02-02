@@ -84,6 +84,14 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
 
   return (
     <div className={styles.container}>
+      <div className={styles.posterSection}>
+        <img 
+          src="/vnclc-poster.png" 
+          alt="VNCLC Poster" 
+          className={styles.posterImage}
+        />
+      </div>
+      
       <div className={styles.card}>
         <h2 className={styles.title}>Đăng nhập VNCLC</h2>
         <p className={styles.subtitle}>
