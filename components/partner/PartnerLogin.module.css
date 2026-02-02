@@ -11,7 +11,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 184, 28, 0.2);
   padding: 40px;
-  max-width: 450px;
+  max-width: 650px;
   width: 100%;
 }
 
@@ -28,6 +28,42 @@
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 32px 0;
   text-align: center;
+}
+
+.noticeBox {
+  background: rgba(255, 184, 28, 0.1);
+  border: 2px solid rgba(255, 184, 28, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 0 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.noticeHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.noticeIcon {
+  color: #FFB81C;
+  flex-shrink: 0;
+}
+
+.noticeTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFB81C;
+  margin: 0;
+}
+
+.noticeText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .form {

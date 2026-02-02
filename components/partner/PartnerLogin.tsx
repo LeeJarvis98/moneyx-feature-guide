@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Info } from 'lucide-react';
 import { exnessApi } from '@/lib/exness/api';
 import PartnerAside from './PartnerAside';
 import CongratulationsModal from './CongratulationsModal';
@@ -179,14 +180,20 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       <div className={styles.card}>
         <h2 className={styles.title}>
           {selectedPlatform
-            ? `Đăng nhập Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
+            ? `Đăng nhập ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}`
             : 'Đăng nhập Đối tác'}
         </h2>
-        <p className={styles.subtitle}>
-          {selectedPlatform
-            ? `Kết nối trực tiếp với thông tin đăng nhập Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
-            : 'Kết nối trực tiếp với thông tin đăng nhập Đối tác của bạn'}
-        </p>
+
+        <div className={styles.noticeBox}>
+          <div className={styles.noticeHeader}>
+            <Info className={styles.noticeIcon} size={20} />
+            <h3 className={styles.noticeTitle}>Thông tin quan trọng</h3>
+          </div>
+
+          <p className={styles.noticeText}>
+            Mục đích của bước này là xác nhận liên kết API cho hệ thống tự động của bạn.
+          </p>
+        </div>
 
         <form onSubmit={handleLogin} className={styles.form}>
           {/* ID Input */}
