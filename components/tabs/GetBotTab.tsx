@@ -65,6 +65,30 @@ export function GetBotTab() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [supportLink, setSupportLink] = useState<string>('https://zalo.me/0353522252/');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpResendDelay, setOtpResendDelay] = useState(10);
+  const [otpResendTimer, setOtpResendTimer] = useState(0);
+
+  // Auto-verify OTP when 6 digits are entered
+  useEffect(() => {
+    if (otp.length === 6 && !verifyingOtp && !otpVerified) {
+      checkAccountStatus();
+    }
+  }, [otp]);
+
+  // OTP resend timer countdown
+  useEffect(() => {
+    if (otpResendTimer > 0) {
+      const timerId = setTimeout(() => {
+        setOtpResendTimer(otpResendTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timerId);
+    }
+  }, [otpResendTimer]);
 
   // Load partner platform data on mount
   useEffect(() => {
@@ -112,9 +136,53 @@ export function GetBotTab() {
     loadPartnerData();
   }, []);
 
-  // Function to check account status via API
-  const checkAccountStatus = async () => {
+  // Function to send OTP
+  const sendOtp = async () => {
     setAccountStatus('checking');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          platform: selectedPlatform,
+          captchaToken: captchaToken,
+          action: 'send-otp',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.otpSent) {
+        setOtpSent(true);
+        setAccountStatus('idle');
+        // Start the resend timer
+        setOtpResendTimer(otpResendDelay);
+        // Increase delay for next resend (first 10s, then +15s each time)
+        setOtpResendDelay(prev => prev + 15);
+      } else {
+        setAccountStatus('unauthorized');
+        setErrorMessage(result.error || 'Không thể gửi OTP');
+      }
+    } catch (error) {
+      setCaptchaToken(null);
+      setAccountStatus('unauthorized');
+      setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      console.error('API Error:', error);
+    }
+  };
+
+  // Function to verify OTP and check account status
+  const checkAccountStatus = async () => {
+    setVerifyingOtp(true);
     setErrorMessage('');
     setAccountData(null);
     setAccountRows([]);
@@ -127,11 +195,11 @@ export function GetBotTab() {
       if (!referralId) {
         setAccountStatus('unauthorized');
         setErrorMessage('Referral ID not found. Please access through a valid partner link.');
+        setVerifyingOtp(false);
         return;
       }
 
-      // Call check-email API with referral ID and captcha token in payload
-      // The backend will use this to look up partner credentials
+      // Call check-email API with OTP verification
       const response = await fetch('/api/check-email', {
         method: 'POST',
         headers: {
@@ -142,6 +210,8 @@ export function GetBotTab() {
           platform: selectedPlatform,
           referralId: referralId,
           captchaToken: captchaToken,
+          otp: otp,
+          action: 'verify-otp',
         }),
       });
 
@@ -153,6 +223,8 @@ export function GetBotTab() {
 
       if (result.success && result.data.affiliation) {
         setCaptchaToken(null); // Reset captcha after successful check
+        setOtpVerified(true); // Mark OTP as verified
+        setOtpError(null);
         setAccountData(result.data);
         // Use accountsWithStatus if available (from Google Sheets check), otherwise use default status
         const rows: AccountRow[] = result.data.accountsWithStatus 
@@ -180,8 +252,12 @@ export function GetBotTab() {
     } catch (error) {
       setCaptchaToken(null); // Reset captcha on error
       setAccountStatus('unauthorized');
-      setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      const errorMsg = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
+      setErrorMessage(errorMsg);
+      setOtpError(errorMsg);
       console.error('API Error:', error);
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -602,18 +678,105 @@ export function GetBotTab() {
                         required
                         classNames={{ input: classes.glowInput }}
                         style={{ flex: 1 }}
+                        disabled={otpSent}
                       />
-                      <Button
-                        c="black"
-                        onClick={checkAccountStatus}
-                        loading={accountStatus === 'checking'}
-                        disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !captchaToken}
-                        size="md"
-                        className={classes.glowButton}
+                      {!otpSent ? (
+                        <Button
+                          c="black"
+                          onClick={sendOtp}
+                          loading={accountStatus === 'checking'}
+                          disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !captchaToken}
+                          size="md"
+                          className={classes.glowButton}
+                        >
+                          Gửi OTP
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="light"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtp('');
+                            setAccountStatus('idle');
+                          }}
+                          size="md"
+                        >
+                          Đổi Email
+                        </Button>
+                      )}
+                    </Group>
+
+                    {otpSent && !otpVerified && (
+                      <Group align="flex-end" gap="md">
+                        <TextInput
+                          type="text"
+                          placeholder="Nhập mã OTP (6 chữ số)"
+                          value={otp}
+                          onChange={(event) => {
+                            const value = event.currentTarget.value.replace(/\D/g, '').slice(0, 6);
+                            setOtp(value);
+                            setOtpError(null);
+                          }}
+                          size="md"
+                          required
+                          classNames={{ input: classes.glowInput }}
+                          style={{ flex: 1 }}
+                          maxLength={6}
+                          disabled={verifyingOtp}
+                        />
+                        <Button
+                          variant="light"
+                          onClick={sendOtp}
+                          loading={accountStatus === 'checking'}
+                          disabled={accountStatus === 'checking' || otpResendTimer > 0}
+                          size="md"
+                        >
+                          {accountStatus === 'checking' 
+                            ? 'Đang gửi...' 
+                            : otpResendTimer > 0 
+                              ? `Gửi lại (${otpResendTimer}s)` 
+                              : 'Gửi lại OTP'}
+                        </Button>
+                      </Group>
+                    )}
+
+                    {otpSent && verifyingOtp && (
+                      <Alert
+                        color="blue"
+                        radius="md"
                       >
-                        Kiểm tra
-                      </Button>
-                    </Group>                    
+                        Đang xác thực OTP...
+                      </Alert>
+                    )}
+
+                    {otpSent && otpVerified && (
+                      <Alert
+                        icon={<CheckCircle size={20} />}
+                        color="green"
+                        radius="md"
+                      >
+                        OTP đã được xác thực thành công!
+                      </Alert>
+                    )}
+
+                    {otpSent && otpError && !verifyingOtp && (
+                      <Alert
+                        icon={<AlertCircle size={20} />}
+                        color="red"
+                        radius="md"
+                      >
+                        {otpError}
+                      </Alert>
+                    )}
+
+                    {otpSent && !otpVerified && !verifyingOtp && !otpError && otp.length === 0 && (
+                      <Alert
+                        color="blue"
+                        radius="md"
+                      >
+                        Kiểm tra email của bạn để nhận mã OTP (có thể trong thư mục spam)
+                      </Alert>
+                    )}                    
 
                     {accountStatus === 'unauthorized' && (
                       <Alert

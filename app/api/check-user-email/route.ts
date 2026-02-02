@@ -3,12 +3,18 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { Resend } from 'resend';
 
-// Check if API key is configured
-if (!process.env.RESEND_API_KEY) {
-  console.error('[CHECK-USER-EMAIL] RESEND_API_KEY is not configured!');
-}
+// Lazy initialization of Resend client to avoid build-time errors
+let resendClient: Resend | null = null;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient(): Resend {
+  if (!resendClient) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 // Generate 6-digit OTP
 function generateOTP(): string {
@@ -121,6 +127,7 @@ export async function POST(request: NextRequest) {
     try {
       console.log('[CHECK-USER-EMAIL] Attempting to send email to:', email);
       
+      const resend = getResendClient();
       const result = await resend.emails.send({
         from: 'VNCLC <no-reply@vnclc.com>', // Replace with your verified domain
         to: email,

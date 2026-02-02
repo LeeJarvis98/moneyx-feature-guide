@@ -2,13 +2,32 @@
 import { getGoogleSheetsClient, getSupabaseClient } from '@/lib/supabase';
 import { SHARED_SHEET_ID } from '@/lib/config';
 import { verifyTurnstileToken } from '@/lib/turnstile';
+import { Resend } from 'resend';
+
+// Lazy initialization of Resend client to avoid build-time errors
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
+
+// Generate 6-digit OTP
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 const RANGE = 'B:B'; // Column B (will use the first sheet)
 const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, platform, referralId, captchaToken } = await request.json();
+    const { email, platform, referralId, captchaToken, otp, action } = await request.json();
     let platformToken = request.headers.get('x-platform-token');
     
     console.log('[CHECK-EMAIL] Received email:', email);
@@ -41,6 +60,166 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Email is required' },
         { status: 400 }
       );
+    }
+
+    // Handle OTP sending
+    if (action === 'send-otp') {
+      console.log('[CHECK-EMAIL] Sending OTP to:', email);
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid email format' },
+          { status: 400 }
+        );
+      }
+
+      // Generate OTP
+      const otpCode = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+      
+      console.log('[CHECK-EMAIL] Generated OTP:', otpCode, 'for email:', email);
+      
+      // Store OTP in database
+      const supabase = getSupabaseClient();
+      const { error: otpError } = await supabase
+        .from('email_otps')
+        .upsert({
+          email: email.toLowerCase(),
+          otp: otpCode,
+          expires_at: expiresAt.toISOString(),
+          verified: false,
+          created_at: new Date().toISOString()
+        }, {
+          onConflict: 'email'
+        });
+      
+      if (otpError) {
+        console.error('[CHECK-EMAIL] Error storing OTP:', otpError);
+        return NextResponse.json(
+          { success: false, error: 'Failed to generate OTP' },
+          { status: 500 }
+        );
+      }
+      
+      console.log('[CHECK-EMAIL] OTP stored in database successfully');
+      
+      // Send OTP via email using Resend
+      try {
+        console.log('[CHECK-EMAIL] Attempting to send email to:', email);
+        
+        const resend = getResendClient();
+        const result = await resend.emails.send({
+          from: 'VNCLC <no-reply@vnclc.com>',
+          to: email,
+          subject: 'Mã xác thực VNCLC',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #FFB81C;">Xác thực Email của bạn</h2>
+              <p>Chào bạn,</p>
+              <p>Mã xác thực của bạn là:</p>
+              <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #FFB81C; border-radius: 8px; margin: 20px 0;">
+                ${otpCode}
+              </div>
+              <p>Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+              <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+              <p style="color: #666; font-size: 12px;">Email này được gửi tự động, vui lòng không trả lời.</p>
+            </div>
+          `
+        });
+        
+        console.log('[CHECK-EMAIL] Resend API response:', JSON.stringify(result, null, 2));
+        console.log('[CHECK-EMAIL] OTP sent successfully to:', email);
+        
+        return NextResponse.json(
+          { success: true, message: 'OTP đã được gửi đến email của bạn', otpSent: true },
+          { status: 200 }
+        );
+      } catch (emailError) {
+        console.error('[CHECK-EMAIL] Error sending OTP email:', emailError);
+        return NextResponse.json(
+          { success: false, error: 'Không thể gửi mã xác thực. Vui lòng thử lại.' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Handle OTP verification
+    if (action === 'verify-otp') {
+      if (!otp) {
+        return NextResponse.json(
+          { success: false, error: 'OTP is required' },
+          { status: 400 }
+        );
+      }
+
+      console.log('[CHECK-EMAIL] Verifying OTP for:', email);
+
+      const supabase = getSupabaseClient();
+
+      // Get OTP record from database
+      const { data: otpRecord, error: fetchError } = await supabase
+        .from('email_otps')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (fetchError || !otpRecord) {
+        console.error('[CHECK-EMAIL] No OTP found for email:', email);
+        return NextResponse.json(
+          { success: false, error: 'Mã xác thực không tồn tại hoặc đã hết hạn' },
+          { status: 400 }
+        );
+      }
+
+      // Check if OTP has expired
+      const now = new Date();
+      const expiresAt = new Date(otpRecord.expires_at);
+      
+      if (now > expiresAt) {
+        console.log('[CHECK-EMAIL] OTP expired for:', email);
+        return NextResponse.json(
+          { success: false, error: 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.' },
+          { status: 400 }
+        );
+      }
+
+      // Check if OTP already verified
+      if (otpRecord.verified) {
+        console.log('[CHECK-EMAIL] OTP already used for:', email);
+        return NextResponse.json(
+          { success: false, error: 'Mã xác thực đã được sử dụng' },
+          { status: 400 }
+        );
+      }
+
+      // Verify OTP
+      if (otpRecord.otp !== otp) {
+        console.log('[CHECK-EMAIL] Invalid OTP for:', email);
+        return NextResponse.json(
+          { success: false, error: 'Mã xác thực không chính xác' },
+          { status: 400 }
+        );
+      }
+
+      // Mark OTP as verified
+      const { error: updateError } = await supabase
+        .from('email_otps')
+        .update({ verified: true })
+        .eq('email', email.toLowerCase());
+
+      if (updateError) {
+        console.error('[CHECK-EMAIL] Error updating OTP:', updateError);
+        return NextResponse.json(
+          { success: false, error: 'Failed to verify OTP' },
+          { status: 500 }
+        );
+      }
+
+      console.log('[CHECK-EMAIL] OTP verified successfully for:', email);
+      // Continue to account checking below
     }
 
     if (!platform) {
