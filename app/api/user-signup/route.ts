@@ -10,6 +10,7 @@ interface UserSignupData {
   password: string;
   created_at: string;
   turnstileToken: string;
+  otp: string;
 }
 
 // Validation helper functions
@@ -115,6 +116,73 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify OTP
+    if (!data.otp || typeof data.otp !== 'string') {
+      return NextResponse.json(
+        { error: 'Mã OTP là bắt buộc' },
+        { status: 400 }
+      );
+    }
+
+    if (data.otp.length !== 6) {
+      return NextResponse.json(
+        { error: 'Mã OTP phải có 6 chữ số' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[USER-SIGNUP] Verifying OTP for email:', data.email);
+    const supabase = getSupabaseClient();
+
+    // Check if OTP exists and is valid
+    const { data: otpRecord, error: otpError } = await supabase
+      .from('email_otps')
+      .select('*')
+      .eq('email', data.email)
+      .eq('otp', data.otp)
+      .eq('verified', true)
+      .maybeSingle();
+
+    if (otpError) {
+      console.error('[USER-SIGNUP] Error verifying OTP:', otpError);
+      return NextResponse.json(
+        { error: 'Lỗi xác thực OTP. Vui lòng thử lại.' },
+        { status: 500 }
+      );
+    }
+
+    if (!otpRecord) {
+      console.error('[USER-SIGNUP] Invalid or unverified OTP for email:', data.email);
+      return NextResponse.json(
+        { error: 'Mã OTP không hợp lệ hoặc chưa được xác thực' },
+        { status: 400 }
+      );
+    }
+
+    // Check if OTP created_at exists
+    if (!otpRecord.created_at) {
+      console.error('[USER-SIGNUP] OTP record missing created_at timestamp');
+      return NextResponse.json(
+        { error: 'Dữ liệu OTP không hợp lệ. Vui lòng thử lại.' },
+        { status: 500 }
+      );
+    }
+
+    // Check if OTP is expired (10 minutes)
+    const otpCreatedAt = new Date(otpRecord.created_at);
+    const now = new Date();
+    const diffMinutes = (now.getTime() - otpCreatedAt.getTime()) / (1000 * 60);
+    
+    if (diffMinutes > 10) {
+      console.error('[USER-SIGNUP] OTP expired for email:', data.email);
+      return NextResponse.json(
+        { error: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[USER-SIGNUP] OTP verified successfully');
+
     // Validate ID
     const idValidation = validateId(data.id);
     if (!idValidation.valid) {
@@ -155,8 +223,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[USER-SIGNUP] Initializing Supabase client...');
-    const supabase = getSupabaseClient();
+    console.log('[USER-SIGNUP] All validations passed. Proceeding with registration...');
 
     // BACKEND VALIDATION: Double-check ID availability
     console.log('[USER-SIGNUP] Double-checking ID availability...');
@@ -200,7 +267,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[USER-SIGNUP] All validations passed. Proceeding with registration...');
+    console.log('[USER-SIGNUP] All backend validations passed. Creating user...');
 
     // Insert new user into database
     const insertData = {

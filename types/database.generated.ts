@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_otps: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          otp: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          otp: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          otp?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       licensed_accounts: {
         Row: {
           account_id: string

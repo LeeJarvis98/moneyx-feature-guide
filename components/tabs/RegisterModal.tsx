@@ -29,6 +29,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [referralIdValid, setReferralIdValid] = useState<boolean | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpResendDelay, setOtpResendDelay] = useState(10); // First time 10s, then +15s each time
+  const [otpResendTimer, setOtpResendTimer] = useState(0); // Countdown timer
   const [mouseDownOnOverlay, setMouseDownOnOverlay] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -56,11 +63,56 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
   const passwordsMatch = regConfirmPassword && regPassword === regConfirmPassword;
   const passwordsDontMatch = regConfirmPassword && regPassword !== regConfirmPassword;
-  
+
   // ID validation states
   const isIdFormatValid = regId && validateId(regId) && regId.length >= 4;
   const isIdFormatInvalid = regId && (!validateId(regId) || regId.length < 4);
-  
+
+  // Auto-check ID after 1 second of typing
+  useEffect(() => {
+    if (!isIdFormatValid || !turnstileToken || checkingId || idAvailable !== null) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      handleCheckId();
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [regId, turnstileToken]);
+
+  // Auto-check referral ID after 1 second of typing
+  useEffect(() => {
+    const isReferralFormatValid = regReferralId && regReferralId.length >= 4 && validateReferralId(regReferralId);
+    
+    if (!isReferralFormatValid || !turnstileToken || checkingReferralId || referralIdValid !== null) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      handleCheckReferralId();
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [regReferralId, turnstileToken]);
+
+  // Auto-verify OTP when 6 digits are entered
+  useEffect(() => {
+    if (otp.length === 6 && !verifyingOtp && !otpVerified) {
+      handleVerifyOtp();
+    }
+  }, [otp]);
+
+  // OTP resend timer countdown
+  useEffect(() => {
+    if (otpResendTimer > 0) {
+      const timerId = setTimeout(() => {
+        setOtpResendTimer(otpResendTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timerId);
+    }
+  }, [otpResendTimer]);
+
   // Email validation states with common TLD mistake detection
   const hasCommonTLDMistake = regEmail && (
     regEmail.endsWith('@gmail.co') ||
@@ -93,6 +145,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setReferralIdValid(null);
       setCheckingEmail(false);
       setEmailAvailable(null);
+      setOtpSent(false);
+      setOtp('');
+      setVerifyingOtp(false);
+      setOtpVerified(false);
+      setOtpError(null);
+      setOtpResendDelay(10);
+      setOtpResendTimer(0);
       setIsClosing(false);
       setTurnstileToken(null);
     }
@@ -256,12 +315,55 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setEmailAvailable(data.available);
       if (!data.available) {
         setRegError(data.message || 'Email này đã được đăng ký');
+      } else if (data.otpSent) {
+        setOtpSent(true);
+        // Start the resend timer
+        setOtpResendTimer(otpResendDelay);
+        // Increase delay for next resend (first 10s, then +15s each time)
+        setOtpResendDelay(prev => prev + 15);
+        // Don't set error, show success message instead
       }
     } catch (err) {
       setRegError(err instanceof Error ? err.message : 'Failed to check email');
       setEmailAvailable(null);
     } finally {
       setCheckingEmail(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      setOtpError('Vui lòng nhập mã OTP');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setOtpError('Mã OTP phải có 6 chữ số');
+      return;
+    }
+
+    setOtpError(null);
+    setVerifyingOtp(true);
+
+    try {
+      const response = await fetch('/api/verify-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: regEmail, otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.valid) {
+        throw new Error(data.message || 'Mã OTP không chính xác');
+      }
+
+      setOtpVerified(true);
+      setOtpError(null);
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Xác thực OTP thất bại');
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -310,7 +412,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       // Get current time in GMT+7
       const now = new Date();
       const gmt7Time = new Date(now.getTime() + (7 * 60 * 60 * 1000));
-      
+
       const response = await fetch('/api/user-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -319,6 +421,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           referral_id: regReferralId,
           email: regEmail,
           password: regPassword,
+          otp: otp,
           created_at: gmt7Time.toISOString(),
           turnstileToken,
         }),
@@ -344,7 +447,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ''}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) {
@@ -374,40 +477,28 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         <form onSubmit={handleRegisterSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="regId" className={styles.label}>
-              ID<span className={styles.required}>*</span>
+              ID <span className={styles.required}>*</span>
             </label>
-            <div className={styles.inputWithButton}>
-              <input
-                type="text"
-                id="regId"
-                value={regId}
-                onChange={(e) => handleIdChange(e.target.value)}
-                required
-                className={`${styles.input} ${
-                  idAvailable === true
-                    ? styles.inputSuccess
-                    : idAvailable === false || isIdFormatInvalid
+            <input
+              type="text"
+              id="regId"
+              value={regId}
+              onChange={(e) => handleIdChange(e.target.value)}
+              required
+              className={`${styles.input} ${idAvailable === true
+                  ? styles.inputSuccess
+                  : idAvailable === false || isIdFormatInvalid
                     ? styles.inputError
                     : ''
                 }`}
-                placeholder="Nhập ID của bạn"
-                disabled={regLoading || regSuccess}
-              />
-              <button
-                type="button"
-                onClick={handleCheckId}
-                className={`${styles.checkButton} ${
-                  idAvailable === true
-                    ? styles.checkButtonVerified
-                    : isIdFormatValid && idAvailable === null && !checkingId
-                    ? styles.checkButtonActive
-                    : ''
-                }`}
-                disabled={!regId || !isIdFormatValid || checkingId || regLoading || regSuccess}
-              >
-                {checkingId ? 'Kiểm tra...' : idAvailable === true ? '✓' : 'Kiểm tra'}
-              </button>
-            </div>
+              placeholder="Nhập ID của bạn"
+              disabled={regLoading || regSuccess || checkingId}
+            />
+            {checkingId && (
+              <span className={styles.hint}>
+                Đang kiểm tra...
+              </span>
+            )}
             {idAvailable === true && (
               <span className={styles.successText}>
                 <Check size={16} /> Bạn có thể sử dụng ID này
@@ -426,129 +517,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             {!regId && (
               <span className={styles.hint}>
                 Chỉ chữ cái và số, ít nhất 4 ký tự
-              </span>
-            )}
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="regReferralId" className={styles.label}>
-              ID giới thiệu<span className={styles.required}>*</span>
-            </label>
-            <div className={styles.inputWithButton}>
-              <input
-                type="text"
-                id="regReferralId"
-                value={regReferralId}
-                onChange={(e) => handleReferralIdChange(e.target.value)}
-                required
-                className={`${styles.input} ${
-                  referralIdValid === true
-                    ? styles.inputSuccess
-                    : referralIdValid === false
-                    ? styles.inputError
-                    : ''
-                }`}
-                placeholder="Nhập ID người giới thiệu"
-                disabled={regLoading || regSuccess}
-              />
-              <button
-                type="button"
-                onClick={handleCheckReferralId}
-                className={`${styles.checkButton} ${
-                  referralIdValid === true
-                    ? styles.checkButtonVerified
-                    : regReferralId.length >= 4 && validateReferralId(regReferralId) && referralIdValid === null && !checkingReferralId
-                    ? styles.checkButtonActive
-                    : ''
-                }`}
-                disabled={!regReferralId || regReferralId.length < 4 || !validateReferralId(regReferralId) || checkingReferralId || regLoading || regSuccess}
-              >
-                {checkingReferralId ? 'Kiểm tra...' : referralIdValid === true ? '✓' : 'Kiểm tra'}
-              </button>
-            </div>
-            {referralIdValid === true && (
-              <span className={styles.successText}>
-                <Check size={16} /> ID giới thiệu hợp lệ
-              </span>
-            )}
-            {referralIdValid === false && (
-              <span className={styles.errorText}>
-                <X size={16} /> ID giới thiệu không tồn tại
-              </span>
-            )}
-            {regReferralId && regReferralId.length < 4 && (
-              <span className={styles.errorText}>
-                <X size={16} /> ID phải có ít nhất 4 ký tự
-              </span>
-            )}
-            {regReferralId && regReferralId.length >= 4 && !validateReferralId(regReferralId) && (
-              <span className={styles.errorText}>
-                <X size={16} /> Định dạng không đúng. Ví dụ: AndyBao24-8888
-              </span>
-            )}
-            {!regReferralId && (
-              <span className={styles.hint}>
-                Định dạng: [ID]-[số]. Ví dụ: AndyBao24-8888
-              </span>
-            )}
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="regEmail" className={styles.label}>
-              Email <span className={styles.required}>*</span>
-            </label>
-            <div className={styles.inputWithButton}>
-              <input
-                type="email"
-                id="regEmail"
-                value={regEmail}
-                onChange={(e) => {
-                  setRegEmail(e.target.value);
-                  // Reset availability when user modifies input
-                  if (emailAvailable !== null) {
-                    setEmailAvailable(null);
-                  }
-                  setRegError(null);
-                }}
-                required
-                className={`${styles.input} ${
-                  emailAvailable === true
-                    ? styles.inputSuccess
-                    : emailAvailable === false || isEmailFormatInvalid
-                    ? styles.inputError
-                    : ''
-                }`}
-                placeholder="your@email.com"
-                disabled={regLoading || regSuccess}
-              />
-              <button
-                type="button"
-                onClick={handleCheckEmail}
-                className={`${styles.checkButton} ${
-                  emailAvailable === true
-                    ? styles.checkButtonVerified
-                    : isEmailFormatValid && emailAvailable === null && !checkingEmail
-                    ? styles.checkButtonActive
-                    : ''
-                }`}
-                disabled={!regEmail || !isEmailFormatValid || checkingEmail || regLoading || regSuccess}
-              >
-                {checkingEmail ? 'Kiểm tra...' : emailAvailable === true ? '✓' : 'Kiểm tra'}
-              </button>
-            </div>
-            {emailAvailable === true && (
-              <span className={styles.successText}>
-                <Check size={16} /> Bạn có thể sử dụng email này
-              </span>
-            )}
-            {emailAvailable === false && (
-              <span className={styles.errorText}>
-                <X size={16} /> Email này đã được đăng ký
-              </span>
-            )}
-            {isEmailFormatInvalid && emailAvailable === null && (
-              <span className={styles.errorText}>
-                <X size={16} /> {hasCommonTLDMistake ? 'Định dạng email không đúng (bạn có thể đã nhập nhầm .com thành .co)' : 'Định dạng email không hợp lệ'}
               </span>
             )}
           </div>
@@ -591,13 +559,12 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                   value={regConfirmPassword}
                   onChange={(e) => setRegConfirmPassword(e.target.value)}
                   required
-                  className={`${styles.input} ${
-                    passwordsMatch
+                  className={`${styles.input} ${passwordsMatch
                       ? styles.inputSuccess
                       : passwordsDontMatch
-                      ? styles.inputError
-                      : ''
-                  }`}
+                        ? styles.inputError
+                        : ''
+                    }`}
                   placeholder="Nhập lại mật khẩu"
                   disabled={regLoading || regSuccess}
                 />
@@ -623,9 +590,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             </div>
           </div>
 
-          {regPassword && (
+          {regPassword && !isPasswordStrong && (
             <div className={styles.passwordCriteria}>
-               <p className={styles.criteriaTitle}>Mật khẩu phải chứa:</p>
+              <p className={styles.criteriaTitle}>Mật khẩu phải chứa:</p>
               <div className={passwordCriteria.minLength ? styles.criteriaValid : styles.criteriaInvalid}>
                 {passwordCriteria.minLength ? <Check size={14} /> : <X size={14} />}
                 <span>Ít nhất 8 ký tự</span>
@@ -649,6 +616,180 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             </div>
           )}
 
+          <div className={styles.inputGroup}>
+            <label htmlFor="regEmail" className={styles.label}>
+              Email <span className={styles.required}>*</span>
+            </label>
+            <div className={styles.inputWithButton}>
+              <input
+                type="email"
+                id="regEmail"
+                value={regEmail}
+                onChange={(e) => {
+                  setRegEmail(e.target.value);
+                  // Reset availability when user modifies input
+                  if (emailAvailable !== null) {
+                    setEmailAvailable(null);
+                  }
+                  setRegError(null);
+                }}
+                required
+                className={`${styles.input} ${emailAvailable === true
+                    ? styles.inputSuccess
+                    : emailAvailable === false || isEmailFormatInvalid
+                      ? styles.inputError
+                      : ''
+                  }`}
+                placeholder="your@email.com"
+                disabled={regLoading || regSuccess}
+              />
+              <button
+                type="button"
+                onClick={handleCheckEmail}
+                className={`${styles.checkButton} ${emailAvailable === true
+                    ? styles.checkButtonVerified
+                    : isEmailFormatValid && emailAvailable === null && !checkingEmail
+                      ? styles.checkButtonActive
+                      : ''
+                  }`}
+                disabled={!regEmail || !isEmailFormatValid || checkingEmail || regLoading || regSuccess}
+              >
+                {checkingEmail ? 'Kiểm tra...' : emailAvailable === true ? '✓' : 'Kiểm tra'}
+              </button>
+            </div>
+            {emailAvailable === true && (
+              <span className={styles.successText}>
+                <Check size={16} /> Mã OTP đã được gửi đến email của bạn
+              </span>
+            )}
+            {emailAvailable === false && (
+              <span className={styles.errorText}>
+                <X size={16} /> Email này đã được đăng ký
+              </span>
+            )}
+            {isEmailFormatInvalid && emailAvailable === null && (
+              <span className={styles.errorText}>
+                <X size={16} /> {hasCommonTLDMistake ? 'Định dạng email không đúng (bạn có thể đã nhập nhầm .com thành .co)' : 'Định dạng email không hợp lệ'}
+              </span>
+            )}
+          </div>
+
+          {/* OTP Input - Only show if email is available and OTP was sent */}
+          {otpSent && emailAvailable && (
+            <div className={styles.inputGroup}>
+              <label htmlFor="otp" className={styles.label}>
+                Mã OTP <span className={styles.required}>*</span>
+              </label>
+              <div className={styles.inputWithButton}>
+                <input
+                  type="text"
+                  id="otp"
+                  value={otp}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(value);
+                    setOtpError(null);
+                  }}
+                  required
+                  className={`${styles.input} ${otpVerified
+                      ? styles.inputSuccess
+                      : otpError
+                        ? styles.inputError
+                        : ''
+                    }`}
+                  placeholder="Nhập mã 6 chữ số"
+                  disabled={regLoading || regSuccess || otpVerified || verifyingOtp}
+                  maxLength={6}
+                />
+                {!otpVerified && (
+                  <button
+                    type="button"
+                    onClick={handleCheckEmail}
+                    className={styles.checkButton}
+                    disabled={checkingEmail || regLoading || regSuccess || otpResendTimer > 0}
+                  >
+                    {checkingEmail 
+                      ? 'Đang gửi...' 
+                      : otpResendTimer > 0 
+                        ? `Gửi lại (${otpResendTimer}s)` 
+                        : 'Gửi lại OTP'}
+                  </button>
+                )}
+              </div>
+              {verifyingOtp && (
+                <span className={styles.hint}>
+                  Đang xác thực...
+                </span>
+              )}
+              {otpVerified && (
+                <span className={styles.successText}>
+                  <Check size={16} /> Email đã được xác thực
+                </span>
+              )}
+              {otpError && (
+                <span className={styles.errorText}>
+                  <X size={16} /> {otpError}
+                </span>
+              )}
+              {!otpVerified && !verifyingOtp && !otpError && otp.length === 0 && (
+                <span className={styles.hint}>
+                  Kiểm tra email của bạn để nhận mã OTP (có thể trong thư mục spam)
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="regReferralId" className={styles.label}>
+              Mã giới thiệu <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              id="regReferralId"
+              value={regReferralId}
+              onChange={(e) => handleReferralIdChange(e.target.value)}
+              required
+              className={`${styles.input} ${referralIdValid === true
+                  ? styles.inputSuccess
+                  : referralIdValid === false
+                    ? styles.inputError
+                    : ''
+                }`}
+              placeholder="Nhập ID người giới thiệu"
+              disabled={regLoading || regSuccess || checkingReferralId}
+            />
+            {checkingReferralId && (
+              <span className={styles.hint}>
+                Đang kiểm tra...
+              </span>
+            )}
+            {referralIdValid === true && (
+              <span className={styles.successText}>
+                <Check size={16} /> ID giới thiệu hợp lệ
+              </span>
+            )}
+            {referralIdValid === false && (
+              <span className={styles.errorText}>
+                <X size={16} /> ID giới thiệu không tồn tại
+              </span>
+            )}
+            {regReferralId && regReferralId.length < 4 && (
+              <span className={styles.errorText}>
+                <X size={16} /> ID phải có ít nhất 4 ký tự
+              </span>
+            )}
+            {regReferralId && regReferralId.length >= 4 && !validateReferralId(regReferralId) && (
+              <span className={styles.errorText}>
+                <X size={16} /> Định dạng không đúng. Ví dụ: AndyBao24-8888
+              </span>
+            )}
+            {!regReferralId && (
+              <span className={styles.hint}>
+                Định dạng: [ID]-[số]. Ví dụ: AndyBao24-8888
+              </span>
+            )}
+          </div>
+
           <div className={styles.checkboxGroup}>
             <input
               type="checkbox"
@@ -660,11 +801,11 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             />
             <label htmlFor="regTerms" className={styles.checkboxLabel}>
               Tôi đồng ý với{' '}
-              <a href="#" className={styles.link}>
+              <a href="https://drive.google.com/file/d/1C0e9sqXS_wSgaq2DaqOLkzk-hhdS2PZW/view?usp=sharing" className={styles.link} target="_blank" rel="noopener noreferrer">
                 điều khoản dịch vụ
               </a>{' '}
               và{' '}
-              <a href="#" className={styles.link}>
+              <a href="#" className={styles.link} target="_blank" rel="noopener noreferrer">
                 chính sách bảo mật
               </a>
             </label>
@@ -695,13 +836,14 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             type="submit"
             className={styles.submitButton}
             disabled={
-              regLoading || 
-              regSuccess || 
-              !regTermsAccepted || 
-              idAvailable !== true || 
-              referralIdValid !== true || 
-              emailAvailable !== true || 
-              !isPasswordStrong || 
+              regLoading ||
+              regSuccess ||
+              !regTermsAccepted ||
+              idAvailable !== true ||
+              referralIdValid !== true ||
+              emailAvailable !== true ||
+              !otpVerified ||
+              !isPasswordStrong ||
               !passwordsMatch
             }
           >
