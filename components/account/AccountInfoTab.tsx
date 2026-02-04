@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Checkbox, Box } from '@mantine/core';
-import { User, Mail, Calendar, Award, CreditCard, Trash2, Save } from 'lucide-react';
+import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Box, Paper, Alert } from '@mantine/core';
+import { User, Mail, Calendar, Award, CreditCard, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import classes from './AccountInfoTab.module.css';
 
 interface UserData {
@@ -99,63 +99,37 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
         }
       });
     } else {
-      // Handle unlicensed accounts - toggle for licensing
+      // Handle unlicensed accounts - toggle for licensing (max 3)
       setSelectedAccounts((prev) => {
         if (prev.includes(accountId)) {
           return prev.filter((id) => id !== accountId);
         } else {
+          // Limit to 3 selections
+          if (prev.length >= 3) {
+            return prev;
+          }
           return [...prev, accountId];
         }
       });
     }
   };
 
-  const handleUpdateAccounts = async () => {
-    if (!selectedEmailGroup) return;
+  const handleRevokeLicenses = async () => {
+    if (!selectedEmailGroup || accountsMarkedForDeletion.length === 0) return;
 
     setUpdating(true);
     try {
-      // Handle deletions (revoke licenses)
-      if (accountsMarkedForDeletion.length > 0) {
-        const revokeResponse = await fetch('/api/revoke-license', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accountIds: accountsMarkedForDeletion,
-            email: selectedEmailGroup.email,
-          }),
-        });
+      const revokeResponse = await fetch('/api/revoke-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountIds: accountsMarkedForDeletion,
+          email: selectedEmailGroup.email,
+        }),
+      });
 
-        if (!revokeResponse.ok) {
-          throw new Error('Failed to revoke licenses');
-        }
-      }
-
-      // Handle new licenses (grant licenses)
-      if (selectedAccounts.length > 0) {
-        // Get referralId from sessionStorage or user data
-        const referralId = userData?.referral_id;
-        
-        if (!referralId) {
-          throw new Error('Referral ID not found');
-        }
-
-        const grantResponse = await fetch('/api/grant-license', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accountIds: selectedAccounts,
-            email: selectedEmailGroup.email,
-            clientUid: selectedEmailGroup.uid,
-            userId: userId,
-            platform: selectedEmailGroup.platform,
-            referralId: referralId,
-          }),
-        });
-
-        if (!grantResponse.ok) {
-          throw new Error('Failed to grant licenses');
-        }
+      if (!revokeResponse.ok) {
+        throw new Error('Failed to revoke licenses');
       }
 
       // Refresh data
@@ -164,8 +138,50 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
       setSelectedAccounts([]);
       setAccountsMarkedForDeletion([]);
     } catch (err) {
-      console.error('Error updating accounts:', err);
-      setError('Không thể cập nhật tài khoản');
+      console.error('Error revoking licenses:', err);
+      setError('Không thể thu hồi bản quyền');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleGrantLicenses = async () => {
+    if (!selectedEmailGroup || selectedAccounts.length === 0) return;
+
+    setUpdating(true);
+    try {
+      // Get referralId from user data
+      const referralId = userData?.referral_id;
+      
+      if (!referralId) {
+        throw new Error('Referral ID not found');
+      }
+
+      const grantResponse = await fetch('/api/grant-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountIds: selectedAccounts,
+          email: selectedEmailGroup.email,
+          clientUid: selectedEmailGroup.uid,
+          userId: userId,
+          platform: selectedEmailGroup.platform,
+          referralId: referralId,
+        }),
+      });
+
+      if (!grantResponse.ok) {
+        throw new Error('Failed to grant licenses');
+      }
+
+      // Refresh data
+      await fetchUserInfo();
+      setModalOpen(false);
+      setSelectedAccounts([]);
+      setAccountsMarkedForDeletion([]);
+    } catch (err) {
+      console.error('Error granting licenses:', err);
+      setError('Không thể cấp bản quyền');
     } finally {
       setUpdating(false);
     }
@@ -173,7 +189,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
   if (loading) {
     return (
-      <Stack align="center" justify="center" style={{ minHeight: '400px' }}>
+      <Stack align="center" justify="center" className={classes.loadingContainer}>
         <Loader size="lg" />
         <Text c="dimmed">Đang tải thông tin...</Text>
       </Stack>
@@ -182,7 +198,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
   if (error || !userData) {
     return (
-      <Stack align="center" justify="center" style={{ minHeight: '400px' }}>
+      <Stack align="center" justify="center" className={classes.loadingContainer}>
         <Text c="red">{error || 'Không tìm thấy thông tin tài khoản'}</Text>
       </Stack>
     );
@@ -190,7 +206,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
   return (
     <Stack gap="xl" className={classes.container}>
-      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ backgroundColor: 'var(--mantine-color-dark-7)' }}>
+      <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.card}>
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Title order={2} size="h3" c="white">
@@ -281,11 +297,11 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
         </Stack>
       </Card>
 
-      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ backgroundColor: 'var(--mantine-color-dark-7)' }}>
+      <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.card}>
         <Stack gap="md">
           <Group align="center" gap="sm">
             <Title order={3} size="h4" c="white">
-              Tài khoản khách được cấp bản quyền ({emailGroups.length})
+              Tài khoản hiện có của bạn ({emailGroups.length})
             </Title>
           </Group>
 
@@ -293,7 +309,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
           {emailGroups.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
-              Bạn chưa có tài khoản khách nào được cấp bản quyền
+              Bạn chưa có tài khoản nào được cấp bản quyền
             </Text>
           ) : (
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -308,19 +324,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
                     padding="lg"
                     radius="md"
                     withBorder
-                    style={{
-                      backgroundColor: 'var(--mantine-color-dark-6)',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '';
-                    }}
+                    className={classes.emailCard}
                     onClick={() => openEmailModal(emailGroup)}
                   >
                     <Stack gap="sm">
@@ -328,7 +332,7 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
                         <ThemeIcon size="lg" radius="md" variant="light" color="blue">
                           <Mail size={20} />
                         </ThemeIcon>
-                        <Text fw={600} size="sm" style={{ wordBreak: 'break-word' }}>
+                        <Text fw={600} size="sm" className={classes.emailText}>
                           {emailGroup.email}
                         </Text>
                       </Group>
@@ -382,66 +386,121 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
             </div>
           </Group>
         }
-        size="lg"
+        size="1400px 100px"
         centered
       >
         <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Chọn tài khoản để cập nhật trạng thái bản quyền. Tài khoản đã cấp (màu xanh) có thể thu hồi, tài khoản chưa cấp (màu vàng) có thể cấp bản quyền.
-          </Text>
+          {selectedEmailGroup && (
+            <Alert
+              icon={<CheckCircle size={20} />}
+              color="blue"
+              radius="md"
+            >
+              <Text size="sm">
+                <strong>UID:</strong> {selectedEmailGroup.uid}
+              </Text>
+            </Alert>
+          )}
 
           <Divider />
 
           {selectedEmailGroup && selectedEmailGroup.accounts.length > 0 ? (
-            <Stack gap="xs">
-              {selectedEmailGroup.accounts.map((account) => {
-                const isLicensed = account.status === 'licensed';
-                const isMarkedForDeletion = accountsMarkedForDeletion.includes(account.accountId);
-                const isSelected = selectedAccounts.includes(account.accountId);
-                const isChecked = isLicensed ? isMarkedForDeletion : isSelected;
+            <Box>
+              <Text size="sm" fw={600} mb="xs">
+                Danh sách tài khoản (nhấn để chọn):
+              </Text>
+              
+              {/* Legend */}
+              <Group gap="xl" mb="sm">
+                <Group gap="xs">
+                  <Box className={`${classes.legendCircle} ${classes.legendViolet}`} />
+                  <Text size="sm" c="dimmed">
+                    ID đã cấp bản quyền
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <Box className={`${classes.legendCircle} ${classes.legendRed}`} />
+                  <Text size="sm" c="dimmed">
+                    ID được chọn để thu hồi
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <Box className={`${classes.legendCircle} ${classes.legendYellow}`} />
+                  <Text size="sm" c="dimmed">
+                    ID được chọn để cấp
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <Box className={`${classes.legendCircle} ${classes.legendOutline}`} />
+                  <Text size="sm" c="dimmed">
+                    ID khả dụng (chưa chọn)
+                  </Text>
+                </Group>
+              </Group>
 
-                return (
-                  <Box
-                    key={account.accountId}
-                    style={{
-                      border: `2px solid ${isLicensed ? (isMarkedForDeletion ? '#fa5252' : '#51cf66') : (isSelected ? '#ffd43b' : '#373A40')}`,
-                      borderRadius: '8px',
-                      padding: '12px',
-                      backgroundColor: 'var(--mantine-color-dark-6)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
-                    onClick={() => toggleAccountSelection(account.accountId, account.status)}
-                  >
-                    <Group justify="space-between" wrap="nowrap">
-                      <Group gap="sm">
-                        <Checkbox
-                          checked={isChecked}
-                          onChange={() => toggleAccountSelection(account.accountId, account.status)}
-                          color={isLicensed ? (isMarkedForDeletion ? 'red' : 'green') : 'yellow'}
-                        />
-                        <div>
-                          <Text fw={600} style={{ fontFamily: 'monospace' }}>
-                            {account.accountId}
-                          </Text>
-                          {account.licensedDate && (
-                            <Text size="xs" c="dimmed">
-                              {formatDate(account.licensedDate)}
-                            </Text>
-                          )}
-                        </div>
-                      </Group>
+              <Paper
+                withBorder
+                p="md"
+                radius="md"
+                className={classes.accountsPaper}
+              >
+                <Group gap="xs">
+                  {selectedEmailGroup.accounts.map((account) => {
+                    const isLicensed = account.status === 'licensed';
+                    const isSelected = selectedAccounts.includes(account.accountId);
+                    const isMarkedForDeletion = accountsMarkedForDeletion.includes(account.accountId);
+                    
+                    // Determine color and variant
+                    let badgeColor = 'gray';
+                    let badgeVariant: 'filled' | 'outline' = 'outline';
+                    
+                    if (isMarkedForDeletion) {
+                      badgeColor = 'red';
+                      badgeVariant = 'filled';
+                    } else if (isLicensed) {
+                      badgeColor = 'violet';
+                      badgeVariant = 'filled';
+                    } else if (isSelected) {
+                      badgeColor = '#FFB81C';
+                      badgeVariant = 'filled';
+                    }
+                    
+                    return (
                       <Badge
-                        color={isLicensed ? 'green' : 'yellow'}
-                        variant="filled"
+                        key={account.accountId}
+                        size="lg"
+                        variant={badgeVariant}
+                        color={badgeColor}
+                        className={`${classes.accountBadge} ${(isSelected || isMarkedForDeletion) && !isLicensed ? classes.accountBadgeSelected : ''}`}
+                        onClick={() => toggleAccountSelection(account.accountId, account.status)}
+                        title={account.licensedDate ? `Cấp ngày: ${formatDate(account.licensedDate)}` : 'Chưa cấp bản quyền'}
                       >
-                        {isLicensed ? 'Đã cấp' : 'Chưa cấp'}
+                        {account.accountId}
                       </Badge>
-                    </Group>
-                  </Box>
-                );
-              })}
-            </Stack>
+                    );
+                  })}
+                </Group>
+              </Paper>
+              
+              {selectedAccounts.length > 0 && (
+                <Text size="sm" c="dimmed" mt="xs">
+                  Mỗi email chỉ được sử dụng tối đa <strong className={classes.highlightedStrong}>{selectedAccounts.length}/3</strong> ID để cấp bản quyền Bot.
+                </Text>
+              )}
+
+              {accountsMarkedForDeletion.length > 0 && (
+                <Alert
+                  icon={<AlertCircle size={16} />}
+                  color="red"
+                  variant="light"
+                  mt="xs"
+                >
+                  <Text size="sm">
+                    Bạn đang chọn <strong>{accountsMarkedForDeletion.length}</strong> tài khoản để thu hồi bản quyền.
+                  </Text>
+                </Alert>
+              )}
+            </Box>
           ) : (
             <Text c="dimmed" ta="center" py="md">
               Không có tài khoản nào
@@ -451,34 +510,34 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
           <Divider />
 
           <Group justify="space-between">
-            <div>
+            <Button
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              disabled={updating}
+            >
+              Hủy
+            </Button>
+            <Group gap="sm">
               {accountsMarkedForDeletion.length > 0 && (
-                <Text size="sm" c="red">
-                  Thu hồi: {accountsMarkedForDeletion.length} tài khoản
-                </Text>
+                <Button
+                  color="red"
+                  onClick={handleRevokeLicenses}
+                  loading={updating}
+                  disabled={accountsMarkedForDeletion.length === 0}
+                >
+                  Xóa ({accountsMarkedForDeletion.length})
+                </Button>
               )}
               {selectedAccounts.length > 0 && (
-                <Text size="sm" c="yellow">
-                  Cấp mới: {selectedAccounts.length} tài khoản
-                </Text>
+                <Button
+                  leftSection={<Save size={16} />}
+                  onClick={handleGrantLicenses}
+                  loading={updating}
+                  disabled={selectedAccounts.length === 0}
+                >
+                  Cấp bản quyền ({selectedAccounts.length})
+                </Button>
               )}
-            </div>
-            <Group gap="sm">
-              <Button
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-                disabled={updating}
-              >
-                Hủy
-              </Button>
-              <Button
-                leftSection={<Save size={16} />}
-                onClick={handleUpdateAccounts}
-                loading={updating}
-                disabled={selectedAccounts.length === 0 && accountsMarkedForDeletion.length === 0}
-              >
-                Cập nhật
-              </Button>
             </Group>
           </Group>
         </Stack>
