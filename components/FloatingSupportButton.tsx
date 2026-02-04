@@ -11,6 +11,7 @@ export default function FloatingSupportButton() {
   const [isMenuClosing, setIsMenuClosing] = useState(false);
   const [partnerSupportLink, setPartnerSupportLink] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const lastSupportLinkRef = useRef<string | null>(null);
 
   // Get partner support link from sessionStorage
   useEffect(() => {
@@ -19,19 +20,26 @@ export default function FloatingSupportButton() {
       if (partnerPlatformData) {
         try {
           const data = JSON.parse(partnerPlatformData);
-          console.log('[FloatingSupportButton] Partner platform data:', data);
-          if (data.supportLink) {
-            console.log('[FloatingSupportButton] Setting support link:', data.supportLink);
-            setPartnerSupportLink(data.supportLink);
-          } else {
-            setPartnerSupportLink(null);
+          const newSupportLink = data.supportLink || null;
+          
+          // Only update and log if the support link has changed
+          if (newSupportLink !== lastSupportLinkRef.current) {
+            console.log('[FloatingSupportButton] Partner support link changed:', newSupportLink);
+            lastSupportLinkRef.current = newSupportLink;
+            setPartnerSupportLink(newSupportLink);
           }
         } catch (error) {
           console.error('Error parsing partner platform data:', error);
-          setPartnerSupportLink(null);
+          if (lastSupportLinkRef.current !== null) {
+            lastSupportLinkRef.current = null;
+            setPartnerSupportLink(null);
+          }
         }
       } else {
-        setPartnerSupportLink(null);
+        if (lastSupportLinkRef.current !== null) {
+          lastSupportLinkRef.current = null;
+          setPartnerSupportLink(null);
+        }
       }
     };
 

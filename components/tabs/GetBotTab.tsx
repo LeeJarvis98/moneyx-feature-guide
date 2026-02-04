@@ -420,7 +420,9 @@ export function GetBotTab() {
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs
           clientUid: accountData?.client_uid, // Send client UID
-          userId: userId // Send user ID for the id field
+          userId: userId, // Send user ID for own_licensed_accounts
+          platform: selectedPlatform, // Send the selected platform
+          referralId: referralId // Send referral ID to look up partner ID
         }),
       });
 

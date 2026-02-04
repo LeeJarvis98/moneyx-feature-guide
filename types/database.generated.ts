@@ -76,6 +76,38 @@ export type Database = {
           },
         ]
       }
+      own_licensed_accounts: {
+        Row: {
+          account_id: Json | null
+          created_at: string | null
+          email: string | null
+          id: string
+          uid: string | null
+        }
+        Insert: {
+          account_id?: Json | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          uid?: string | null
+        }
+        Update: {
+          account_id?: Json | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          uid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "own_licensed_accounts_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       own_referral_id_list: {
         Row: {
           created_at: string

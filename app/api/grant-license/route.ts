@@ -4,8 +4,8 @@ import { SHARED_SHEET_ID } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    const { accountIds, email, clientUid, userId } = await request.json();
-    console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid, 'User ID:', userId);
+    const { accountIds, email, clientUid, userId, platform, referralId } = await request.json();
+    console.log('[GRANT] Received account IDs to license:', accountIds, 'for email:', email, 'UID:', clientUid, 'User ID:', userId, 'Platform:', platform, 'Referral ID:', referralId);
 
     if (!accountIds || !Array.isArray(accountIds) || accountIds.length === 0) {
       return NextResponse.json(
@@ -35,6 +35,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!platform) {
+      return NextResponse.json(
+        { success: false, error: 'Platform is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!referralId) {
+      return NextResponse.json(
+        { success: false, error: 'Referral ID is required' },
+        { status: 400 }
+      );
+    }
+
     try {
       // Initialize clients
       const supabase = getSupabaseClient();
@@ -44,6 +58,30 @@ export async function POST(request: NextRequest) {
 
       // Format timestamp as ISO string
       const timestamp = new Date().toISOString();
+
+      // === LOOK UP PARTNER ID FROM REFERRAL ID ===
+      console.log('[GRANT] Looking up partner ID from referral ID:', referralId);
+      const { data: referralData, error: referralError } = await supabase
+        .from('own_referral_id_list')
+        .select('id')
+        .eq('own_referral_id', referralId)
+        .maybeSingle();
+
+      if (referralError) {
+        console.error('[GRANT] Error looking up partner ID:', referralError);
+        throw new Error('Failed to look up partner ID from referral ID');
+      }
+
+      if (!referralData || !referralData.id) {
+        console.error('[GRANT] No partner found for referral ID:', referralId);
+        return NextResponse.json(
+          { success: false, error: 'Invalid referral ID. Partner not found.' },
+          { status: 404 }
+        );
+      }
+
+      const partnerId = referralData.id;
+      console.log('[GRANT] Found partner ID:', partnerId, 'for referral ID:', referralId);
 
       // === CHECK FOR EXISTING ACCOUNTS IN SUPABASE ===
       console.log('[GRANT] Checking for existing accounts in Supabase...');
@@ -69,12 +107,12 @@ export async function POST(request: NextRequest) {
       if (newAccountIds.length > 0) {
         console.log('[GRANT] Writing', newAccountIds.length, 'new accounts to Supabase...');
         const licensedRecords = newAccountIds.map((accountId) => ({
-          id: userId, // Foreign key to users table
+          id: partnerId, // Foreign key to partner who referred this user
           email,
           uid: clientUid,
           account_id: accountId,
           licensed_date: timestamp,
-          platform: 'exness', // Default platform
+          platform: platform.toLowerCase(), // Use the platform from request
           licensed_status: 'licensed', // Set status to licensed
         }));
 
@@ -134,6 +172,94 @@ export async function POST(request: NextRequest) {
       });
 
       console.log('[GRANT] Successfully wrote to shared Google Sheet');
+
+      // === UPDATE/INSERT INTO OWN_LICENSED_ACCOUNTS ===
+      console.log('[GRANT] Updating own_licensed_accounts table...');
+      
+      // First, check if the user already has a record
+      const { data: existingRecord, error: fetchError } = await supabase
+        .from('own_licensed_accounts')
+        .select('account_id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('[GRANT] Error fetching existing record:', fetchError);
+        throw fetchError;
+      }
+
+      // Build the updated account_id JSON structure
+      let accountIdData: any = [];
+      
+      if (existingRecord && existingRecord.account_id) {
+        // Parse existing data
+        accountIdData = Array.isArray(existingRecord.account_id) 
+          ? existingRecord.account_id 
+          : [existingRecord.account_id];
+      }
+
+      // Find or create the platform entry
+      let platformEntry = accountIdData.find((entry: any) => entry && entry[platform.toLowerCase()]);
+      
+      if (!platformEntry) {
+        // Create new platform entry
+        platformEntry = {
+          [platform.toLowerCase()]: {
+            unlicense: [],
+            licensed: []
+          }
+        };
+        accountIdData.push(platformEntry);
+      }
+
+      const platformData = platformEntry[platform.toLowerCase()];
+      
+      // Add the newly licensed accounts with timestamps
+      const licensedEntries = accountIds.map(id => ({
+        [id]: timestamp
+      }));
+
+      // Merge with existing licensed accounts
+      const existingLicensed = platformData.licensed || [];
+      const existingLicensedIds = existingLicensed.map((entry: any) => {
+        if (typeof entry === 'object') {
+          return Object.keys(entry)[0];
+        }
+        return null;
+      }).filter(Boolean);
+
+      // Only add accounts that aren't already licensed
+      const newLicensedEntries = licensedEntries.filter(entry => {
+        const accountId = Object.keys(entry)[0];
+        return !existingLicensedIds.includes(accountId);
+      });
+
+      platformData.licensed = [...existingLicensed, ...newLicensedEntries];
+
+      // Remove newly licensed accounts from unlicense array if they exist there
+      platformData.unlicense = (platformData.unlicense || []).filter(
+        (id: string) => !accountIds.includes(id)
+      );
+
+      // Upsert the record
+      const { error: upsertError } = await supabase
+        .from('own_licensed_accounts')
+        .upsert({
+          id: userId,
+          email: email,
+          uid: clientUid,
+          account_id: accountIdData,
+          created_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+
+      if (upsertError) {
+        console.error('[GRANT] Error upserting own_licensed_accounts:', upsertError);
+        throw upsertError;
+      }
+
+      console.log('[GRANT] Successfully updated own_licensed_accounts table');
 
       return NextResponse.json({
         success: true,
