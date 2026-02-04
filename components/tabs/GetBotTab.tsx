@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   Box,
@@ -26,7 +26,7 @@ import {
   Accordion,
 } from '@mantine/core';
 import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video } from 'lucide-react';
-import { Turnstile } from '../Turnstile';
+import { Turnstile, TurnstileHandle } from '../Turnstile';
 import classes from './GetBotTab.module.css';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
@@ -65,6 +65,7 @@ export function GetBotTab() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [supportLink, setSupportLink] = useState<string>('https://zalo.me/0353522252/');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -168,6 +169,9 @@ export function GetBotTab() {
         setOtpResendTimer(otpResendDelay);
         // Increase delay for next resend (first 10s, then +15s each time)
         setOtpResendDelay(prev => prev + 15);
+        // Reset captcha token and widget for next resend
+        setCaptchaToken(null);
+        turnstileRef.current?.reset();
       } else {
         setAccountStatus('unauthorized');
         setErrorMessage(result.error || 'Không thể gửi OTP');
@@ -728,14 +732,16 @@ export function GetBotTab() {
                           variant="light"
                           onClick={sendOtp}
                           loading={accountStatus === 'checking'}
-                          disabled={accountStatus === 'checking' || otpResendTimer > 0}
+                          disabled={accountStatus === 'checking' || otpResendTimer > 0 || !captchaToken}
                           size="md"
                         >
                           {accountStatus === 'checking' 
                             ? 'Đang gửi...' 
                             : otpResendTimer > 0 
                               ? `Gửi lại (${otpResendTimer}s)` 
-                              : 'Gửi lại OTP'}
+                              : !captchaToken
+                                ? 'Hoàn thành Captcha trước'
+                                : 'Gửi lại OTP'}
                         </Button>
                       </Group>
                     )}
@@ -930,7 +936,7 @@ export function GetBotTab() {
 
                 <Box mt="xl">
                   <Group justify="right" mb="md">
-                    <Turnstile onSuccess={setCaptchaToken} />
+                    <Turnstile ref={turnstileRef} onSuccess={setCaptchaToken} />
                   </Group>
                   
                   <Group justify="space-between">

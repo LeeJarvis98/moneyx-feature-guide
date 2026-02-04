@@ -1,7 +1,7 @@
 'use client';
 
 import { Turnstile as CloudflareTurnstile, TurnstileInstance } from '@marsidev/react-turnstile';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import styles from './Turnstile.module.css';
 
 interface TurnstileProps {
@@ -11,8 +11,21 @@ interface TurnstileProps {
   className?: string;
 }
 
-export function Turnstile({ onSuccess, onError, onExpire, className }: TurnstileProps) {
+export interface TurnstileHandle {
+  reset: () => void;
+}
+
+export const Turnstile = forwardRef<TurnstileHandle, TurnstileProps>(function Turnstile(
+  { onSuccess, onError, onExpire, className },
+  ref
+) {
   const turnstileRef = useRef<TurnstileInstance>(null);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      turnstileRef.current?.reset();
+    },
+  }));
 
   // Get site key from environment variable
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -53,4 +66,4 @@ export function Turnstile({ onSuccess, onError, onExpire, className }: Turnstile
       className={className}
     />
   );
-}
+});
