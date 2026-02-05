@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient, getGoogleSheetsClient } from '@/lib/supabase';
-import { SHARED_SHEET_ID } from '@/lib/config';
+import { getSupabaseClient } from '@/lib/supabase';
 
 /**
- * Revoke license API - Removes account IDs from Google Sheets and updates status in Supabase
- * Note: Supabase records are NOT deleted to maintain history and allow future re-licensing
+ * Revoke license API - Updates account status to unlicensed in Supabase
+ * Note: Records are NOT deleted to maintain history and allow future re-licensing
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,65 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Initialize clients
+      // Initialize Supabase client
       const supabase = getSupabaseClient();
-      const sheets = await getGoogleSheetsClient();
-
-      console.log('[REVOKE] Reading from shared Google Sheet...');
-      
-      // Read all values from column B
-      const readResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHARED_SHEET_ID,
-        range: 'B:B',
-      });
-
-      const existingRows = readResponse.data.values || [];
-      console.log('[REVOKE] Total rows in sheet:', existingRows.length);
-
-      // Find rows that match the account IDs to delete
-      const rowsToDelete: number[] = [];
-      accountIds.forEach((accountId) => {
-        const rowIndex = existingRows.findIndex((row) => row[0] === accountId);
-        if (rowIndex !== -1) {
-          rowsToDelete.push(rowIndex + 1); // +1 because spreadsheet rows are 1-indexed
-          console.log('[REVOKE] Found account ID', accountId, 'at row', rowIndex + 1);
-        }
-      });
-
-      if (rowsToDelete.length === 0) {
-        console.log('[REVOKE] No matching rows found to delete');
-        return NextResponse.json({
-          success: true,
-          message: 'No matching account IDs found in Google Sheets',
-          deletedCount: 0,
-        });
-      }
-
-      console.log('[REVOKE] Rows to delete:', rowsToDelete);
-
-      // Delete rows in reverse order to avoid index shifting issues
-      const sortedRows = rowsToDelete.sort((a, b) => b - a);
-      
-      const deleteRequests = sortedRows.map((rowNumber) => ({
-        deleteDimension: {
-          range: {
-            sheetId: 0, // Assuming first sheet
-            dimension: 'ROWS',
-            startIndex: rowNumber - 1, // 0-indexed for API
-            endIndex: rowNumber, // Exclusive end
-          },
-        },
-      }));
-
-      // Execute batch delete
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: SHARED_SHEET_ID,
-        requestBody: {
-          requests: deleteRequests,
-        },
-      });
-
-      console.log('[REVOKE] Successfully deleted', rowsToDelete.length, 'rows from Google Sheets');
 
       // === UPDATE SUPABASE STATUS TO 'UNLICENSED' ===
       console.log('[REVOKE] Updating Supabase status to unlicensed...');
@@ -101,8 +43,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Licenses revoked successfully from Google Sheets and Supabase updated',
-        deletedCount: rowsToDelete.length,
+        message: 'Licenses revoked successfully in Supabase',
+        updatedCount: accountIds.length,
       });
 
     } catch (error) {

@@ -12,9 +12,6 @@ export interface AppConfig {
   active: boolean;
 }
 
-// Google Sheets ID for shared license tracking
-export const SHARED_SHEET_ID = process.env.SHARED_SHEET_ID || '';
-
 // Main application configuration
 export const MAIN_CONFIG: AppConfig = {
   id: 'main',

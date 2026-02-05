@@ -1,6 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient, getGoogleSheetsClient } from '@/lib/supabase';
-import { SHARED_SHEET_ID } from '@/lib/config';
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,11 +49,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Initialize clients
+      // Initialize Supabase client
       const supabase = getSupabaseClient();
-      const sheets = await getGoogleSheetsClient();
 
-      console.log('[GRANT] Writing licenses to Supabase and Google Sheets...');
+      console.log('[GRANT] Writing licenses to Supabase...');
 
       // Format timestamp as ISO string
       const timestamp = new Date().toISOString();
@@ -112,32 +110,6 @@ export async function POST(request: NextRequest) {
         console.warn('[GRANT] Warning: Only', updatedCount, 'of', accountIds.length, 'accounts were updated');
         console.warn('[GRANT] This might indicate that some accounts were not inserted during email verification');
       }
-
-      // === WRITE TO GOOGLE SHEETS (Shared license list) ===
-      console.log('[GRANT] Writing to shared Google Sheet...');
-      const readResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHARED_SHEET_ID,
-        range: 'B:B',
-      });
-
-      const existingRows = readResponse.data.values || [];
-      const nextRow = existingRows.length + 1;
-      console.log('[GRANT] Shared sheet - next empty row:', nextRow);
-
-      // Write only account IDs to column B
-      const simpleValues = accountIds.map((id) => [id]);
-      const simpleTargetRange = `B${nextRow}:B${nextRow + simpleValues.length - 1}`;
-      
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SHARED_SHEET_ID,
-        range: simpleTargetRange,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: simpleValues,
-        },
-      });
-
-      console.log('[GRANT] Successfully wrote to shared Google Sheet');
 
       return NextResponse.json({
         success: true,

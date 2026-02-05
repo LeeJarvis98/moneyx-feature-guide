@@ -307,7 +307,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
         setOtpVerified(true); // Mark OTP as verified
         setOtpError(null);
         setAccountData(result.data);
-        // Use accountsWithStatus if available (from Google Sheets check), otherwise use default status
+        // Use accountsWithStatus if available (from database check), otherwise use default status
         const rows: AccountRow[] = result.data.accountsWithStatus 
           ? result.data.accountsWithStatus 
           : result.data.accounts.map((accountId: string) => ({
@@ -316,7 +316,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
             }));
         setAccountRows(rows);
         
-        // Auto-select accounts that are already licensed (exist in Google Sheets)
+        // Auto-select accounts that are already licensed (exist in database)
         const licensedAccounts = rows
           .filter((row) => row.status === 'licensed')
           .map((row) => row.id);
@@ -408,7 +408,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
     }
   };
 
-  // Delete licenses from Google Sheets only (not from Supabase)
+  // Delete licenses (update status to unlicensed in Supabase)
   const deleteLicenses = async () => {
     if (accountsMarkedForDeletion.length === 0) {
       return;

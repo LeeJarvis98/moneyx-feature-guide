@@ -1,6 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSheetsClient, getSupabaseClient } from '@/lib/supabase';
-import { SHARED_SHEET_ID } from '@/lib/config';
+import { getSupabaseClient } from '@/lib/supabase';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { Resend } from 'resend';
 
@@ -22,7 +21,6 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-const RANGE = 'B:B'; // Column B (will use the first sheet)
 const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
 export async function POST(request: NextRequest) {
@@ -457,29 +455,30 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
         });
       }
 
-      // Step 2: Check which IDs exist in Google Sheets column B using Service Account
+      // Step 2: Check which IDs exist in Supabase licensed_accounts table
       try {
-        console.log('[CHECK-EMAIL] Step 2: Fetching from Google Sheets...');
+        console.log('[CHECK-EMAIL] Step 2: Checking license status in Supabase...');
         
-        // Initialize auth with centralized service account
-        const sheets = await getGoogleSheetsClient();
+        const supabase = getSupabaseClient();
 
-        // Read data from column B of the shared sheet
-        console.log('[CHECK-EMAIL] Reading Google Sheets, ID:', SHARED_SHEET_ID, 'Range:', RANGE);
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SHARED_SHEET_ID,
-          range: RANGE,
-        });
+        // Query licensed_accounts table for these account IDs
+        const { data: licensedAccounts, error: queryError } = await supabase
+          .from('licensed_accounts')
+          .select('account_id')
+          .in('account_id', clientData.accounts)
+          .eq('licensed_status', 'licensed');
 
-        const rows = response.data.values || [];
-        console.log('[CHECK-EMAIL] Google Sheets rows count:', rows.length);
-        
-        const existingIds = new Set(rows.map((row: any) => row[0]?.toString().toLowerCase()));
-        console.log('[CHECK-EMAIL] Existing IDs in Google Sheets:', Array.from(existingIds).slice(0, 5), '...');
+        if (queryError) {
+          console.error('[CHECK-EMAIL] Error querying licensed_accounts:', queryError);
+          throw queryError;
+        }
 
-        // Check each account ID against the Google Sheets data
+        const licensedIds = new Set((licensedAccounts || []).map(acc => acc.account_id.toLowerCase()));
+        console.log('[CHECK-EMAIL] Licensed IDs found:', Array.from(licensedIds).slice(0, 5), '...');
+
+        // Check each account ID against the licensed accounts
         const accountsWithStatus = clientData.accounts.map((accountId: string) => {
-          const isLicensed = existingIds.has(accountId.toLowerCase());
+          const isLicensed = licensedIds.has(accountId.toLowerCase());
           console.log(`[CHECK-EMAIL] Checking ${accountId}: ${isLicensed ? 'licensed' : 'unlicensed'}`);
           return {
             id: accountId,
@@ -495,8 +494,6 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
         } else {
           try {
             console.log('[CHECK-EMAIL] Step 3: Inserting account IDs into licensed_accounts table...');
-            
-            const supabase = getSupabaseClient();
             
             // Get user ID from session/cookie if available
             // For now, we'll get it from the referralId lookup
@@ -523,7 +520,7 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
               
               // Prepare records for all accounts
               const accountRecords = clientData.accounts.map((accountId: string) => {
-                const isLicensed = existingIds.has(accountId.toLowerCase());
+                const isLicensed = licensedIds.has(accountId.toLowerCase());
                 return {
                   id: partnerId,
                   email: email.toLowerCase(),
@@ -595,16 +592,15 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
           },
         });
 
-      } catch (sheetsError: any) {
-        console.error('[CHECK-EMAIL] Google Sheets API Error:', sheetsError);
+      } catch (dbError: any) {
+        console.error('[CHECK-EMAIL] Database Error:', dbError);
         console.error('[CHECK-EMAIL] Error details:', {
-          message: sheetsError.message,
-          code: sheetsError.code,
-          errors: sheetsError.errors,
+          message: dbError.message,
+          code: dbError.code,
         });
         
-        // If Google Sheets fails, still return data but without license status
-        console.warn('[CHECK-EMAIL] Google Sheets check failed, returning data without license status');
+        // If database check fails, still return data but without license status
+        console.warn('[CHECK-EMAIL] Database check failed, returning data without license status');
         return NextResponse.json({
           success: true,
           data: {
