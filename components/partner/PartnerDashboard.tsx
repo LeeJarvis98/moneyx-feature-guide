@@ -78,7 +78,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
           
           <Stack gap="xs" className={styles.dashboardNavStack}>
             <NavLink
-              label="Client"
+              label="Khách hàng"
               active={activeSection === 'reports'}
               fw={activeSection === 'reports' ? 700 : undefined}
               onClick={() => setActiveSection('reports')}
@@ -86,7 +86,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             />
             
             <NavLink
-              label="Partner System"
+              label="Hệ thống đối tác"
               active={activeSection === 'partnerSystem'}
               fw={activeSection === 'partnerSystem' ? 700 : undefined}
               onClick={() => setActiveSection('partnerSystem')}
@@ -123,10 +123,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Partner Dashboard</h1>
-      </div>
-
       {/* Main Content Area */}
       <div className={styles.content}>
         {activeSection === 'reports' && <ClientReports autoFetch={true} />}

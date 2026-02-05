@@ -1,0 +1,73 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.loadingContainer {
+  min-height: 400px;
+}
+
+.card {
+  background-color: var(--mantine-color-dark-7);
+}
+
+.emailCard {
+  background-color: var(--mantine-color-dark-6);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.emailCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.emailText {
+  word-break: break-word;
+}
+
+.legendCircle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.legendViolet {
+  background-color: var(--mantine-color-violet-6);
+}
+
+.legendRed {
+  background-color: var(--mantine-color-red-6);
+}
+
+.legendYellow {
+  background-color: #FFB81C;
+}
+
+.legendOutline {
+  border: 2px solid var(--mantine-color-gray-5);
+  background-color: transparent;
+}
+
+.accountsPaper {
+  background-color: var(--mantine-color-dark-7);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.accountBadge {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 10px 16px;
+  font-size: 16px;
+  opacity: 1;
+}
+
+.accountBadgeSelected {
+  color: black;
+}
+
+.highlightedStrong {
+  color: #FFB81C;
+}

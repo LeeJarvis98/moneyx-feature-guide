@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Box, TypographyStylesProvider, Loader, Center } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
+import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
 import { LoginTab } from '@/components/tabs/LoginTab';
 import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
@@ -246,6 +247,12 @@ export default function HomePage() {
     closeMobileAside();
     // Reset partner agreement visibility when changing tabs
     setShowPartnerAgreement(false);
+    // Set default article when switching to guides or strategies
+    if (value === 'guides') {
+      setSelectedArticle('lesson-1');
+    } else if (value === 'strategies') {
+      setSelectedArticle('strategy-1');
+    }
   };
 
   // Determine if navbar should be shown
@@ -290,17 +297,17 @@ export default function HomePage() {
     // Clear user session
     localStorage.removeItem('userId');
     sessionStorage.removeItem('userId');
-    
+
     // Clear partner-related data
     localStorage.removeItem('partnerRank');
     sessionStorage.removeItem('referralId');
     sessionStorage.removeItem('partnerPlatformData');
-    
+
     // Clear partner authentication using exnessApi
     exnessApi.clearToken();
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
-    
+
     // Reset all user and partner states
     setIsUserLoggedIn(false);
     setLoggedInUserId(null);
@@ -309,7 +316,7 @@ export default function HomePage() {
     setPartnerType('');
     setIsPartnerAuthenticated(false);
     setSelectedPlatform(null);
-    
+
     // Navigate to documentation tab
     handleNavigationChange('library');
     setActiveTab('guides');
@@ -451,28 +458,6 @@ export default function HomePage() {
                               )}
                             </CopyButton>
                           </Group>
-                          {daysToMonthEnd !== null && (
-                            <Badge
-                              variant="light"
-                              color="gray"
-                              size="lg"
-                              className={classes.countdownBanner}
-                            >
-                              <span className={classes.scrollingText}>
-                                {daysToMonthEnd === 0 ? (
-                                  <>
-                                    <span className={classes.highlightText}>Ngày mai</span>
-                                    {' sẽ chốt hoa hồng'}
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className={classes.highlightText}>{daysToMonthEnd} ngày</span>
-                                    {' nữa đến kỳ chốt hoa hồng'}
-                                  </>
-                                )}
-                              </span>
-                            </Badge>
-                          )}
                         </Group>
                       )}
                     </Group>
@@ -490,7 +475,7 @@ export default function HomePage() {
                       className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'library' ? classes.linkActive : ''}`}
                       onClick={() => handleNavigationChange('library')}
                     >
-                      Học viện
+                      Khách hàng
                     </button>
                     {!isUserLoggedIn ? (
                       <Button
@@ -537,7 +522,7 @@ export default function HomePage() {
                           </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
-                          <Menu.Item 
+                          <Menu.Item
                             leftSection={<User size={16} />}
                             onClick={() => {
                               handleNavigationChange('account');
@@ -546,7 +531,7 @@ export default function HomePage() {
                           >
                             Thông tin tài khoản
                           </Menu.Item>
-                          <Menu.Item 
+                          <Menu.Item
                             leftSection={<Settings size={16} />}
                             onClick={() => {
                               handleNavigationChange('account');
@@ -599,13 +584,22 @@ export default function HomePage() {
                             Chiến lược
                           </Tabs.Tab>
                           {isUserLoggedIn && (
-                            <Tabs.Tab
-                              value="get-bot"
-                              c={activeTab === 'get-bot' ? theme.white : undefined}
-                              fw={activeTab === 'get-bot' ? 700 : undefined}
-                            >
-                              Lấy Bot
-                            </Tabs.Tab>
+                            <>
+                              <Tabs.Tab
+                                value="get-bot"
+                                c={activeTab === 'get-bot' ? theme.white : undefined}
+                                fw={activeTab === 'get-bot' ? 700 : undefined}
+                              >
+                                Lấy Bot
+                              </Tabs.Tab>
+                              <Tabs.Tab
+                                value="manage-accounts"
+                                c={activeTab === 'manage-accounts' ? theme.white : undefined}
+                                fw={activeTab === 'manage-accounts' ? 700 : undefined}
+                              >
+                                Bản quyền
+                              </Tabs.Tab>
+                            </>
                           )}
                         </>
                       )}
@@ -838,9 +832,14 @@ export default function HomePage() {
                     <ArticleViewer selectedArticle={selectedArticle} />
                   </Tabs.Panel>
                   {isUserLoggedIn && (
-                    <Tabs.Panel value="get-bot">
-                      <GetBotTab />
-                    </Tabs.Panel>
+                    <>
+                      <Tabs.Panel value="get-bot">
+                        <GetBotTab isActive={activeTab === 'get-bot'} />
+                      </Tabs.Panel>
+                      <Tabs.Panel value="manage-accounts">
+                        <ManageAccountsTab isActive={activeTab === 'manage-accounts'} />
+                      </Tabs.Panel>
+                    </>
                   )}
                 </>
               )}
@@ -915,6 +914,28 @@ export default function HomePage() {
                   <Text size="sm" c="dimmed">
                     © {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.
                   </Text>
+                  {daysToMonthEnd !== null && (
+                    <Badge
+                      variant="light"
+                      color="gray"
+                      size="lg"
+                      className={classes.countdownBanner}
+                    >
+                      <span className={classes.scrollingText}>
+                        {daysToMonthEnd === 0 ? (
+                          <>
+                            <span className={classes.highlightText}>Ngày mai</span>
+                            {' sẽ chốt hoa hồng'}
+                          </>
+                        ) : (
+                          <>
+                            <span className={classes.highlightText}>{daysToMonthEnd} ngày</span>
+                            {' nữa đến kỳ chốt hoa hồng'}
+                          </>
+                        )}
+                      </span>
+                    </Badge>
+                  )}
                 </Group>
                 {/* <Group gap="md">
                 <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>

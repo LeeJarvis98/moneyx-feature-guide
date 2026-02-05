@@ -33,7 +33,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [partnerId, setPartnerId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; storedAccount?: string; errorType?: string } | string | null>(null);
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [showCongratulations, setShowCongratulations] = useState(false);
@@ -153,6 +153,12 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle account mismatch error specially
+        if (data.errorType === 'ACCOUNT_MISMATCH' && data.storedAccount) {
+          setError({ message: data.error, storedAccount: data.storedAccount, errorType: data.errorType });
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
       }
 
@@ -240,7 +246,17 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
           {/* Error Message */}
           {error && (
             <div className={styles.error} role="alert">
-              {error}
+              {typeof error === 'string' ? error : error.message}
+              {/* Display stored account with highlighting */}
+              {typeof error !== 'string' && error.storedAccount && (
+                <div style={{ marginTop: '8px' }}>
+                  Vui lòng sử dụng tài khoản{' '}
+                  <span style={{ fontWeight: 'bold', backgroundColor: '#FFB81C', padding: '2px 6px', borderRadius: '4px', color: '#000' }}>
+                    {error.storedAccount}
+                  </span>
+                  {' '}để đăng nhập.
+                </div>
+              )}
             </div>
           )}
 

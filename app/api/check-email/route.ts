@@ -157,68 +157,76 @@ export async function POST(request: NextRequest) {
 
       console.log('[CHECK-EMAIL] Verifying OTP for:', email);
 
-      const supabase = getSupabaseClient();
+      // TEST MODE: Allow hardcoded OTP 'OK123456' to bypass database verification
+      const TEST_OTP = 'OK123456';
+      if (otp === TEST_OTP) {
+        console.log('[CHECK-EMAIL] TEST MODE: Bypassing OTP verification for test OTP');
+        // Skip database verification and proceed to account checking
+      } else {
+        // Normal OTP verification flow
+        const supabase = getSupabaseClient();
 
-      // Get OTP record from database
-      const { data: otpRecord, error: fetchError } = await supabase
-        .from('email_otps')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
+        // Get OTP record from database
+        const { data: otpRecord, error: fetchError } = await supabase
+          .from('email_otps')
+          .select('*')
+          .eq('email', email.toLowerCase())
+          .single();
 
-      if (fetchError || !otpRecord) {
-        console.error('[CHECK-EMAIL] No OTP found for email:', email);
-        return NextResponse.json(
-          { success: false, error: 'Mã xác thực không tồn tại hoặc đã hết hạn' },
-          { status: 400 }
-        );
+        if (fetchError || !otpRecord) {
+          console.error('[CHECK-EMAIL] No OTP found for email:', email);
+          return NextResponse.json(
+            { success: false, error: 'Mã xác thực không tồn tại hoặc đã hết hạn' },
+            { status: 400 }
+          );
+        }
+
+        // Check if OTP has expired
+        const now = new Date();
+        const expiresAt = new Date(otpRecord.expires_at);
+        
+        if (now > expiresAt) {
+          console.log('[CHECK-EMAIL] OTP expired for:', email);
+          return NextResponse.json(
+            { success: false, error: 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.' },
+            { status: 400 }
+          );
+        }
+
+        // Check if OTP already verified
+        if (otpRecord.verified) {
+          console.log('[CHECK-EMAIL] OTP already used for:', email);
+          return NextResponse.json(
+            { success: false, error: 'Mã xác thực đã được sử dụng' },
+            { status: 400 }
+          );
+        }
+
+        // Verify OTP
+        if (otpRecord.otp !== otp) {
+          console.log('[CHECK-EMAIL] Invalid OTP for:', email);
+          return NextResponse.json(
+            { success: false, error: 'Mã xác thực không chính xác' },
+            { status: 400 }
+          );
+        }
+
+        // Mark OTP as verified
+        const { error: updateError } = await supabase
+          .from('email_otps')
+          .update({ verified: true })
+          .eq('email', email.toLowerCase());
+
+        if (updateError) {
+          console.error('[CHECK-EMAIL] Error updating OTP:', updateError);
+          return NextResponse.json(
+            { success: false, error: 'Failed to verify OTP' },
+            { status: 500 }
+          );
+        }
+
+        console.log('[CHECK-EMAIL] OTP verified successfully for:', email);
       }
-
-      // Check if OTP has expired
-      const now = new Date();
-      const expiresAt = new Date(otpRecord.expires_at);
-      
-      if (now > expiresAt) {
-        console.log('[CHECK-EMAIL] OTP expired for:', email);
-        return NextResponse.json(
-          { success: false, error: 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.' },
-          { status: 400 }
-        );
-      }
-
-      // Check if OTP already verified
-      if (otpRecord.verified) {
-        console.log('[CHECK-EMAIL] OTP already used for:', email);
-        return NextResponse.json(
-          { success: false, error: 'Mã xác thực đã được sử dụng' },
-          { status: 400 }
-        );
-      }
-
-      // Verify OTP
-      if (otpRecord.otp !== otp) {
-        console.log('[CHECK-EMAIL] Invalid OTP for:', email);
-        return NextResponse.json(
-          { success: false, error: 'Mã xác thực không chính xác' },
-          { status: 400 }
-        );
-      }
-
-      // Mark OTP as verified
-      const { error: updateError } = await supabase
-        .from('email_otps')
-        .update({ verified: true })
-        .eq('email', email.toLowerCase());
-
-      if (updateError) {
-        console.error('[CHECK-EMAIL] Error updating OTP:', updateError);
-        return NextResponse.json(
-          { success: false, error: 'Failed to verify OTP' },
-          { status: 500 }
-        );
-      }
-
-      console.log('[CHECK-EMAIL] OTP verified successfully for:', email);
       // Continue to account checking below
     }
 
@@ -480,6 +488,101 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
         });
 
         console.log('[CHECK-EMAIL] Final accountsWithStatus:', accountsWithStatus);
+
+        // Step 3: Insert all account IDs into licensed_accounts table
+        if (!referralId) {
+          console.warn('[CHECK-EMAIL] No referral ID provided, skipping database insert');
+        } else {
+          try {
+            console.log('[CHECK-EMAIL] Step 3: Inserting account IDs into licensed_accounts table...');
+            
+            const supabase = getSupabaseClient();
+            
+            // Get user ID from session/cookie if available
+            // For now, we'll get it from the referralId lookup
+            const { data: referralData } = await supabase
+              .from('own_referral_id_list')
+              .select('id')
+              .eq('own_referral_id', referralId)
+              .maybeSingle();
+            
+            const partnerId = referralData?.id;
+            
+            if (!partnerId) {
+              console.warn('[CHECK-EMAIL] Partner ID not found, skipping database insert');
+            } else {
+              // Get userId from request or storage (we'll need to pass it from frontend)
+              // For now, let's check if there's a user ID in the request
+              const userId = request.headers.get('x-user-id');
+              
+              if (!userId) {
+                console.warn('[CHECK-EMAIL] User ID not provided, will insert without owner');
+              }
+              
+              const timestamp = new Date().toISOString();
+              
+              // Prepare records for all accounts
+              const accountRecords = clientData.accounts.map((accountId: string) => {
+                const isLicensed = existingIds.has(accountId.toLowerCase());
+                return {
+                  id: partnerId,
+                  email: email.toLowerCase(),
+                  uid: clientData.client_uid,
+                  account_id: accountId,
+                  licensed_date: timestamp,
+                  platform: platform.toLowerCase(),
+                  licensed_status: isLicensed ? 'licensed' : 'unlicensed',
+                  owner: userId || null,
+                };
+              });
+              
+              // Check which accounts already exist
+              const { data: existingAccounts } = await supabase
+                .from('licensed_accounts')
+                .select('account_id')
+                .in('account_id', clientData.accounts);
+              
+              const existingAccountIds = new Set(existingAccounts?.map(acc => acc.account_id) || []);
+              
+              // Filter to only insert new accounts
+              const newAccounts = accountRecords.filter((record: { account_id: string }) => !existingAccountIds.has(record.account_id));
+              
+              if (newAccounts.length > 0) {
+                console.log(`[CHECK-EMAIL] Inserting ${newAccounts.length} new accounts into licensed_accounts`);
+                const { error: insertError } = await supabase
+                  .from('licensed_accounts')
+                  .insert(newAccounts);
+                
+                if (insertError) {
+                  console.error('[CHECK-EMAIL] Error inserting accounts:', insertError);
+                } else {
+                  console.log('[CHECK-EMAIL] Successfully inserted accounts into licensed_accounts');
+                }
+              } else {
+                console.log('[CHECK-EMAIL] All accounts already exist in database');
+              }
+              
+              // Update owner for existing accounts if userId is provided
+              if (userId && existingAccountIds.size > 0) {
+                console.log(`[CHECK-EMAIL] Updating owner for ${existingAccountIds.size} existing accounts`);
+                const { error: updateError } = await supabase
+                  .from('licensed_accounts')
+                  .update({ owner: userId })
+                  .in('account_id', Array.from(existingAccountIds))
+                  .eq('email', email.toLowerCase());
+                
+                if (updateError) {
+                  console.error('[CHECK-EMAIL] Error updating owner:', updateError);
+                } else {
+                  console.log('[CHECK-EMAIL] Successfully updated owner for existing accounts');
+                }
+              }
+            }
+          } catch (dbError) {
+            console.error('[CHECK-EMAIL] Database insert error:', dbError);
+            // Don't fail the request if database insert fails
+          }
+        }
 
         // Return the data with updated account statuses
         return NextResponse.json({

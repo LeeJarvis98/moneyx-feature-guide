@@ -83,68 +83,34 @@ export async function POST(request: NextRequest) {
       const partnerId = referralData.id;
       console.log('[GRANT] Found partner ID:', partnerId, 'for referral ID:', referralId);
 
-      // === CHECK FOR EXISTING ACCOUNTS IN SUPABASE ===
-      console.log('[GRANT] Checking for existing accounts in Supabase...');
-      const { data: existingAccounts, error: checkError } = await supabase
+      // === UPDATE ACCOUNTS STATUS TO 'LICENSED' IN SUPABASE ===
+      // All accounts should already exist from the check-email step
+      // We only need to update their licensed_status to 'licensed'
+      console.log('[GRANT] Updating', accountIds.length, 'accounts to licensed status in Supabase...');
+      
+      const { data: updatedAccounts, error: updateError } = await supabase
         .from('licensed_accounts')
-        .select('account_id')
-        .in('account_id', accountIds);
-
-      if (checkError) {
-        console.error('[GRANT] Error checking existing accounts:', checkError);
-        throw checkError;
-      }
-
-      const existingAccountIds = new Set(existingAccounts?.map((acc) => acc.account_id) || []);
-      console.log('[GRANT] Found', existingAccountIds.size, 'existing accounts:', Array.from(existingAccountIds));
-
-      // Filter out accounts that already exist
-      const newAccountIds = accountIds.filter((id) => !existingAccountIds.has(id));
-      console.log('[GRANT] New accounts to insert:', newAccountIds);
-
-      // === WRITE TO SUPABASE (Only new accounts) ===
-      let insertedRecords: any[] = [];
-      if (newAccountIds.length > 0) {
-        console.log('[GRANT] Writing', newAccountIds.length, 'new accounts to Supabase...');
-        const licensedRecords = newAccountIds.map((accountId) => ({
-          id: partnerId, // Foreign key to partner who referred this user
-          email,
-          uid: clientUid,
-          account_id: accountId,
+        .update({ 
+          licensed_status: 'licensed',
           licensed_date: timestamp,
-          platform: platform.toLowerCase(), // Use the platform from request
-          licensed_status: 'licensed', // Set status to licensed
-        }));
+          owner: userId // Update owner to current user
+        })
+        .in('account_id', accountIds)
+        .eq('email', email)
+        .select();
 
-        const { data: inserted, error: insertError } = await supabase
-          .from('licensed_accounts')
-          .insert(licensedRecords)
-          .select();
-
-        if (insertError) {
-          console.error('[GRANT] Supabase error:', insertError);
-          throw insertError;
-        }
-
-        insertedRecords = inserted || [];
-        console.log('[GRANT] Successfully wrote', insertedRecords.length, 'new records to Supabase');
-      } else {
-        console.log('[GRANT] All accounts already exist in Supabase, skipping insert');
+      if (updateError) {
+        console.error('[GRANT] Error updating accounts status:', updateError);
+        throw updateError;
       }
 
-      // === UPDATE EXISTING ACCOUNTS STATUS TO 'LICENSED' ===
-      if (existingAccountIds.size > 0) {
-        console.log('[GRANT] Updating', existingAccountIds.size, 'existing accounts to licensed status...');
-        const { error: updateError } = await supabase
-          .from('licensed_accounts')
-          .update({ licensed_status: 'licensed' })
-          .in('account_id', Array.from(existingAccountIds));
-
-        if (updateError) {
-          console.error('[GRANT] Error updating existing accounts status:', updateError);
-        } else {
-          console.log('[GRANT] Successfully updated existing accounts to licensed status');
-        }
+      const updatedCount = updatedAccounts?.length || 0;
+      console.log('[GRANT] Successfully updated', updatedCount, 'accounts to licensed status');
+      
+      // If some accounts weren't found (shouldn't happen), log a warning
+      if (updatedCount < accountIds.length) {
+        console.warn('[GRANT] Warning: Only', updatedCount, 'of', accountIds.length, 'accounts were updated');
+        console.warn('[GRANT] This might indicate that some accounts were not inserted during email verification');
       }
 
       // === WRITE TO GOOGLE SHEETS (Shared license list) ===
@@ -173,102 +139,13 @@ export async function POST(request: NextRequest) {
 
       console.log('[GRANT] Successfully wrote to shared Google Sheet');
 
-      // === UPDATE/INSERT INTO OWN_LICENSED_ACCOUNTS ===
-      console.log('[GRANT] Updating own_licensed_accounts table...');
-      
-      // First, check if the user already has a record
-      const { data: existingRecord, error: fetchError } = await supabase
-        .from('own_licensed_accounts')
-        .select('account_id')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('[GRANT] Error fetching existing record:', fetchError);
-        throw fetchError;
-      }
-
-      // Build the updated account_id JSON structure
-      let accountIdData: any = [];
-      
-      if (existingRecord && existingRecord.account_id) {
-        // Parse existing data
-        accountIdData = Array.isArray(existingRecord.account_id) 
-          ? existingRecord.account_id 
-          : [existingRecord.account_id];
-      }
-
-      // Find or create the platform entry
-      let platformEntry = accountIdData.find((entry: any) => entry && entry[platform.toLowerCase()]);
-      
-      if (!platformEntry) {
-        // Create new platform entry
-        platformEntry = {
-          [platform.toLowerCase()]: {
-            unlicense: [],
-            licensed: []
-          }
-        };
-        accountIdData.push(platformEntry);
-      }
-
-      const platformData = platformEntry[platform.toLowerCase()];
-      
-      // Add the newly licensed accounts with timestamps
-      const licensedEntries = accountIds.map(id => ({
-        [id]: timestamp
-      }));
-
-      // Merge with existing licensed accounts
-      const existingLicensed = platformData.licensed || [];
-      const existingLicensedIds = existingLicensed.map((entry: any) => {
-        if (typeof entry === 'object') {
-          return Object.keys(entry)[0];
-        }
-        return null;
-      }).filter(Boolean);
-
-      // Only add accounts that aren't already licensed
-      const newLicensedEntries = licensedEntries.filter(entry => {
-        const accountId = Object.keys(entry)[0];
-        return !existingLicensedIds.includes(accountId);
-      });
-
-      platformData.licensed = [...existingLicensed, ...newLicensedEntries];
-
-      // Remove newly licensed accounts from unlicense array if they exist there
-      platformData.unlicense = (platformData.unlicense || []).filter(
-        (id: string) => !accountIds.includes(id)
-      );
-
-      // Upsert the record
-      const { error: upsertError } = await supabase
-        .from('own_licensed_accounts')
-        .upsert({
-          id: userId,
-          email: email,
-          uid: clientUid,
-          account_id: accountIdData,
-          created_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
-
-      if (upsertError) {
-        console.error('[GRANT] Error upserting own_licensed_accounts:', upsertError);
-        throw upsertError;
-      }
-
-      console.log('[GRANT] Successfully updated own_licensed_accounts table');
-
       return NextResponse.json({
         success: true,
         data: {
-          updatedRows: insertedRecords.length,
+          updatedRows: updatedCount,
           totalAccounts: accountIds.length,
-          newAccounts: insertedRecords.length,
-          existingAccounts: existingAccountIds.size,
-          records: insertedRecords,
+          updatedAccounts: updatedCount,
+          records: updatedAccounts || [],
         },
       });
 

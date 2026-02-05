@@ -36,7 +36,14 @@ interface AccountRow {
   status: 'licensed' | 'unlicensed';
 }
 
-export function GetBotTab() {
+interface GetBotTabProps {
+  isActive?: boolean;
+}
+
+export function GetBotTab({ isActive = false }: GetBotTabProps) {
+  // TEST MODE FLAG - Set to true to bypass OTP verification for testing
+  const TEST_MODE = true;
+
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)
   const partnerId = pathname.startsWith('/') && pathname !== '/' ? pathname.slice(1).split('/')[0] : null;
@@ -91,6 +98,56 @@ export function GetBotTab() {
     }
   }, [otpResendTimer]);
 
+  // Reset to step 1 when tab becomes active
+  useEffect(() => {
+    if (isActive) {
+      setActive(0);
+    }
+  }, [isActive]);
+
+  // Function to refresh license statuses from database without re-fetching from external API
+  const refreshLicenseStatuses = async () => {
+    try {
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (!userId) return;
+
+      const response = await fetch('/api/get-licensed-ids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email,
+          platform: selectedPlatform,
+          userId 
+        }),
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+      
+      if (result.success && result.licensedIds) {
+        const licensedSet = new Set(result.licensedIds);
+        
+        // Update account rows with current license statuses
+        setAccountRows((prev) =>
+          prev.map((row) => ({
+            ...row,
+            status: licensedSet.has(row.id) ? 'licensed' : 'unlicensed',
+          }))
+        );
+        
+        // Update selected accounts to match current licensed accounts (up to 3)
+        const currentLicensed = accountRows
+          .filter((row) => licensedSet.has(row.id))
+          .map((row) => row.id)
+          .slice(0, 3);
+        setSelectedAccounts(currentLicensed);
+      }
+    } catch (error) {
+      console.error('[GetBotTab] Error refreshing license statuses:', error);
+    }
+  };
+
   // Load partner platform data on mount
   useEffect(() => {
     const loadPartnerData = () => {
@@ -142,6 +199,18 @@ export function GetBotTab() {
     setAccountStatus('checking');
     setErrorMessage('');
 
+    // TEST MODE: Skip OTP sending and proceed directly to account checking
+    if (TEST_MODE) {
+      console.log('[TEST MODE] Bypassing OTP verification');
+      setOtpSent(true);
+      setOtpVerified(true);
+      setOtp('OK123456');
+      setAccountStatus('idle');
+      // Proceed to check account status with hardcoded OTP
+      setTimeout(() => checkAccountStatus('OK123456'), 100);
+      return;
+    }
+
     try {
       const response = await fetch('/api/check-email', {
         method: 'POST',
@@ -185,7 +254,7 @@ export function GetBotTab() {
   };
 
   // Function to verify OTP and check account status
-  const checkAccountStatus = async () => {
+  const checkAccountStatus = async (testOtp?: string) => {
     setVerifyingOtp(true);
     setErrorMessage('');
     setAccountData(null);
@@ -203,18 +272,26 @@ export function GetBotTab() {
         return;
       }
 
+      // Get userId from storage to pass to API
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+      // Use testOtp if provided (TEST_MODE), otherwise use state otp
+      const otpToSend = testOtp || otp;
+      console.log('[CHECK-EMAIL] Sending OTP:', otpToSend);
+
       // Call check-email API with OTP verification
       const response = await fetch('/api/check-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': userId || '', // Pass userId in header for database insert
         },
         body: JSON.stringify({ 
           email,
           platform: selectedPlatform,
           referralId: referralId,
           captchaToken: captchaToken,
-          otp: otp,
+          otp: otpToSend,
           action: 'verify-otp',
         }),
       });
@@ -420,7 +497,7 @@ export function GetBotTab() {
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs
           clientUid: accountData?.client_uid, // Send client UID
-          userId: userId, // Send user ID for own_licensed_accounts
+          userId: userId, // Send user ID to set as owner in licensed_accounts
           platform: selectedPlatform, // Send the selected platform
           referralId: referralId // Send referral ID to look up partner ID
         }),
@@ -703,7 +780,14 @@ export function GetBotTab() {
                           onClick={() => {
                             setOtpSent(false);
                             setOtp('');
+                            setOtpVerified(false);
+                            setOtpError(null);
                             setAccountStatus('idle');
+                            setAccountData(null);
+                            setAccountRows([]);
+                            setSelectedAccounts([]);
+                            setCaptchaToken(null);
+                            turnstileRef.current?.reset();
                           }}
                           size="md"
                         >

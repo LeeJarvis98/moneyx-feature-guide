@@ -45,6 +45,7 @@ export type Database = {
           id: string | null
           licensed_date: string
           licensed_status: string | null
+          owner: string | null
           platform: string | null
           uid: string
         }
@@ -54,6 +55,7 @@ export type Database = {
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
+          owner?: string | null
           platform?: string | null
           uid: string
         }
@@ -63,6 +65,7 @@ export type Database = {
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
+          owner?: string | null
           platform?: string | null
           uid?: string
         }
@@ -71,38 +74,6 @@ export type Database = {
             foreignKeyName: "licensed_accounts_id_fkey"
             columns: ["id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      own_licensed_accounts: {
-        Row: {
-          account_id: Json | null
-          created_at: string | null
-          email: string | null
-          id: string
-          uid: string | null
-        }
-        Insert: {
-          account_id?: Json | null
-          created_at?: string | null
-          email?: string | null
-          id: string
-          uid?: string | null
-        }
-        Update: {
-          account_id?: Json | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          uid?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "own_licensed_accounts_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },

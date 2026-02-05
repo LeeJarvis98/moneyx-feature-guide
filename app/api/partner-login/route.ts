@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Store platform credentials in partners table
+      // Check and store platform credentials in partners table
       let userIdToUpdate: string | null = null;
       try {
         const supabase = getSupabaseClient();
@@ -147,16 +147,42 @@ export async function POST(request: NextRequest) {
             platformAccounts = partnerData.platform_accounts;
           }
 
+          // Check if this platform already exists in the array
+          const existingIndex = platformAccounts.findIndex(acc => 
+            acc && typeof acc === 'object' && platform.toLowerCase() in acc
+          );
+
+          // If platform account already exists, verify it matches the current login attempt
+          if (existingIndex >= 0) {
+            const existingAccount = platformAccounts[existingIndex][platform.toLowerCase()];
+            
+            if (existingAccount && existingAccount.email) {
+              // Check if the email/partnerId matches the stored one
+              if (existingAccount.email !== partnerId) {
+                console.log('[PARTNER-LOGIN] Attempt to login with different account detected');
+                console.log('[PARTNER-LOGIN] Stored account:', existingAccount.email);
+                console.log('[PARTNER-LOGIN] Attempted account:', partnerId);
+                
+                return NextResponse.json(
+                  { 
+                    error: `Bạn đang đăng nhập bằng tài khoản ${platform.charAt(0).toUpperCase() + platform.slice(1)} khác.`,
+                    storedAccount: existingAccount.email,
+                    errorType: 'ACCOUNT_MISMATCH'
+                  },
+                  { status: 403 }
+                );
+              }
+              
+              // Account matches, update the password in case it changed
+              console.log('[PARTNER-LOGIN] Account matches stored record, updating password');
+            }
+          }
+
           // Create or update the platform account credentials
           const credentials: PlatformAccountCredentials = {
             email: partnerId,
             password: password
           };
-
-          // Check if this platform already exists in the array
-          const existingIndex = platformAccounts.findIndex(acc => 
-            acc && typeof acc === 'object' && platform.toLowerCase() in acc
-          );
 
           if (existingIndex >= 0) {
             // Update existing platform credentials
@@ -164,6 +190,7 @@ export async function POST(request: NextRequest) {
           } else {
             // Add new platform credentials
             platformAccounts.push({ [platform.toLowerCase()]: credentials });
+            console.log('[PARTNER-LOGIN] First time login for this platform, storing account');
           }
 
           // Update the partners table
