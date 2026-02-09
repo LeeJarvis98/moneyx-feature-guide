@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Box, Paper, Alert } from '@mantine/core';
-import { Mail, Save, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Save, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
+import { Turnstile, TurnstileHandle } from '@/components/Turnstile';
 import classes from './ManageAccountsTab.module.css';
 
 interface AccountRow {
@@ -33,12 +34,24 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
   const [accountsMarkedForDeletion, setAccountsMarkedForDeletion] = useState<string[]>([]);
   const [updating, setUpdating] = useState(false);
   const [referralId, setReferralId] = useState<string>('');
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [updateClickCount, setUpdateClickCount] = useState<Record<string, number>>({});
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     if (isActive) {
       fetchOwnAccounts();
     }
   }, [isActive]);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const fetchOwnAccounts = async () => {
     try {
@@ -86,7 +99,89 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
     setSelectedEmailGroup(emailGroup);
     setSelectedAccounts([]);
     setAccountsMarkedForDeletion([]);
+    setCaptchaToken('');
+    setError('');
     setModalOpen(true);
+  };
+
+  const handleRefreshAccounts = async () => {
+    if (!selectedEmailGroup || !captchaToken || countdown > 0) return;
+
+    setRefreshing(true);
+    setError('');
+
+    try {
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+      if (!userId) {
+        setError('Vui lòng đăng nhập để cập nhật');
+        return;
+      }
+
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
+        body: JSON.stringify({
+          email: selectedEmailGroup.email,
+          platform: selectedEmailGroup.platform,
+          referralId: referralId,
+          captchaToken: captchaToken,
+          action: 'refresh',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to refresh accounts');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh the account list
+        const updatedResponse = await fetch('/api/get-own-accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (updatedResponse.ok) {
+          const updatedData = await updatedResponse.json();
+          const updatedGroups = updatedData.licensedAccountsByEmail || [];
+          setEmailGroups(updatedGroups);
+          
+          // Update the selected email group with fresh data
+          const updatedEmailGroup = updatedGroups.find(
+            (group: EmailGroup) => group.email === selectedEmailGroup.email && group.platform === selectedEmailGroup.platform
+          );
+          
+          if (updatedEmailGroup) {
+            setSelectedEmailGroup(updatedEmailGroup);
+          }
+        }
+        
+        // Update click count and set countdown
+        const emailKey = selectedEmailGroup.email;
+        const clickCount = (updateClickCount[emailKey] || 0) + 1;
+        setUpdateClickCount(prev => ({ ...prev, [emailKey]: clickCount }));
+        
+        // First click: 10 seconds, subsequent clicks: +15 seconds each
+        const delay = clickCount === 1 ? 10 : 10 + (clickCount - 1) * 15;
+        setCountdown(delay);
+        
+        // Reset Turnstile
+        turnstileRef.current?.reset();
+        setCaptchaToken('');
+      }
+    } catch (err: any) {
+      console.error('Error refreshing accounts:', err);
+      setError(err.message || 'Không thể cập nhật tài khoản');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const toggleAccountSelection = (accountId: string, status: 'licensed' | 'unlicensed') => {
@@ -307,18 +402,34 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
       {/* Account Management Modal */}
       <Modal
         opened={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setError('');
+          setCaptchaToken('');
+          setCountdown(0);
+        }}
         title={
 
-          <Group gap="sm">
-            <Badge variant="light" color="blue" tt="capitalize" size="sm">
-              {selectedEmailGroup?.platform}
-            </Badge>
-            <Mail size={24} />
-            <div>
-              <Text fw={600}>{selectedEmailGroup?.email}</Text>
-
-            </div>
+          <Group gap="sm" justify="space-between">
+            <Group gap="sm">
+              <Badge variant="light" color="blue" tt="capitalize" size="sm">
+                {selectedEmailGroup?.platform}
+              </Badge>
+              <Mail size={24} />
+              <div>
+                <Text fw={600}>{selectedEmailGroup?.email}</Text>
+              </div>
+            </Group>
+            <Button
+              leftSection={<RefreshCw size={16} />}
+              onClick={handleRefreshAccounts}
+              loading={refreshing}
+              disabled={!captchaToken || countdown > 0 || refreshing}
+              variant="light"
+              color="blue"
+            >
+              {countdown > 0 ? `Đợi ${countdown}s` : 'Cập nhật'}
+            </Button>
           </Group>
         }
         size="1400px 100px"
@@ -326,18 +437,16 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
       >
         <Stack gap="md">
           {selectedEmailGroup && (
-            <Alert
-              icon={<CheckCircle size={20} />}
-              color="blue"
-              radius="md"
-            >
-              <Text size="sm">
-                <strong>UID:</strong> {selectedEmailGroup.uid}
-              </Text>
-            </Alert>
-          )}
-
-          <Divider />
+              <Alert
+                icon={<CheckCircle size={20} />}
+                color="blue"
+                radius="md"
+              >
+                <Text size="sm">
+                  <strong>UID:</strong> {selectedEmailGroup.uid}
+                </Text>
+              </Alert>
+            )}
 
           {selectedEmailGroup && selectedEmailGroup.accounts.length > 0 ? (
             <Box>
@@ -441,6 +550,31 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
               Không có tài khoản nào
             </Text>
           )}
+
+          <Divider />
+
+          {/* Error Alert */}
+          {error && (
+            <Alert
+              icon={<AlertCircle size={20} />}
+              color="red"
+              variant="filled"
+              withCloseButton
+              onClose={() => setError('')}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {/* Turnstile and Update Section */}
+          <Stack gap="md" align="center">
+            <Turnstile
+              ref={turnstileRef}
+              onSuccess={(token) => setCaptchaToken(token)}
+              onError={() => setCaptchaToken('')}
+              onExpire={() => setCaptchaToken('')}
+            />
+          </Stack>
 
           <Divider />
 

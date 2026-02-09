@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     console.log('[CHECK-EMAIL] Received email:', email);
     console.log('[CHECK-EMAIL] Platform:', platform);
     console.log('[CHECK-EMAIL] Referral ID:', referralId);
+    console.log('[CHECK-EMAIL] Action:', action);
     console.log('[CHECK-EMAIL] Captcha token present:', !!captchaToken);
     console.log('[CHECK-EMAIL] Platform token in header:', !!platformToken);
 
@@ -251,6 +252,12 @@ export async function POST(request: NextRequest) {
 
         console.log('[CHECK-EMAIL] OTP verified successfully for:', email);
       }
+      // Continue to account checking below
+    }
+
+    // Handle refresh action - skip OTP but continue to account checking
+    if (action === 'refresh') {
+      console.log('[CHECK-EMAIL] Refresh action - skipping OTP verification');
       // Continue to account checking below
     }
 

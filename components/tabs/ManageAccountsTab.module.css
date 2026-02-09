@@ -71,3 +71,14 @@
 .highlightedStrong {
   color: #FFB81C;
 }
+
+.updateSection {
+  background-color: var(--mantine-color-dark-6);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--mantine-color-dark-4);
+}
+
+.updateButton {
+  min-width: 120px;
+}
