@@ -14,15 +14,29 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // Fetch partner data (excluding platform_ref_links)
+    // Fetch partner data from partners table
     const { data: partnerData, error: partnerError } = await supabase
       .from('partners')
+      .select('id, created_at, partner_type, partner_type_change_date, platform_accounts, platform_ref_links, selected_platform, support_link')
+      .eq('id', userId)
+      .single();
+
+    if (partnerError) {
+      console.error('Error fetching partner data:', partnerError);
+      return NextResponse.json(
+        { error: 'Failed to fetch partner data' },
+        { status: 500 }
+      );
+    }
+
+    // Fetch partner detail data from partner_detail table
+    const { data: partnerDetailData, error: detailError } = await supabase
+      .from('partner_detail')
       .select(`
         id,
-        created_at,
-        partner_type,
+        uid,
+        platform,
         partner_list,
-        platform_accounts,
         total_clients,
         total_client_lots,
         total_client_reward,
@@ -36,28 +50,26 @@ export async function POST(request: NextRequest) {
         accum_partner_reward,
         accum_refer_reward,
         accum_time_remaining,
-        claim_client_reward,
-        claim_partner_reward,
-        claim_refer_reward,
         claim_time_remaining,
-        last_claim_client_reward,
-        last_claim_partner_reward,
-        last_claim_refer_reward
+        total_reward_history,
+        updated_at
       `)
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    if (partnerError) {
-      console.error('Error fetching partner data:', partnerError);
-      return NextResponse.json(
-        { error: 'Failed to fetch partner data' },
-        { status: 500 }
-      );
+    if (detailError) {
+      console.error('Error fetching partner detail data:', detailError);
     }
+
+    // Merge both data sets
+    const combinedData = {
+      ...partnerData,
+      ...partnerDetailData,
+    };
 
     return NextResponse.json({
       success: true,
-      data: partnerData,
+      data: combinedData,
     });
   } catch (error) {
     console.error('Error in get-partner-data:', error);

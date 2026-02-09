@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists in partners table and get partner_type and claim rewards
+    // Check if user exists in partners table and get partner_type
     const { data: partner, error: partnerError } = await supabase
       .from('partners')
-      .select('id, partner_type, partner_type_change_date, last_claim_client_reward, last_claim_partner_reward, last_claim_refer_reward, claim_client_reward, claim_partner_reward, claim_refer_reward')
+      .select('id, partner_type, partner_type_change_date')
       .eq('id', partnerId)
       .maybeSingle();
 
@@ -35,12 +35,6 @@ export async function POST(request: NextRequest) {
         referralId: null,
         partnerType: null,
         partnerTypeChangeDate: null,
-        last_claim_client_reward: 0,
-        last_claim_partner_reward: 0,
-        last_claim_refer_reward: 0,
-        claim_client_reward: 0,
-        claim_partner_reward: 0,
-        claim_refer_reward: 0,
       });
     }
 
@@ -72,12 +66,6 @@ export async function POST(request: NextRequest) {
       referralId: referralData?.own_referral_id || null,
       partnerType: partner?.partner_type || null,
       partnerTypeChangeDate: partner?.partner_type_change_date || null,
-      last_claim_client_reward: partner?.last_claim_client_reward || 0,
-      last_claim_partner_reward: partner?.last_claim_partner_reward || 0,
-      last_claim_refer_reward: partner?.last_claim_refer_reward || 0,
-      claim_client_reward: partner?.claim_client_reward || 0,
-      claim_partner_reward: partner?.claim_partner_reward || 0,
-      claim_refer_reward: partner?.claim_refer_reward || 0,
     });
   } catch (error) {
     console.error('[check-partner-status] Error:', error);

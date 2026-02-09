@@ -42,7 +42,7 @@ interface GetBotTabProps {
 
 export function GetBotTab({ isActive = false }: GetBotTabProps) {
   // TEST MODE FLAG - Set to true to bypass OTP verification for testing
-  const TEST_MODE = true;
+  const TEST_MODE = false;
 
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)
@@ -225,10 +225,6 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const result = await response.json();
 
       if (result.success && result.otpSent) {
@@ -244,6 +240,8 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
       } else {
         setAccountStatus('unauthorized');
         setErrorMessage(result.error || 'Không thể gửi OTP');
+        setCaptchaToken(null);
+        turnstileRef.current?.reset();
       }
     } catch (error) {
       setCaptchaToken(null);
@@ -772,7 +770,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
                           size="md"
                           className={classes.glowButton}
                         >
-                          Gửi OTP
+                          Kiểm tra
                         </Button>
                       ) : (
                         <Button
@@ -877,7 +875,9 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
                         color="red"
                         radius="md"
                       >
-                        {errorMessage || 'Không thể xác thực email. Vui lòng kiểm tra lại email và sàn giao dịch.'}
+                        <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
+                          {errorMessage || 'Không thể xác thực email. Vui lòng kiểm tra lại email và sàn giao dịch.'}
+                        </Text>
                       </Alert>
                     )}
 

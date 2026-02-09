@@ -9,12 +9,12 @@ interface AccumulationHistoryProps {
 }
 
 interface ClaimRewards {
-  last_claim_client_reward: number;
-  last_claim_partner_reward: number;
-  last_claim_refer_reward: number;
-  claim_client_reward: number;
-  claim_partner_reward: number;
-  claim_refer_reward: number;
+  accum_client_reward: number;
+  accum_partner_reward: number;
+  accum_refer_reward: number;
+  total_client_reward: number;
+  total_partner_reward: number;
+  total_refer_reward: number;
 }
 
 export default function AccumulationHistory({ autoFetch = false }: AccumulationHistoryProps) {
@@ -36,21 +36,22 @@ export default function AccumulationHistory({ autoFetch = false }: AccumulationH
         return;
       }
 
-      const response = await fetch('/api/check-partner-status', {
+      const response = await fetch('/api/get-partner-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId: userId }),
+        body: JSON.stringify({ userId }),
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data;
         setRewards({
-          last_claim_client_reward: data.last_claim_client_reward || 0,
-          last_claim_partner_reward: data.last_claim_partner_reward || 0,
-          last_claim_refer_reward: data.last_claim_refer_reward || 0,
-          claim_client_reward: data.claim_client_reward || 0,
-          claim_partner_reward: data.claim_partner_reward || 0,
-          claim_refer_reward: data.claim_refer_reward || 0,
+          accum_client_reward: data.accum_client_reward || 0,
+          accum_partner_reward: data.accum_partner_reward || 0,
+          accum_refer_reward: data.accum_refer_reward || 0,
+          total_client_reward: data.total_client_reward || 0,
+          total_partner_reward: data.total_partner_reward || 0,
+          total_refer_reward: data.total_refer_reward || 0,
         });
       }
     } catch (error) {
@@ -70,12 +71,12 @@ export default function AccumulationHistory({ autoFetch = false }: AccumulationH
   };
 
   const rewardCards = rewards ? [
-    { title: 'Last Claim Client Reward', value: rewards.last_claim_client_reward, color: '#FFB81C' },
-    { title: 'Last Claim Partner Reward', value: rewards.last_claim_partner_reward, color: '#FFC82E' },
-    { title: 'Last Claim Refer Reward', value: rewards.last_claim_refer_reward, color: '#FFD54F' },
-    { title: 'Claim Client Reward', value: rewards.claim_client_reward, color: '#40c057' },
-    { title: 'Claim Partner Reward', value: rewards.claim_partner_reward, color: '#51cf66' },
-    { title: 'Claim Refer Reward', value: rewards.claim_refer_reward, color: '#69db7c' },
+    { title: 'Tổng Com Khách', value: rewards.total_client_reward, color: '#FFB81C' },
+    { title: 'Tổng Com Đối Tác', value: rewards.total_partner_reward, color: '#FFC82E' },
+    { title: 'Tổng Com Ref.', value: rewards.total_refer_reward, color: '#FFD54F' },
+    { title: 'Tích lũy Com Khách tháng này', value: rewards.accum_client_reward, color: '#40c057' },
+    { title: 'Tích lũy Com Đối Tác tháng này', value: rewards.accum_partner_reward, color: '#51cf66' },
+    { title: 'Tích lũy Com Ref. tháng này', value: rewards.accum_refer_reward, color: '#69db7c' },
   ] : [];
 
   return (

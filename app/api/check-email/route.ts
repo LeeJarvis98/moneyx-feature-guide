@@ -73,14 +73,40 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Check if email already exists in licensed_accounts table
+      const supabase = getSupabaseClient();
+      const { data: existingLicense, error: checkError } = await supabase
+        .from('licensed_accounts')
+        .select('email, platform')
+        .ilike('email', email)
+        .eq('platform', platform)
+        .limit(1);
+      
+      if (checkError) {
+        console.error('[CHECK-EMAIL] Error checking licensed_accounts:', checkError);
+      }
+      
+      if (existingLicense && existingLicense.length > 0) {
+        console.log('[CHECK-EMAIL] Email already exists in licensed_accounts:', email);
+        const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Email "${email}" đã được xác nhận trong hệ thống.\n\nMỗi email chỉ cần kiểm tra một lần duy nhất. Bạn có thể chuyển sang tab Bản quyền để quản lý tài khoản của mình.` 
+          },
+          { status: 400 }
+        );
+      }
+
+      console.log('[CHECK-EMAIL] Email not found in licensed_accounts, proceeding with OTP');
+
       // Generate OTP
       const otpCode = generateOTP();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
       
       console.log('[CHECK-EMAIL] Generated OTP:', otpCode, 'for email:', email);
       
-      // Store OTP in database
-      const supabase = getSupabaseClient();
+      // Store OTP in database (reuse supabase instance from above)
       const { error: otpError } = await supabase
         .from('email_otps')
         .upsert({
