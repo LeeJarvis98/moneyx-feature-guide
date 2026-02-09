@@ -105,6 +105,83 @@ export type Database = {
           },
         ]
       }
+      partner_detail: {
+        Row: {
+          accum_client_reward: number
+          accum_partner_reward: number
+          accum_refer_reward: number
+          accum_time_remaining: number
+          claim_time_remaining: number
+          id: string
+          partner_list: Json[]
+          platform: string | null
+          this_month_tradi_com: number
+          total_client_lots: number
+          total_client_reward: number
+          total_clients: number
+          total_partner_lots: number
+          total_partner_reward: number
+          total_partners: number
+          total_refer_reward: number
+          total_reward_history: Json[]
+          total_tradi_com: number
+          uid: string
+          updated_at: string
+        }
+        Insert: {
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          accum_refer_reward?: number
+          accum_time_remaining?: number
+          claim_time_remaining?: number
+          id: string
+          partner_list?: Json[]
+          platform?: string | null
+          this_month_tradi_com?: number
+          total_client_lots?: number
+          total_client_reward?: number
+          total_clients?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          total_refer_reward?: number
+          total_reward_history?: Json[]
+          total_tradi_com?: number
+          uid?: string
+          updated_at?: string
+        }
+        Update: {
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          accum_refer_reward?: number
+          accum_time_remaining?: number
+          claim_time_remaining?: number
+          id?: string
+          partner_list?: Json[]
+          platform?: string | null
+          this_month_tradi_com?: number
+          total_client_lots?: number
+          total_client_reward?: number
+          total_clients?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          total_refer_reward?: number
+          total_reward_history?: Json[]
+          total_tradi_com?: number
+          uid?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_detail_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_rank_list: {
         Row: {
           lot_volume: number
@@ -125,97 +202,34 @@ export type Database = {
       }
       partners: {
         Row: {
-          accum_client_reward: number
-          accum_partner_reward: number
-          accum_refer_reward: number
-          accum_time_remaining: number
-          claim_client_reward: number
-          claim_partner_reward: number
-          claim_refer_reward: number
-          claim_time_remaining: number
           created_at: string
           id: string
-          last_claim_client_reward: number
-          last_claim_partner_reward: number
-          last_claim_refer_reward: number
-          partner_list: Json[]
           partner_type: string | null
           partner_type_change_date: string | null
           platform_accounts: Json[]
           platform_ref_links: Json[]
           selected_platform: Json[]
           support_link: string | null
-          this_month_tradi_com: number
-          total_client_lots: number
-          total_client_reward: number
-          total_clients: number
-          total_partner_lots: number
-          total_partner_reward: number
-          total_partners: number
-          total_refer_reward: number
-          total_tradi_com: number
         }
         Insert: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          accum_refer_reward?: number
-          accum_time_remaining?: number
-          claim_client_reward?: number
-          claim_partner_reward?: number
-          claim_refer_reward?: number
-          claim_time_remaining?: number
           created_at?: string
           id: string
-          last_claim_client_reward?: number
-          last_claim_partner_reward?: number
-          last_claim_refer_reward?: number
-          partner_list?: Json[]
           partner_type?: string | null
           partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
           support_link?: string | null
-          this_month_tradi_com?: number
-          total_client_lots?: number
-          total_client_reward?: number
-          total_clients?: number
-          total_partner_lots?: number
-          total_partner_reward?: number
-          total_partners?: number
-          total_refer_reward?: number
-          total_tradi_com?: number
         }
         Update: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          accum_refer_reward?: number
-          accum_time_remaining?: number
-          claim_client_reward?: number
-          claim_partner_reward?: number
-          claim_refer_reward?: number
-          claim_time_remaining?: number
           created_at?: string
           id?: string
-          last_claim_client_reward?: number
-          last_claim_partner_reward?: number
-          last_claim_refer_reward?: number
-          partner_list?: Json[]
           partner_type?: string | null
           partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
           support_link?: string | null
-          this_month_tradi_com?: number
-          total_client_lots?: number
-          total_client_reward?: number
-          total_clients?: number
-          total_partner_lots?: number
-          total_partner_reward?: number
-          total_partners?: number
-          total_refer_reward?: number
-          total_tradi_com?: number
         }
         Relationships: [
           {
@@ -270,7 +284,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_account_ids: {
+        Row: {
+          account_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

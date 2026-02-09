@@ -24,18 +24,18 @@ interface PartnerAsideProps {
 }
 
 const PLATFORMS = [
-  { key: 'exness', label: 'Exness' },
-  { key: 'binance', label: 'Binance' },
-  { key: 'bingx', label: 'BingX' },
-  { key: 'bitget', label: 'BitGet' },
-  { key: 'bybit', label: 'Bybit' },
-  { key: 'gate', label: 'Gate.io' },
-  { key: 'htx', label: 'HTX' },
-  { key: 'kraken', label: 'Kraken' },
-  { key: 'kucoin', label: 'KuCoin' },
-  { key: 'mexc', label: 'MEXC' },
-  { key: 'okx', label: 'OKX' },
-  { key: 'upbit', label: 'Upbit' },
+  { key: 'exness', label: 'Exness', logo: '/getbot_section/exness.png' },
+  { key: 'binance', label: 'Binance', logo: '/getbot_section/binance.png' },
+  { key: 'bingx', label: 'BingX', logo: '/getbot_section/bingx.png' },
+  { key: 'bitget', label: 'BitGet', logo: '/getbot_section/bitget.png' },
+  { key: 'bybit', label: 'Bybit', logo: '/getbot_section/bybit.png' },
+  { key: 'gate', label: 'Gate.io', logo: '/getbot_section/gate.png' },
+  { key: 'htx', label: 'HTX', logo: null },
+  { key: 'kraken', label: 'Kraken', logo: null },
+  { key: 'kucoin', label: 'KuCoin', logo: null },
+  { key: 'mexc', label: 'MEXC', logo: '/getbot_section/mexc.png' },
+  { key: 'okx', label: 'OKX', logo: '/getbot_section/okx.png' },
+  { key: 'upbit', label: 'Upbit', logo: null },
 ] as const;
 
 export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsideProps) {
@@ -107,7 +107,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
 
         const data = await response.json();
         const platforms = data.selectedPlatforms || [];
-        
+
         console.log('[PartnerAside] Loaded selected platforms:', platforms);
         setSelectedPlatforms(platforms);
         setHasLoadedData(true);
@@ -131,11 +131,11 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
     const loadRefLinks = async () => {
       try {
         const response = await fetch(`/api/get-partner-ref-links?partnerId=${partnerId}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load referral links: ${response.status}`);
         }
-        
+
         const data = await response.json();
 
         if (data.refLinks) {
@@ -166,7 +166,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
     if (processedValue && !processedValue.startsWith('http://') && !processedValue.startsWith('https://')) {
       processedValue = 'https://' + processedValue;
     }
-    
+
     const updatedLinks = {
       ...refLinks,
       [platform]: processedValue,
@@ -193,12 +193,12 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const hasChanges = () => {
     // Check if support link has changed
     const supportLinkChanged = supportLink !== originalSupportLink;
-    
+
     // Check if any ref link has changed
     const refLinksChanged = Object.keys(refLinks).some(
       key => refLinks[key as keyof PlatformRefLinks] !== originalRefLinks[key as keyof PlatformRefLinks]
     );
-    
+
     return supportLinkChanged || refLinksChanged;
   };
 
@@ -249,8 +249,8 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const visiblePlatforms = !hasLoadedData
     ? PLATFORMS // Show all platforms if data hasn't been loaded yet
     : selectedPlatforms.length > 0
-    ? PLATFORMS.filter(p => selectedPlatforms.includes(p.key))
-    : []; // Show nothing if loaded data is empty array
+      ? PLATFORMS.filter(p => selectedPlatforms.includes(p.key))
+      : []; // Show nothing if loaded data is empty array
 
   return (
     <div className={styles.container}>
@@ -271,31 +271,24 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
             {isSupportEditMode ? 'Hủy' : 'Chỉnh sửa'}
           </button>
         </div>
-        <p className={styles.subtitle}>
-          {isSupportEditMode ? 'Chỉnh sửa link hỗ trợ khách hàng của bạn' : 'Xem link hỗ trợ khách hàng của bạn'}
-        </p>
-      </div>
-
-      <div className={styles.formContainer}>
-        <div className={styles.inputGroup}>
-          <label htmlFor="support-link" className={styles.label}>
-            Link Hỗ Trợ
-          </label>
-          <input
-            type="url"
-            id="support-link"
-            value={supportLink}
-            onChange={(e) => handleSupportLinkChange(e.target.value)}
-            placeholder="Nhập link hỗ trợ khách hàng (Telegram, WhatsApp, etc.)"
-            className={styles.input}
-            disabled={saving || !isSupportEditMode}
-            readOnly={!isSupportEditMode}
-          />
+        <div className={styles.formContainer}>
+          <div className={styles.inputGroup}>
+            <input
+              type="url"
+              id="support-link"
+              value={supportLink}
+              onChange={(e) => handleSupportLinkChange(e.target.value)}
+              placeholder="Nhập link hỗ trợ khách hàng (Telegram, WhatsApp, etc.)"
+              className={styles.input}
+              disabled={saving || !isSupportEditMode}
+              readOnly={!isSupportEditMode}
+            />
+          </div>
         </div>
       </div>
 
       {/* Referral Links Section */}
-      <div className={styles.header} style={{ marginTop: '2rem' }}>
+      <div className={styles.header}>
         <div className={styles.headerTop}>
           <h3 className={styles.title}>Link Giới Thiệu Sàn</h3>
           <button
@@ -311,38 +304,42 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
             {isEditMode ? 'Hủy' : 'Chỉnh sửa'}
           </button>
         </div>
-        <p className={styles.subtitle}>
-          {isEditMode ? 'Chỉnh sửa link giới thiệu cho từng sàn' : 'Xem link giới thiệu cho từng sàn'}
-        </p>
-      </div>
-
-      <div className={styles.formContainer}>
-        {visiblePlatforms.length > 0 ? (
-          visiblePlatforms.map(({ key, label }) => (
-            <div key={key} className={styles.inputGroup}>
-              <label htmlFor={key} className={styles.label}>
-                {label}
-              </label>
-              <input
-                type="url"
-                id={key}
-                value={refLinks[key as keyof PlatformRefLinks]}
-                onChange={(e) => handleInputChange(key, e.target.value)}
-                placeholder={`Nhập link giới thiệu ${label}`}
-                className={styles.input}
-                disabled={saving || !isEditMode}
-                readOnly={!isEditMode}
-              />
+        <div className={styles.formContainer}>
+          {visiblePlatforms.length > 0 ? (
+            visiblePlatforms.map(({ key, label, logo }) => (
+              <div key={key} className={styles.inputGroup}>
+                <div className={styles.inputWrapper}>
+                  {logo ? (
+                    <img
+                      src={logo}
+                      alt={label}
+                      className={styles.platformLogo}
+                    />
+                  ) : (
+                    <span className={styles.platformLabel}>{label}</span>
+                  )}
+                  <input
+                    type="url"
+                    id={key}
+                    value={refLinks[key as keyof PlatformRefLinks]}
+                    onChange={(e) => handleInputChange(key, e.target.value)}
+                    placeholder={`Nhập link giới thiệu ${label}`}
+                    className={styles.input}
+                    disabled={saving || !isEditMode}
+                    readOnly={!isEditMode}
+                  />
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className={styles.emptyState}>
+              <p>Chưa chọn sàn nào</p>
+              <p className={styles.emptyStateHint}>
+                Vui lòng chọn sàn trong thanh điều hướng để thêm link giới thiệu
+              </p>
             </div>
-          ))
-        ) : (
-          <div className={styles.emptyState}>
-            <p>Chưa chọn sàn nào</p>
-            <p className={styles.emptyStateHint}>
-              Vui lòng chọn sàn trong thanh điều hướng để thêm link giới thiệu
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}

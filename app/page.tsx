@@ -69,7 +69,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<string | null>('guides');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
-  const [selectedArticle, setSelectedArticle] = useState<string>('lesson-1');
+  const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
   const [showPartnerAgreement, setShowPartnerAgreement] = useState(false);
@@ -249,7 +249,7 @@ export default function HomePage() {
     setShowPartnerAgreement(false);
     // Set default article when switching to guides or strategies
     if (value === 'guides') {
-      setSelectedArticle('lesson-1');
+      setSelectedArticle('guide-1');
     } else if (value === 'strategies') {
       setSelectedArticle('strategy-1');
     }
@@ -415,7 +415,7 @@ export default function HomePage() {
                                   <RankIcon size={18} />
                                 </span>
                               )}
-                              <span>{partnerRank}{percentage && ` - ${percentage}`}</span>
+                              <span>{partnerRank}{percentage && `: ${percentage}`}</span>
                             </span>
                           </Badge>
                         );
@@ -680,43 +680,7 @@ export default function HomePage() {
                   </Badge>
 
                   <NavLink
-                    label="1. Thông tin và ý nghĩa Bot"
-                    leftSection={<BookOpen size={16} color="#307fffff" />}
-                    active={selectedArticle === 'lesson-1'}
-                    fw={selectedArticle === 'lesson-1' ? 700 : undefined}
-                    onClick={() => setSelectedArticle('lesson-1')}
-                    color="blue"
-                  />
-
-                  <NavLink
-                    label="2. Bảng thông tin"
-                    leftSection={<BookOpen size={16} color="#307fffff" />}
-                    active={selectedArticle === 'lesson-2'}
-                    fw={selectedArticle === 'lesson-2' ? 700 : undefined}
-                    onClick={() => setSelectedArticle('lesson-2')}
-                    color="blue"
-                  />
-
-                  <NavLink
-                    label="3. Bảng hỗ trợ Trade Tay"
-                    leftSection={<BookOpen size={16} color="#307fffff" />}
-                    active={selectedArticle === 'lesson-3'}
-                    fw={selectedArticle === 'lesson-3' ? 700 : undefined}
-                    onClick={() => setSelectedArticle('lesson-3')}
-                    color="blue"
-                  />
-
-                  <NavLink
-                    label="4. Input chế độ DCA"
-                    leftSection={<BookOpen size={16} color="#307fffff" />}
-                    active={selectedArticle === 'lesson-4'}
-                    fw={selectedArticle === 'lesson-4' ? 700 : undefined}
-                    onClick={() => setSelectedArticle('lesson-4')}
-                    color="blue"
-                  />
-
-                  <NavLink
-                    label="5. Thêm Bot + bản quyền"
+                    label="1. Trade Tay"
                     leftSection={<BookOpen size={16} color="#307fffff" />}
                     active={selectedArticle === 'guide-1'}
                     fw={selectedArticle === 'guide-1' ? 700 : undefined}
@@ -725,11 +689,29 @@ export default function HomePage() {
                   />
 
                   <NavLink
-                    label="6. Mở Backtest"
+                    label="2. Auto DCA"
                     leftSection={<BookOpen size={16} color="#307fffff" />}
                     active={selectedArticle === 'guide-2'}
                     fw={selectedArticle === 'guide-2' ? 700 : undefined}
                     onClick={() => setSelectedArticle('guide-2')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="3. AI Trade"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'guide-3'}
+                    fw={selectedArticle === 'guide-3' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('guide-3')}
+                    color="blue"
+                  />
+
+                  <NavLink
+                    label="4. TP - Tổng, Tỉa, Đơn"
+                    leftSection={<BookOpen size={16} color="#307fffff" />}
+                    active={selectedArticle === 'guide-4'}
+                    fw={selectedArticle === 'guide-4' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('guide-4')}
                     color="blue"
                   />
                 </Stack>
@@ -746,7 +728,7 @@ export default function HomePage() {
                   </Badge>
 
                   <NavLink
-                    label="1. CHỈ BUY VÀNG"
+                    label="1. Mở Lệnh TP SL Nhanh"
                     leftSection={<TrendingUp size={16} color="violet" />}
                     active={selectedArticle === 'strategy-1'}
                     fw={selectedArticle === 'strategy-1' ? 700 : undefined}
@@ -755,7 +737,7 @@ export default function HomePage() {
                   />
 
                   <NavLink
-                    label="2. FULL MARGIN"
+                    label="2. Mở Lệnh Kiểm Soát"
                     leftSection={<TrendingUp size={16} color="violet" />}
                     active={selectedArticle === 'strategy-2'}
                     fw={selectedArticle === 'strategy-2' ? 700 : undefined}
@@ -764,7 +746,7 @@ export default function HomePage() {
                   />
 
                   <NavLink
-                    label="3. NHÂN & TỔNG"
+                    label="3. 100 Lệnh Trong 1 Giây"
                     leftSection={<TrendingUp size={16} color="violet" />}
                     active={selectedArticle === 'strategy-3'}
                     fw={selectedArticle === 'strategy-3' ? 700 : undefined}
@@ -773,7 +755,7 @@ export default function HomePage() {
                   />
 
                   <NavLink
-                    label="4. CỘNG & TỈA"
+                    label="4. BE - Auto Dời SL về Entry"
                     leftSection={<TrendingUp size={16} color="violet" />}
                     active={selectedArticle === 'strategy-4'}
                     fw={selectedArticle === 'strategy-4' ? 700 : undefined}
@@ -782,11 +764,128 @@ export default function HomePage() {
                   />
 
                   <NavLink
-                    label="5. CỘNG & TỔNG"
+                    label="5. Trailing Stop - Auto Dời Theo Lãi"
                     leftSection={<TrendingUp size={16} color="violet" />}
                     active={selectedArticle === 'strategy-5'}
                     fw={selectedArticle === 'strategy-5' ? 700 : undefined}
                     onClick={() => setSelectedArticle('strategy-5')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="6. Partipal - Auto Chốt 1 Nửa TP Trước"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-6'}
+                    fw={selectedArticle === 'strategy-6' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-6')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="7. BE + Part - Chốt Lãi Hòa"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-7'}
+                    fw={selectedArticle === 'strategy-7' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-7')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="8. Trail + Part - Chốt Lãi Tăng Theo"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-8'}
+                    fw={selectedArticle === 'strategy-8' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-8')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="9. Chốt 25-50-75"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-9'}
+                    fw={selectedArticle === 'strategy-9' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-9')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="10. Trade Tay + AI Trade"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-10'}
+                    fw={selectedArticle === 'strategy-10' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-10')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="11. Mặc Định Bot VNCLC"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-11'}
+                    fw={selectedArticle === 'strategy-11' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-11')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="12. Nhân + Tổng (EMA)"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-12'}
+                    fw={selectedArticle === 'strategy-12' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-12')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="13. Nhân + Tỉa (EMA)"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-13'}
+                    fw={selectedArticle === 'strategy-13' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-13')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="14. Cộng + Tổng (EMA)"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-14'}
+                    fw={selectedArticle === 'strategy-14' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-14')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="15. Cộng + Tỉa (EMA)"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-15'}
+                    fw={selectedArticle === 'strategy-15' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-15')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="16. DCA + Trend"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-16'}
+                    fw={selectedArticle === 'strategy-16' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-16')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="17. Đều + Đơn - Chỉ Buy Vàng"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-17'}
+                    fw={selectedArticle === 'strategy-17' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-17')}
+                    color="violet"
+                  />
+
+                  <NavLink
+                    label="18. 1%/Ngày + Thời Gian (Kiểm Soát)"
+                    leftSection={<TrendingUp size={16} color="violet" />}
+                    active={selectedArticle === 'strategy-18'}
+                    fw={selectedArticle === 'strategy-18' ? 700 : undefined}
+                    onClick={() => setSelectedArticle('strategy-18')}
                     color="violet"
                   />
                 </Stack>
