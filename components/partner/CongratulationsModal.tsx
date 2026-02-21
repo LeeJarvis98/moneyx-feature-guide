@@ -7,14 +7,13 @@ import styles from './CongratulationsModal.module.css';
 
 interface CongratulationsModalProps {
   rank: string;
-  partnerType: 'new' | 'system';
+  isOpen: boolean;
   onClose: () => void;
   onNavigateToLogin: () => void;
 }
 
 const rankIcons: Record<string, typeof Diamond> = {
   'Kim Cương': Gem,
-  'Ruby': Diamond,
   'Bạch Kim': Star,
   'Vàng': Award,
   'Bạc': Medal,
@@ -23,30 +22,39 @@ const rankIcons: Record<string, typeof Diamond> = {
 
 const rankPercentages: Record<string, { partner: string; tradi: string }> = {
   'Kim Cương': { partner: '90%', tradi: '10%' },
-  'Ruby': { partner: '85%', tradi: '15%' },
-  'Bạch Kim': { partner: '80%', tradi: '20%' },
-  'Vàng': { partner: '75%', tradi: '25%' },
-  'Bạc': { partner: '70%', tradi: '30%' },
-  'Đồng': { partner: '65%', tradi: '35%' },
+  'Bạch Kim': { partner: '85%', tradi: '15%' },
+  'Vàng': { partner: '80%', tradi: '20%' },
+  'Bạc': { partner: '75%', tradi: '25%' },
+  'Đồng': { partner: '70%', tradi: '30%' },
 };
 
-export default function CongratulationsModal({ rank, partnerType, onClose, onNavigateToLogin }: CongratulationsModalProps) {
+export default function CongratulationsModal({ rank, isOpen, onClose, onNavigateToLogin }: CongratulationsModalProps) {
   const [stage, setStage] = useState<1 | 2>(1);
-  const [mounted, setMounted] = useState(false);
+  const [isBrowser, setIsBrowser] = useState(false);
   const IconComponent = rankIcons[rank] || Shield;
-  const percentages = rankPercentages[rank] || { partner: '65%', tradi: '30%' };
-  
-  const partnerTypeText = partnerType === 'new' ? 'Đối Tác Tradi' : 'Đại Lí Hệ Thống';
+  const percentages = rankPercentages[rank] || { partner: '70%', tradi: '30%' };
 
   useEffect(() => {
-    setMounted(true);
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    // Ensure we're in the browser
+    setIsBrowser(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[CongratulationsModal] Modal opened with rank:', rank);
+      // Reset to stage 1 when modal opens
+      setStage(1);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      console.log('[CongratulationsModal] Modal closed');
+      document.body.style.overflow = 'unset';
+    }
     
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, [isOpen, rank]);
 
   const handleContinue = () => {
     if (stage === 1) {
@@ -60,7 +68,12 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
     }
   };
 
-  const modalContent = (
+  // Only render when open and on the client side
+  if (!isOpen || !isBrowser) {
+    return null;
+  }
+
+  return createPortal(
     <div className={styles.modalOverlay} onClick={(e) => {
       // Only allow closing on stage 2
       if (stage === 2) {
@@ -84,11 +97,7 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
             </div>
 
             <h2 className={styles.title}>Chúc Mừng!</h2>
-            <p className={styles.subtitle}>Bạn đã đăng ký thành công</p>
-
-            <div className={styles.partnerTypeCard}>
-              <div className={styles.partnerTypeBadge}>{partnerTypeText}</div>
-            </div>
+            <p className={styles.subtitle}>Bạn đã đăng ký thành công Đại Lý Tradi</p>
 
             <div className={styles.rankCard}>
               <div className={styles.rankHeader}>
@@ -109,25 +118,12 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
             </div>
 
             <div className={styles.infoBox}>
-              {partnerType === 'new' ? (
-                <>
-                  <p className={styles.infoText}>
-                    ✨ Bạn bắt đầu với cấp độ <strong>{rank}</strong>
-                  </p>
-                  <p className={styles.infoText}>
-                    📈 Hoàn thành giao dịch để tăng cấp và nhận hoa hồng cao hơn
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className={styles.infoText}>
-                    ✨ Bạn bắt đầu với cấp độ <strong>{rank}</strong>
-                  </p>
-                  <p className={styles.infoText}>
-                    🔗 Hoa hồng của bạn sẽ tăng theo cấp độ hệ thống tổng
-                  </p>
-                </>
-              )}
+              <p className={styles.infoText}>
+                ✨ Bạn bắt đầu với cấp độ <strong>{rank}</strong>
+              </p>
+              <p className={styles.infoText}>
+                📈 Hoàn thành giao dịch để tăng cấp và nhận hoa hồng cao hơn
+              </p>
             </div>
 
             <button className={styles.continueButton} onClick={handleContinue}>
@@ -195,13 +191,9 @@ export default function CongratulationsModal({ rank, partnerType, onClose, onNav
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  // Only render portal after component has mounted (client-side only)
-  if (!mounted) return null;
-  
-  return createPortal(modalContent, document.body);
 }
   
   

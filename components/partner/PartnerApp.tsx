@@ -7,6 +7,7 @@ import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
 import PartnerAgreement from './PartnerAgreement';
 import WelcomeScreen from './WelcomeScreen';
+import CongratulationsModal from './CongratulationsModal';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
@@ -31,27 +32,8 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
   const [isPartner, setIsPartner] = useState(!!hasPartnerRank || isAdmin);
   const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
   const [hasSelectedPlatforms, setHasSelectedPlatforms] = useState<boolean | null>(null);
-
-  // Function to check partner status from Google Sheets
-  const checkPartnerStatus = async (partnerId: string) => {
-    try {
-      const response = await fetch('/api/check-partner-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setIsPartner(data.isPartner);
-        console.log('[PartnerApp] Partner status:', data.isPartner, 'Rank:', data.rank);
-        return data.isPartner;
-      }
-    } catch (error) {
-      console.error('[PartnerApp] Error checking partner status:', error);
-    }
-    return false;
-  };
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
 
   // Check if user has selected platforms in database
   useEffect(() => {
@@ -178,6 +160,12 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     }
   };
 
+  const handleRegistrationSuccess = (rank: string) => {
+    console.log('[PartnerApp] Registration success callback, rank:', rank);
+    setRegisteredRank(rank);
+    setShowCongratulations(true);
+  };
+
   // Notify parent about agreement visibility
   useEffect(() => {
     if (onAgreementVisibilityChange) {
@@ -251,8 +239,26 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           selectedPlatform={selectedPlatform}
           onPlatformSelect={onPlatformSelect}
           userId={userId || ''}
+          onRegistrationSuccess={handleRegistrationSuccess}
         />
       )}
+
+      {/* Congratulations Modal - lifted to PartnerApp level so it persists across transitions */}
+      <CongratulationsModal
+        rank={registeredRank}
+        isOpen={showCongratulations}
+        onClose={() => {
+          console.log('[PartnerApp] Closing congratulations modal');
+          setShowCongratulations(false);
+          // After closing modal, mark user as partner
+          handleAcceptTerms();
+        }}
+        onNavigateToLogin={() => {
+          console.log('[PartnerApp] Navigate to login called from modal');
+          // This is called when user clicks continue on stage 1
+          // We don't navigate yet, just move to stage 2 of the modal
+        }}
+      />
     </>
   );
 }

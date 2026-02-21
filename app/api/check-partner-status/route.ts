@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists in partners table and get partner_type
+    // Check if user exists in partners table
     const { data: partner, error: partnerError } = await supabase
       .from('partners')
-      .select('id, partner_type, partner_type_change_date')
+      .select('id')
       .eq('id', partnerId)
       .maybeSingle();
 
@@ -33,8 +33,6 @@ export async function POST(request: NextRequest) {
         isPartner: false,
         rank: null,
         referralId: null,
-        partnerType: null,
-        partnerTypeChangeDate: null,
       });
     }
 
@@ -64,8 +62,6 @@ export async function POST(request: NextRequest) {
       isPartner: true,
       rank: userData?.partner_rank || null,
       referralId: referralData?.own_referral_id || null,
-      partnerType: partner?.partner_type || null,
-      partnerTypeChangeDate: partner?.partner_type_change_date || null,
     });
   } catch (error) {
     console.error('[check-partner-status] Error:', error);

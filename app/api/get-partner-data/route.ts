@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     // Fetch partner data from partners table
     const { data: partnerData, error: partnerError } = await supabase
       .from('partners')
-      .select('id, created_at, partner_type, partner_type_change_date, platform_accounts, platform_ref_links, selected_platform, support_link')
+      .select('id, created_at, platform_accounts, platform_ref_links, selected_platform, support_link')
       .eq('id', userId)
       .single();
 

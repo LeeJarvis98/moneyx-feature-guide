@@ -137,14 +137,6 @@
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.4);
 }
 
-.rankBadgeRuby {
-  color: #ffffff !important;
-}
-
-.rankBadgeRuby:hover {
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 0 40px rgba(139, 92, 246, 0.4);
-}
-
 .rankBadgePlatinum {
   color: #000000 !important;
 }

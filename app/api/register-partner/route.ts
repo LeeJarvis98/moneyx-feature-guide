@@ -4,7 +4,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
-    const { userId, partnerType } = await request.json();
+    const { userId } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -13,15 +13,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!partnerType || (partnerType !== 'DTT' && partnerType !== 'DLHT')) {
-      return NextResponse.json(
-        { error: 'Invalid partner type' },
-        { status: 400 }
-      );
-    }
-
-    // Determine rank based on partner type
-    const rank = partnerType === 'DTT' ? 'Đồng' : 'Ruby';
+    // Default rank for new partners (Đồng - starting rank)
+    // In the future, this could be calculated based on referral chain position
+    const rank = 'Đồng';
 
     // Check if user already exists as a partner
     const { data: existingPartner, error: checkError } = await supabase
@@ -70,7 +64,6 @@ export async function POST(request: NextRequest) {
       .from('partners')
       .insert({
         id: userId,
-        partner_type: partnerType,
         platform_accounts: [],
         platform_ref_links: [],
         selected_platform: [],
@@ -115,7 +108,7 @@ export async function POST(request: NextRequest) {
       partner,
       rank,
       referralId,
-      message: `Successfully registered as ${partnerType === 'DTT' ? 'Đối tác Tradi' : 'Đại lí hệ thống'}`,
+      message: 'Successfully registered as Đại lý Tradi',
     });
   } catch (error) {
     console.error('[register-partner] Error:', error);

@@ -6,7 +6,6 @@ import { exnessApi } from '@/lib/exness/api';
 import ClientReports from './ClientReports';
 import PartnerSystem from './PartnerSystem';
 import AccumulationHistory from './AccumulationHistory';
-import ChangeForm from './ChangeForm';
 import styles from './PartnerDashboard.module.css';
 
 interface PartnerDashboardProps {
@@ -15,35 +14,7 @@ interface PartnerDashboardProps {
 }
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
-  const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem' | 'accumulationHistory' | 'changeForm'>('reports');
-  const [partnerType, setPartnerType] = useState<'DTT' | 'DLHT' | null>(null);
-
-  // Fetch partner type on mount
-  useEffect(() => {
-    const fetchPartnerType = async () => {
-      try {
-        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-        if (!userId) return;
-
-        const response = await fetch('/api/check-partner-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partnerId: userId }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.partnerType) {
-            setPartnerType(data.partnerType);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching partner type:', error);
-      }
-    };
-
-    fetchPartnerType();
-  }, []);
+  const [activeSection, setActiveSection] = useState<'reports' | 'partnerSystem' | 'accumulationHistory'>('reports');
 
   // Update aside content when active section changes
   useEffect(() => {
@@ -100,14 +71,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
               onClick={() => setActiveSection('accumulationHistory')}
               color="#FFB81C"
             />
-            
-            <NavLink
-              label="Đổi hình thức"
-              active={activeSection === 'changeForm'}
-              fw={activeSection === 'changeForm' ? 700 : undefined}
-              onClick={() => setActiveSection('changeForm')}
-              color="#FFB81C"
-            />
           </Stack>
         </div>
         
@@ -128,7 +91,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
         {activeSection === 'reports' && <ClientReports autoFetch={true} />}
         {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} />}
         {activeSection === 'accumulationHistory' && <AccumulationHistory autoFetch={true} />}
-        {activeSection === 'changeForm' && <ChangeForm autoFetch={true} partnerType={partnerType} />}
       </div>
     </div>
   );

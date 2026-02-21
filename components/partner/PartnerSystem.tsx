@@ -155,7 +155,6 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
          id: partner.id || 'N/A',
          email: partner.email || 'N/A',
          partner_rank: partner.partner_rank || 'N/A',
-         partner_type: partner.partner_type || 'N/A',
          total_lots: partner.total_lots || 0,
          total_reward: partner.total_reward || 0,
          refer_reward: partner.refer_reward || 0,
@@ -170,8 +169,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
             return (
                record.id.toLowerCase().includes(query) ||
                record.email.toLowerCase().includes(query) ||
-               record.partner_rank.toLowerCase().includes(query) ||
-               record.partner_type.toLowerCase().includes(query)
+               record.partner_rank.toLowerCase().includes(query)
             );
          })
          : records;
@@ -304,12 +302,6 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                         accessor: 'partner_rank',
                         title: 'Hạng',
                         width: 100,
-                        sortable: true
-                     },
-                     {
-                        accessor: 'partner_type',
-                        title: 'Loại',
-                        width: 80,
                         sortable: true
                      },
                      {

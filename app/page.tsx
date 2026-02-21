@@ -77,10 +77,14 @@ export default function HomePage() {
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [partnerRank, setPartnerRank] = useState<string>('');
   const [referralId, setReferralId] = useState<string>('');
-  const [partnerType, setPartnerType] = useState<string>('');
   const [daysToMonthEnd, setDaysToMonthEnd] = useState<number | null>(null);
   const [loadingPlatforms, setLoadingPlatforms] = useState(false);
   const theme = useMantineTheme();
+
+  // Debug: Log referralId changes
+  useEffect(() => {
+    console.log('[HomePage] ReferralId state changed:', referralId);
+  }, [referralId]);
 
   // Fetch Internet time and calculate days to month end
   useEffect(() => {
@@ -145,15 +149,7 @@ export default function HomePage() {
         console.log('[HomePage] Received referralIdUpdated event:', e.detail.referralId);
         setReferralId(e.detail.referralId);
         sessionStorage.setItem('referralId', e.detail.referralId);
-      }
-    };
-
-    // Listen for partner type update
-    const handlePartnerTypeUpdate = (e: CustomEvent) => {
-      if (e.detail && e.detail.partnerType) {
-        console.log('[HomePage] Received partnerTypeUpdated event:', e.detail.partnerType);
-        setPartnerType(e.detail.partnerType);
-        sessionStorage.setItem('partnerType', e.detail.partnerType);
+        localStorage.setItem('referralId', e.detail.referralId);
       }
     };
 
@@ -168,7 +164,6 @@ export default function HomePage() {
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
     window.addEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
-    window.addEventListener('partnerTypeUpdated', handlePartnerTypeUpdate as EventListener);
     window.addEventListener('focus', handleFocus);
 
     // Check rank and referralId immediately in case they were just set
@@ -176,22 +171,19 @@ export default function HomePage() {
     if (currentRank) {
       setPartnerRank(currentRank);
     }
-    const currentReferralId = sessionStorage.getItem('referralId');
+    const currentReferralId = localStorage.getItem('referralId') || sessionStorage.getItem('referralId');
     if (currentReferralId) {
-      console.log('[HomePage] Found referralId in sessionStorage:', currentReferralId);
+      console.log('[HomePage] Found referralId in storage:', currentReferralId);
       setReferralId(currentReferralId);
-    }
-    const currentPartnerType = sessionStorage.getItem('partnerType');
-    if (currentPartnerType) {
-      console.log('[HomePage] Found partnerType in sessionStorage:', currentPartnerType);
-      setPartnerType(currentPartnerType);
+      // Ensure it's in both storages
+      localStorage.setItem('referralId', currentReferralId);
+      sessionStorage.setItem('referralId', currentReferralId);
     }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
       window.removeEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
-      window.removeEventListener('partnerTypeUpdated', handlePartnerTypeUpdate as EventListener);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
@@ -211,26 +203,25 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json();
         console.log('[HomePage] Partner status data:', data);
-        if (data.isPartner && data.rank) {
-          console.log('[HomePage] Setting partner rank:', data.rank);
-          setPartnerRank(data.rank);
+        if (data.isPartner) {
+          if (data.rank) {
+            console.log('[HomePage] Setting partner rank:', data.rank);
+            setPartnerRank(data.rank);
+          }
           if (data.referralId) {
             console.log('[HomePage] Setting referral ID from API:', data.referralId);
             setReferralId(data.referralId);
             sessionStorage.setItem('referralId', data.referralId);
-          }
-          if (data.partnerType) {
-            console.log('[HomePage] Setting partner type:', data.partnerType);
-            setPartnerType(data.partnerType);
-            sessionStorage.setItem('partnerType', data.partnerType);
+            localStorage.setItem('referralId', data.referralId);
+          } else {
+            console.log('[HomePage] No referral ID returned from API, keeping existing value');
           }
         } else {
-          console.log('[HomePage] User is not a partner or rank is empty');
+          console.log('[HomePage] User is not a partner, clearing partner data');
           setPartnerRank('');
           setReferralId('');
-          setPartnerType('');
           sessionStorage.removeItem('referralId');
-          sessionStorage.removeItem('partnerType');
+          localStorage.removeItem('referralId');
         }
       }
     } catch (error) {
@@ -331,9 +322,9 @@ export default function HomePage() {
 
     // Clear partner-related data
     localStorage.removeItem('partnerRank');
+    localStorage.removeItem('referralId');
     sessionStorage.removeItem('referralId');
     sessionStorage.removeItem('partnerPlatformData');
-    sessionStorage.removeItem('partnerType');
 
     // Clear partner authentication using exnessApi
     exnessApi.clearToken();
@@ -345,7 +336,6 @@ export default function HomePage() {
     setLoggedInUserId(null);
     setPartnerRank('');
     setReferralId('');
-    setPartnerType('');
     setIsPartnerAuthenticated(false);
     setSelectedPlatform(null);
 
@@ -408,7 +398,6 @@ export default function HomePage() {
                       {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
                           'Kim Cương': Gem,
-                          'Ruby': Diamond,
                           'Bạch Kim': Star,
                           'Vàng': Award,
                           'Bạc': Medal,
@@ -416,15 +405,13 @@ export default function HomePage() {
                         };
                         const rankPercentages: Record<string, string> = {
                           'Kim Cương': '90%',
-                          'Ruby': '85%',
-                          'Bạch Kim': '80%',
-                          'Vàng': '75%',
-                          'Bạc': '70%',
-                          'Đồng': '65%',
+                          'Bạch Kim': '85%',
+                          'Vàng': '80%',
+                          'Bạc': '75%',
+                          'Đồng': '70%',
                         };
                         const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
                           'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
-                          'Ruby': { variant: 'gradient', gradient: { from: 'red', to: 'violet', deg: 90 }, className: classes.rankBadgeRuby },
                           'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.4', deg: 90 }, className: classes.rankBadgeBachKim },
                           'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
                           'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
@@ -453,43 +440,39 @@ export default function HomePage() {
                         );
                       })()}
                       {isUserLoggedIn && referralId && (
-                        <Group gap="xs" onClick={(e) => e.stopPropagation()}>
-                          <Group
-                            gap="xs"
-                            style={{
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              backgroundColor: 'rgba(255, 184, 28, 0.1)',
-                              border: '1px solid rgba(255, 184, 28, 0.3)',
-                            }}
-                          >
-                            <Text size="sm" fw={600} c="yellow">
-                              {(() => {
-                                const partnerTypeDisplay = partnerType === 'DLHT' ? 'Đại lý Hệ Thống' : partnerType === 'DTT' ? 'Đối tác Tradi' : null;
-                                return partnerTypeDisplay ? `${partnerTypeDisplay} | Mã giới thiệu:` : 'Mã giới thiệu:';
-                              })()}
-                            </Text>
-                            <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
-                              {referralId}
-                            </Text>
-                            <CopyButton value={referralId} timeout={2000}>
-                              {({ copied, copy }) => (
-                                <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
-                                  <ActionIcon
-                                    color={copied ? 'teal' : 'yellow'}
-                                    variant="subtle"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      copy();
-                                    }}
-                                    size="sm"
-                                  >
-                                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                                  </ActionIcon>
-                                </Tooltip>
-                              )}
-                            </CopyButton>
-                          </Group>
+                        <Group
+                          gap="xs"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                            border: '1px solid rgba(255, 184, 28, 0.3)',
+                          }}
+                        >
+                          <Text size="sm" fw={600} c="yellow">
+                            Mã giới thiệu:
+                          </Text>
+                          <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
+                            {referralId}
+                          </Text>
+                          <CopyButton value={referralId} timeout={2000}>
+                            {({ copied, copy }) => (
+                              <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
+                                <ActionIcon
+                                  color={copied ? 'teal' : 'yellow'}
+                                  variant="subtle"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copy();
+                                  }}
+                                  size="sm"
+                                >
+                                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </CopyButton>
                         </Group>
                       )}
                     </Group>
@@ -978,7 +961,7 @@ export default function HomePage() {
               {/* Login Section */}
               {navigationSection === 'login' && (
                 <LoginTab
-                  onLoginSuccess={(userId, partnerRank, ownReferralId, partnerType) => {
+                  onLoginSuccess={(userId, partnerRank, ownReferralId) => {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
@@ -993,10 +976,8 @@ export default function HomePage() {
                     // Set referral ID if provided
                     if (ownReferralId) {
                       setReferralId(ownReferralId);
-                    }
-                    // Set partner type if provided
-                    if (partnerType) {
-                      setPartnerType(partnerType);
+                      localStorage.setItem('referralId', ownReferralId);
+                      sessionStorage.setItem('referralId', ownReferralId);
                     }
                     // Redirect to documentation
                     handleNavigationChange('library');

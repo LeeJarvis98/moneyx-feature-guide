@@ -270,8 +270,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          partner_type: string | null
-          partner_type_change_date: string | null
           platform_accounts: Json[]
           platform_ref_links: Json[]
           selected_platform: Json[]
@@ -280,8 +278,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id: string
-          partner_type?: string | null
-          partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
@@ -290,8 +286,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          partner_type?: string | null
-          partner_type_change_date?: string | null
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]

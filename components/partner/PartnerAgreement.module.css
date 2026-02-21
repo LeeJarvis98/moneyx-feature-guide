@@ -416,13 +416,17 @@
 }
 
 .buttonGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buttonGrid > button {
+  flex: 1 1 auto;
 }
 
 .buttonGrid.singleButton {
-  grid-template-columns: 1fr;
+  display: flex;
   max-width: 450px;
   margin: 0 auto;
 }

@@ -463,7 +463,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     >
       <div className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Đăng ký tài khoản</h2>
+          <h2 className={styles.title}>Đăng ký tài khoản VNCLC</h2>
           <button
             onClick={handleClose}
             className={styles.closeButton}
@@ -477,7 +477,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         <form onSubmit={handleRegisterSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="regId" className={styles.label}>
-              ID <span className={styles.required}>*</span>
+              ID VNCLC<span className={styles.required}>*</span>
             </label>
             <input
               type="text"
