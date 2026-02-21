@@ -86,40 +86,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create partner detail record in partner_detail table
-    const { error: detailInsertError } = await supabase
-      .from('partner_detail')
-      .insert({
-        id: userId,
-        uid: userId, // Using userId as uid, adjust if needed
-        partner_list: [],
-        total_clients: 0,
-        total_client_lots: 0,
-        total_client_reward: 0,
-        total_partners: 0,
-        total_partner_lots: 0,
-        total_partner_reward: 0,
-        total_refer_reward: 0,
-        total_tradi_com: 0,
-        this_month_tradi_com: 0,
-        accum_client_reward: 0,
-        accum_partner_reward: 0,
-        accum_refer_reward: 0,
-        accum_time_remaining: 0,
-        claim_time_remaining: 0,
-        total_reward_history: [],
-      });
-
-    if (detailInsertError) {
-      console.error('[register-partner] Error creating partner detail:', detailInsertError);
-      // Rollback partner creation if detail creation fails
-      await supabase.from('partners').delete().eq('id', userId);
-      return NextResponse.json(
-        { error: 'Failed to register partner details', details: detailInsertError.message },
-        { status: 500 }
-      );
-    }
-
     // Update user's partner_rank field
     const { error: updateError } = await supabase
       .from('users')

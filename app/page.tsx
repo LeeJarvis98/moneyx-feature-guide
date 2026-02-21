@@ -142,7 +142,18 @@ export default function HomePage() {
     // Listen for referral ID update
     const handleReferralIdUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.referralId) {
+        console.log('[HomePage] Received referralIdUpdated event:', e.detail.referralId);
         setReferralId(e.detail.referralId);
+        sessionStorage.setItem('referralId', e.detail.referralId);
+      }
+    };
+
+    // Listen for partner type update
+    const handlePartnerTypeUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.partnerType) {
+        console.log('[HomePage] Received partnerTypeUpdated event:', e.detail.partnerType);
+        setPartnerType(e.detail.partnerType);
+        sessionStorage.setItem('partnerType', e.detail.partnerType);
       }
     };
 
@@ -157,18 +168,30 @@ export default function HomePage() {
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
     window.addEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
+    window.addEventListener('partnerTypeUpdated', handlePartnerTypeUpdate as EventListener);
     window.addEventListener('focus', handleFocus);
 
-    // Check rank immediately in case it was just set
+    // Check rank and referralId immediately in case they were just set
     const currentRank = localStorage.getItem('partnerRank');
     if (currentRank) {
       setPartnerRank(currentRank);
+    }
+    const currentReferralId = sessionStorage.getItem('referralId');
+    if (currentReferralId) {
+      console.log('[HomePage] Found referralId in sessionStorage:', currentReferralId);
+      setReferralId(currentReferralId);
+    }
+    const currentPartnerType = sessionStorage.getItem('partnerType');
+    if (currentPartnerType) {
+      console.log('[HomePage] Found partnerType in sessionStorage:', currentPartnerType);
+      setPartnerType(currentPartnerType);
     }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
       window.removeEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
+      window.removeEventListener('partnerTypeUpdated', handlePartnerTypeUpdate as EventListener);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
@@ -192,18 +215,22 @@ export default function HomePage() {
           console.log('[HomePage] Setting partner rank:', data.rank);
           setPartnerRank(data.rank);
           if (data.referralId) {
-            console.log('[HomePage] Setting referral ID:', data.referralId);
+            console.log('[HomePage] Setting referral ID from API:', data.referralId);
             setReferralId(data.referralId);
+            sessionStorage.setItem('referralId', data.referralId);
           }
           if (data.partnerType) {
             console.log('[HomePage] Setting partner type:', data.partnerType);
             setPartnerType(data.partnerType);
+            sessionStorage.setItem('partnerType', data.partnerType);
           }
         } else {
           console.log('[HomePage] User is not a partner or rank is empty');
           setPartnerRank('');
           setReferralId('');
           setPartnerType('');
+          sessionStorage.removeItem('referralId');
+          sessionStorage.removeItem('partnerType');
         }
       }
     } catch (error) {
@@ -227,6 +254,10 @@ export default function HomePage() {
         sessionStorage.removeItem('platformToken');
       }
       console.log('[HomePage] Partner session cleared');
+      // Refresh partner data when navigating to features
+      if (loggedInUserId) {
+        checkPartnerRank(loggedInUserId);
+      }
     } else if (value === 'library') {
       setActiveTab('guides');
     } else if (value === 'account') {
@@ -302,6 +333,7 @@ export default function HomePage() {
     localStorage.removeItem('partnerRank');
     sessionStorage.removeItem('referralId');
     sessionStorage.removeItem('partnerPlatformData');
+    sessionStorage.removeItem('partnerType');
 
     // Clear partner authentication using exnessApi
     exnessApi.clearToken();
@@ -383,12 +415,12 @@ export default function HomePage() {
                           'Đồng': Shield,
                         };
                         const rankPercentages: Record<string, string> = {
-                          'Kim Cương': '95%',
-                          'Ruby': '90%',
-                          'Bạch Kim': '85%',
-                          'Vàng': '80%',
-                          'Bạc': '75%',
-                          'Đồng': '70%',
+                          'Kim Cương': '90%',
+                          'Ruby': '85%',
+                          'Bạch Kim': '80%',
+                          'Vàng': '75%',
+                          'Bạc': '70%',
+                          'Đồng': '65%',
                         };
                         const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
                           'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },

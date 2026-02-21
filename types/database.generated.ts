@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      commission_distributions: {
+        Row: {
+          commission_pool: number
+          created_at: string | null
+          period_month: string
+          recipient_amount: number
+          recipient_partner_id: string
+          recipient_type: string
+          remaining_pool: number
+          source_partner_id: string
+          source_total_reward: number
+          source_upline_share_pct: number
+          tradi_fee: number
+          upline_position: number
+          uuid: string
+        }
+        Insert: {
+          commission_pool?: number
+          created_at?: string | null
+          period_month: string
+          recipient_amount?: number
+          recipient_partner_id: string
+          recipient_type: string
+          remaining_pool?: number
+          source_partner_id: string
+          source_total_reward?: number
+          source_upline_share_pct?: number
+          tradi_fee?: number
+          upline_position?: number
+          uuid?: string
+        }
+        Update: {
+          commission_pool?: number
+          created_at?: string | null
+          period_month?: string
+          recipient_amount?: number
+          recipient_partner_id?: string
+          recipient_type?: string
+          remaining_pool?: number
+          source_partner_id?: string
+          source_total_reward?: number
+          source_upline_share_pct?: number
+          tradi_fee?: number
+          upline_position?: number
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_distributions_recipient_partner_id_fkey"
+            columns: ["recipient_partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_distributions_source_partner_id_fkey"
+            columns: ["source_partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_otps: {
         Row: {
           created_at: string | null
@@ -129,24 +192,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          accum_refer_reward?: number
+          accum_client_reward: number
+          accum_partner_reward: number
+          accum_refer_reward: number
           accum_time_remaining?: number
           claim_time_remaining?: number
           id: string
           partner_list?: Json[]
           platform?: string | null
-          this_month_tradi_com?: number
-          total_client_lots?: number
-          total_client_reward?: number
+          this_month_tradi_com: number
+          total_client_lots: number
+          total_client_reward: number
           total_clients?: number
-          total_partner_lots?: number
-          total_partner_reward?: number
+          total_partner_lots: number
+          total_partner_reward: number
           total_partners?: number
-          total_refer_reward?: number
+          total_refer_reward: number
           total_reward_history?: Json[]
-          total_tradi_com?: number
+          total_tradi_com: number
           uid?: string
           updated_at?: string
         }
@@ -187,16 +250,19 @@ export type Database = {
           lot_volume: number
           partner_rank: string
           reward_percentage: number
+          upline_share_percentage: number | null
         }
         Insert: {
           lot_volume?: number
           partner_rank: string
           reward_percentage: number
+          upline_share_percentage?: number | null
         }
         Update: {
           lot_volume?: number
           partner_rank?: string
           reward_percentage?: number
+          upline_share_percentage?: number | null
         }
         Relationships: []
       }
@@ -295,6 +361,25 @@ export type Database = {
           account_id?: string | null
         }
         Relationships: []
+      }
+      monthly_referral_earnings: {
+        Row: {
+          direct_earned: number | null
+          indirect_earned: number | null
+          period_month: string | null
+          recipient_partner_id: string | null
+          source_count: number | null
+          total_earned: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_distributions_recipient_partner_id_fkey"
+            columns: ["recipient_partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

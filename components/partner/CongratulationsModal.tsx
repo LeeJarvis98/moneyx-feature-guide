@@ -22,19 +22,19 @@ const rankIcons: Record<string, typeof Diamond> = {
 };
 
 const rankPercentages: Record<string, { partner: string; tradi: string }> = {
-  'Kim Cương': { partner: '95%', tradi: '5%' },
-  'Ruby': { partner: '90%', tradi: '10%' },
-  'Bạch Kim': { partner: '85%', tradi: '15%' },
-  'Vàng': { partner: '80%', tradi: '20%' },
-  'Bạc': { partner: '75%', tradi: '25%' },
-  'Đồng': { partner: '70%', tradi: '30%' },
+  'Kim Cương': { partner: '90%', tradi: '10%' },
+  'Ruby': { partner: '85%', tradi: '15%' },
+  'Bạch Kim': { partner: '80%', tradi: '20%' },
+  'Vàng': { partner: '75%', tradi: '25%' },
+  'Bạc': { partner: '70%', tradi: '30%' },
+  'Đồng': { partner: '65%', tradi: '35%' },
 };
 
 export default function CongratulationsModal({ rank, partnerType, onClose, onNavigateToLogin }: CongratulationsModalProps) {
   const [stage, setStage] = useState<1 | 2>(1);
   const [mounted, setMounted] = useState(false);
   const IconComponent = rankIcons[rank] || Shield;
-  const percentages = rankPercentages[rank] || { partner: '70%', tradi: '30%' };
+  const percentages = rankPercentages[rank] || { partner: '65%', tradi: '30%' };
   
   const partnerTypeText = partnerType === 'new' ? 'Đối Tác Tradi' : 'Đại Lí Hệ Thống';
 

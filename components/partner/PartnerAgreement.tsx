@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Gem, Diamond, Star, Award, Medal, Shield } from 'lucide-react';
+import CongratulationsModal from './CongratulationsModal';
 import styles from './PartnerAgreement.module.css';
 
 interface PartnerAgreementProps {
@@ -12,12 +13,12 @@ interface PartnerAgreementProps {
 }
 
 const partnerTiers = [
-  { name: 'Kim Cương', partner: '95%', tradi: '5%', condition: '2000 Lot', icon: Gem },
-  { name: 'Ruby', partner: '90%', tradi: '10%', condition: '1200 lot', icon: Diamond },
-  { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '600 lot', icon: Star },
-  { name: 'Vàng', partner: '80%', tradi: '20%', condition: '300 lot', icon: Award },
-  { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 lot', icon: Medal },
-  { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Shield },
+  { name: 'Kim Cương', partner: '90%', tradi: '10%', condition: '2000 Lot', icon: Gem },
+  { name: 'Ruby', partner: '85%', tradi: '15%', condition: '1200 Lot', icon: Diamond },
+  { name: 'Bạch Kim', partner: '80%', tradi: '20%', condition: '600 Lot', icon: Star },
+  { name: 'Vàng', partner: '75%', tradi: '25%', condition: '300 Lot', icon: Award },
+  { name: 'Bạc', partner: '70%', tradi: '30%', condition: '100 Lot', icon: Medal },
+  { name: 'Đồng', partner: '65%', tradi: '35%', condition: 'Hoàn thành', icon: Shield },
 ];
 
 export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId }: PartnerAgreementProps) {
@@ -29,6 +30,53 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [hasClickedTerms, setHasClickedTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [showOnlyTradi, setShowOnlyTradi] = useState(false);
+  const [isCheckingReferrer, setIsCheckingReferrer] = useState(true);
+  const [referrerCheckError, setReferrerCheckError] = useState<string | null>(null);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
+  const [registeredPartnerType, setRegisteredPartnerType] = useState<'new' | 'system'>('new');
+
+  // Check referrer status on mount
+  useEffect(() => {
+    const checkReferrerStatus = async () => {
+      try {
+        const response = await fetch('/api/check-referrer-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[PartnerAgreement] Referrer check result:', data);
+          
+          // Check for edge cases that should show errors
+          if (data.reason === 'no_referrer') {
+            setReferrerCheckError('Bạn chưa có người giới thiệu. Vui lòng liên hệ admin để được hỗ trợ.');
+          } else if (data.reason === 'referrer_not_found') {
+            setReferrerCheckError('Không tìm thấy thông tin người giới thiệu. Vui lòng liên hệ admin.');
+          } else if (data.reason === 'referrer_data_not_found') {
+            setReferrerCheckError('Dữ liệu người giới thiệu không hợp lệ. Vui lòng liên hệ admin.');
+          } else {
+            // Valid referrer found
+            setShowOnlyTradi(data.showOnlyTradi);
+            setReferrerCheckError(null);
+          }
+        } else {
+          console.error('[PartnerAgreement] Failed to check referrer status');
+          setReferrerCheckError('Không thể kiểm tra thông tin người giới thiệu. Vui lòng thử lại sau.');
+        }
+      } catch (error) {
+        console.error('[PartnerAgreement] Error checking referrer:', error);
+        setReferrerCheckError('Lỗi hệ thống khi kiểm tra thông tin. Vui lòng thử lại sau.');
+      } finally {
+        setIsCheckingReferrer(false);
+      }
+    };
+
+    checkReferrerStatus();
+  }, [userId]);
 
   const canProceed = hasConfirmed;
   const canConfirm = hasRead && hasAgreed;
@@ -65,8 +113,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       // Store rank and referral ID for page update
       if (data.rank) {
         localStorage.setItem('partnerRank', data.rank);
-        sessionStorage.setItem('justRegistered', 'true');
-        sessionStorage.setItem('registeredPartnerType', type);
+        setRegisteredRank(data.rank);
         
         // Dispatch custom event for same-window update
         window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
@@ -77,16 +124,27 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       // Store and dispatch referral ID if provided
       if (data.referralId) {
         console.log('[PartnerAgreement] Setting referral ID:', data.referralId);
+        // Store in sessionStorage for persistence
+        sessionStorage.setItem('referralId', data.referralId);
         // Dispatch custom event for referral ID update
         window.dispatchEvent(new CustomEvent('referralIdUpdated', { 
           detail: { referralId: data.referralId } 
         }));
       }
       
-      // Trigger transition to partner login (modal will show there)
-      setTimeout(() => {
-        onAccept();
-      }, 500);
+      // Dispatch partner type update event
+      console.log('[PartnerAgreement] Setting partner type:', type);
+      sessionStorage.setItem('partnerType', type);
+      window.dispatchEvent(new CustomEvent('partnerTypeUpdated', { 
+        detail: { partnerType: type } 
+      }));
+      
+      // Map partner type to modal format: DTT → 'new', DLHT → 'system'
+      const modalPartnerType = type === 'DTT' ? 'new' : 'system';
+      setRegisteredPartnerType(modalPartnerType);
+      
+      // Show congratulations modal immediately
+      setShowCongratulations(true);
     } catch (error) {
       console.error('[PartnerAgreement] Registration error:', error);
       setRegistrationError(error instanceof Error ? error.message : 'Failed to register');
@@ -174,35 +232,47 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     {registrationError}
                   </div>
                 )}
-                <div className={styles.buttonGrid}>
-                  <div className={styles.buttonWrapper}>
-                    <div className={styles.buttonInfo}>
-                      <span className={styles.commissionLabel}>Hoa hồng: 70%</span>
-                      <span className={styles.commissionSubtext}>(nâng được)</span>
-                    </div>
-                    <button
-                      className={styles.partnerButton}
-                      onClick={() => handlePartnerTypeSelect('DTT')}
-                      disabled={!canProceed || isRegistering}
-                    >
-                      {isRegistering ? 'Đang đăng ký...' : 'ĐỐI TÁC TRADI'}
-                    </button>
+                {isCheckingReferrer ? (
+                  <div className={styles.loadingMessage}>
+                    Đang kiểm tra thông tin...
                   </div>
+                ) : referrerCheckError ? (
+                  <div className={styles.errorMessage}>
+                    {referrerCheckError}
+                  </div>
+                ) : (
+                  <div className={`${styles.buttonGrid} ${showOnlyTradi ? styles.singleButton : ''}`}>
+                    <div className={styles.buttonWrapper}>
+                      <div className={styles.buttonInfo}>
+                        <span className={styles.commissionLabel}>Hoa hồng: 65%</span>
+                        <span className={styles.commissionSubtext}>(nâng được)</span>
+                      </div>
+                      <button
+                        className={styles.partnerButton}
+                        onClick={() => handlePartnerTypeSelect('DTT')}
+                        disabled={!canProceed || isRegistering}
+                      >
+                        {isRegistering ? 'Đang đăng ký...' : 'ĐỐI TÁC TRADI'}
+                      </button>
+                    </div>
 
-                  <div className={styles.buttonWrapper}>
-                    <div className={styles.buttonInfo}>
-                      <span className={styles.commissionLabel}>Hoa hồng hệ thống: 90%</span>
-                      <span className={styles.commissionSubtext}>(chỉ nâng khi hệ thống nâng cấp)</span>
-                    </div>
-                    <button
-                      className={styles.partnerButton}
-                      onClick={() => handlePartnerTypeSelect('DLHT')}
-                      disabled={!canProceed || isRegistering}
-                    >
-                      {isRegistering ? 'Đang đăng ký...' : 'ĐẠI LÍ HỆ THỐNG'}
-                    </button>
+                    {!showOnlyTradi && (
+                      <div className={styles.buttonWrapper}>
+                        <div className={styles.buttonInfo}>
+                          <span className={styles.commissionLabel}>Hoa hồng hệ thống: 85%</span>
+                          <span className={styles.commissionSubtext}>(chỉ nâng khi hệ thống nâng cấp)</span>
+                        </div>
+                        <button
+                          className={styles.partnerButton}
+                          onClick={() => handlePartnerTypeSelect('DLHT')}
+                          disabled={!canProceed || isRegistering}
+                        >
+                          {isRegistering ? 'Đang đăng ký...' : 'ĐẠI LÍ HỆ THỐNG'}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -294,6 +364,23 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
             </div>
           </div>
         </div>
+      )}
+
+      {/* Congratulations Modal */}
+      {showCongratulations && (
+        <CongratulationsModal
+          rank={registeredRank}
+          partnerType={registeredPartnerType}
+          onClose={() => {
+            setShowCongratulations(false);
+            // After closing modal, navigate to partner login
+            onAccept();
+          }}
+          onNavigateToLogin={() => {
+            // This is called when user clicks continue on stage 1
+            // We don't navigate yet, just move to stage 2 of the modal
+          }}
+        />
       )}
     </div>
   );

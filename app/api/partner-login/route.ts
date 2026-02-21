@@ -206,6 +206,59 @@ export async function POST(request: NextRequest) {
         // Don't fail the login if database update fails
       }
 
+      // Create partner_detail entry for this platform if it's the first login
+      try {
+        if (userIdToUpdate) {
+          const supabase = getSupabaseClient();
+          
+          // Check if partner_detail entry exists for this user + platform combination
+          const { data: existingDetail } = await supabase
+            .from('partner_detail')
+            .select('id')
+            .eq('id', userIdToUpdate)
+            .eq('platform', platform.toLowerCase())
+            .maybeSingle();
+
+          if (!existingDetail) {
+            console.log('[PARTNER-LOGIN] First login for this platform, creating partner_detail entry');
+            
+            // Create partner detail record for this platform
+            const { error: detailInsertError } = await supabase
+              .from('partner_detail')
+              .insert({
+                id: userIdToUpdate,
+                platform: platform.toLowerCase(),
+                partner_list: [],
+                total_clients: 0,
+                total_client_lots: 0,
+                total_client_reward: 0,
+                total_partners: 0,
+                total_partner_lots: 0,
+                total_partner_reward: 0,
+                total_refer_reward: 0,
+                total_tradi_com: 0,
+                this_month_tradi_com: 0,
+                accum_client_reward: 0,
+                accum_partner_reward: 0,
+                accum_refer_reward: 0,
+                accum_time_remaining: 0,
+                claim_time_remaining: 0,
+                total_reward_history: [],
+              });
+
+            if (detailInsertError) {
+              console.error('[PARTNER-LOGIN] Error creating partner detail:', detailInsertError);
+              // Don't fail the login if detail creation fails
+            } else {
+              console.log('[PARTNER-LOGIN] Partner detail entry created successfully');
+            }
+          }
+        }
+      } catch (detailError) {
+        console.error('[PARTNER-LOGIN] Error checking/creating partner detail:', detailError);
+        // Don't fail the login if partner detail creation fails
+      }
+
       // Call ngrok refresh-account API
       try {
         if (userIdToUpdate) {

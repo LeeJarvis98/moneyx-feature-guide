@@ -18,11 +18,12 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseClient();
 
     // Fetch the selected_platform column from partners table
+    // Use maybeSingle() to handle new users who don't have a record yet
     const { data, error } = await supabase
       .from('partners')
       .select('selected_platform')
       .eq('id', partnerId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[GET-SELECTED-PLATFORMS] Error fetching selected platforms:', error);
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Return empty array if partner doesn't exist yet (new user)
     const selectedPlatforms = data?.selected_platform || [];
     console.log('[GET-SELECTED-PLATFORMS] Found selected platforms:', selectedPlatforms);
 
