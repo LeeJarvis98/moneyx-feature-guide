@@ -220,8 +220,8 @@ export default function HomePage() {
             console.log('[HomePage] No referral ID returned from API, keeping existing value');
           }
         } else {
-          console.log('[HomePage] User is not a partner, clearing partner data');
-          setPartnerRank('');
+          console.log('[HomePage] User is not a partner, setting rank to None');
+          setPartnerRank('None');
           setReferralId('');
           sessionStorage.removeItem('referralId');
           localStorage.removeItem('referralId');
@@ -409,6 +409,7 @@ export default function HomePage() {
                       Việt Nam Chất Lượng Cao
                     </Title>
                     <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+                      {/* Show rank badge for partners */}
                       {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
                           'Kim Cương': Gem,
@@ -453,40 +454,66 @@ export default function HomePage() {
                           </Badge>
                         );
                       })()}
-                      {isUserLoggedIn && referralId && (
+                      
+                      {/* Show "Chưa là đối tác" badge for non-partners */}
+                      {isUserLoggedIn && partnerRank === 'None' && (
+                        <Badge
+                          variant="outline"
+                          color="gray"
+                          size="lg"
+                          style={{ cursor: 'pointer' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigationChange('features');
+                          }}
+                        >
+                          Chưa là đối tác
+                        </Badge>
+                      )}
+                      
+                      {/* Show referral ID or N/A */}
+                      {isUserLoggedIn && (
                         <Group
                           gap="xs"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (partnerRank === 'None') {
+                              handleNavigationChange('features');
+                            }
+                          }}
                           style={{
                             padding: '6px 12px',
                             borderRadius: '8px',
                             backgroundColor: 'rgba(255, 184, 28, 0.1)',
                             border: '1px solid rgba(255, 184, 28, 0.3)',
+                            cursor: partnerRank === 'None' ? 'pointer' : 'default',
                           }}
                         >
                           <Text size="sm" fw={600} c="yellow">
                             Mã giới thiệu:
                           </Text>
                           <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>
-                            {referralId}
+                            {referralId || 'N/A'}
                           </Text>
-                          <CopyButton value={referralId} timeout={2000}>
-                            {({ copied, copy }) => (
-                              <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
-                                <ActionIcon
-                                  color={copied ? 'teal' : 'yellow'}
-                                  variant="subtle"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copy();
-                                  }}
-                                  size="sm"
-                                >
-                                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                                </ActionIcon>
-                              </Tooltip>
-                            )}
-                          </CopyButton>
+                          {referralId && (
+                            <CopyButton value={referralId} timeout={2000}>
+                              {({ copied, copy }) => (
+                                <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép mã giới thiệu'} withArrow position="bottom">
+                                  <ActionIcon
+                                    color={copied ? 'teal' : 'yellow'}
+                                    variant="subtle"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copy();
+                                    }}
+                                    size="sm"
+                                  >
+                                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                                  </ActionIcon>
+                                </Tooltip>
+                              )}
+                            </CopyButton>
+                          )}
                         </Group>
                       )}
                     </Group>
