@@ -10,6 +10,8 @@ import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
 import { LoginTab } from '@/components/tabs/LoginTab';
 import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
+import PartnerAgreement from '@/components/partner/PartnerAgreement';
+import CongratulationsModal from '@/components/partner/CongratulationsModal';
 import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { AccountInfoTab } from '@/components/account/AccountInfoTab';
@@ -72,13 +74,14 @@ export default function HomePage() {
   const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
-  const [showPartnerAgreement, setShowPartnerAgreement] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [partnerRank, setPartnerRank] = useState<string>('');
   const [referralId, setReferralId] = useState<string>('');
   const [daysToMonthEnd, setDaysToMonthEnd] = useState<number | null>(null);
   const [loadingPlatforms, setLoadingPlatforms] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
   const theme = useMantineTheme();
 
   // Debug: Log referralId changes
@@ -229,12 +232,27 @@ export default function HomePage() {
     }
   };
 
+  // Determine if user is a partner (has partner rank that's not 'None')
+  const isPartner = partnerRank && partnerRank !== 'None';
+
+  // Debug logging for tab visibility
+  useEffect(() => {
+    console.log('[HomePage] Tab visibility check:', {
+      partnerRank,
+      isPartner,
+      isUserLoggedIn,
+      navigationSection,
+      activeTab
+    });
+  }, [partnerRank, isPartner, isUserLoggedIn, navigationSection, activeTab]);
+
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
     setNavigationSection(value as NavigationSection);
     // Set default tab for each section
     if (value === 'features') {
-      setActiveTab('partner');
+      // Show partner tab first for existing partners, agreement for non-partners
+      setActiveTab(isPartner ? 'partner' : 'agreement');
       // Clear partner authentication when clicking "Cổng đối tác"
       console.log('[HomePage] Navigating to features, clearing partner session');
       setIsPartnerAuthenticated(false);
@@ -259,16 +277,12 @@ export default function HomePage() {
     }
     // Close mobile menus when switching sections
     closeMobileAside();
-    // Reset partner agreement visibility
-    setShowPartnerAgreement(false);
   };
 
   // Close mobile menus when changing tabs
   const handleTabChange = (value: string | null) => {
     setActiveTab(value);
     closeMobileAside();
-    // Reset partner agreement visibility when changing tabs
-    setShowPartnerAgreement(false);
     // Set default article when switching to guides or strategies
     if (value === 'guides') {
       setSelectedArticle('guide-1');
@@ -280,7 +294,7 @@ export default function HomePage() {
   // Determine if navbar should be shown
   const shouldShowNavbar = (
     (navigationSection === 'library' && (activeTab === 'guides' || activeTab === 'strategies')) ||
-    (navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement)
+    (navigationSection === 'features' && activeTab === 'partner')
   );
 
   // Determine if aside should be shown
@@ -572,15 +586,24 @@ export default function HomePage() {
                 {navigationSection !== 'login' && (
                   <Tabs value={activeTab} onChange={handleTabChange} radius="md">
                     <Tabs.List>
-                      {navigationSection === 'features' && (
+                      {navigationSection === 'features' && isUserLoggedIn && (
                         <>
                           <Tabs.Tab
-                            value="partner"
-                            c={activeTab === 'partner' ? theme.white : undefined}
-                            fw={activeTab === 'partner' ? 700 : undefined}
+                            value="agreement"
+                            c={activeTab === 'agreement' ? theme.white : undefined}
+                            fw={activeTab === 'agreement' ? 700 : undefined}
                           >
-                            Partner
+                            Điều lệ
                           </Tabs.Tab>
+                          {isPartner && (
+                            <Tabs.Tab
+                              value="partner"
+                              c={activeTab === 'partner' ? theme.white : undefined}
+                              fw={activeTab === 'partner' ? 700 : undefined}
+                            >
+                              Đối tác
+                            </Tabs.Tab>
+                          )}
                         </>
                       )}
                       {navigationSection === 'library' && (
@@ -676,7 +699,7 @@ export default function HomePage() {
           </AppShell.Header>
 
           <AppShell.Navbar p="md">
-            {navigationSection === 'features' && activeTab === 'partner' && !showPartnerAgreement && (
+            {navigationSection === 'features' && activeTab === 'partner' && (
               <PartnerNavBar
                 selectedPlatform={selectedPlatform}
                 onPlatformSelect={setSelectedPlatform}
@@ -911,7 +934,7 @@ export default function HomePage() {
 
           <AppShell.Main style={{
             backgroundColor: '#000000',
-            ...(showPartnerAgreement && {
+            ...(activeTab === 'agreement' && {
               paddingTop: '100px',
               paddingLeft: '0px',
               paddingRight: '0px',
@@ -922,6 +945,24 @@ export default function HomePage() {
               {/* Features Section Tabs */}
               {isUserLoggedIn && navigationSection === 'features' && (
                 <>
+                  <Tabs.Panel value="agreement">
+                    <PartnerAgreement
+                      onAccept={() => {}}
+                      selectedPlatform={selectedPlatform}
+                      onPlatformSelect={setSelectedPlatform}
+                      userId={loggedInUserId || ''}
+                      isPartner={!!isPartner}
+                      onRegistrationSuccess={(rank: string) => {
+                        console.log('[HomePage] Partner registration successful, rank:', rank);
+                        // Update partner rank
+                        setPartnerRank(rank);
+                        localStorage.setItem('partnerRank', rank);
+                        // Show congratulations modal
+                        setRegisteredRank(rank);
+                        setShowCongratulations(true);
+                      }}
+                    />
+                  </Tabs.Panel>
                   <Tabs.Panel value="partner">
                     <PartnerApp
                       onAsideContentChange={setPartnerAside}
@@ -929,7 +970,6 @@ export default function HomePage() {
                       onPlatformSelect={setSelectedPlatform}
                       isAuthenticated={isPartnerAuthenticated}
                       setIsAuthenticated={setIsPartnerAuthenticated}
-                      onAgreementVisibilityChange={setShowPartnerAgreement}
                       partnerRank={partnerRank}
                       loadingPlatforms={loadingPlatforms}
                     />
@@ -1089,6 +1129,27 @@ export default function HomePage() {
             </Transition>
           </Affix>
         </AppShell>
+
+        {/* Congratulations Modal */}
+        <CongratulationsModal
+          rank={registeredRank}
+          isOpen={showCongratulations}
+          onClose={() => {
+            console.log('[HomePage] Closing congratulations modal');
+            setShowCongratulations(false);
+            // Switch to partner tab after closing modal
+            setActiveTab('partner');
+            // Refresh partner data
+            if (loggedInUserId) {
+              checkPartnerRank(loggedInUserId);
+            }
+          }}
+          onNavigateToLogin={() => {
+            console.log('[HomePage] Navigate to login called from modal');
+            // This is called when user clicks continue on stage 1
+            // We don't navigate yet, just move to stage 2 of the modal
+          }}
+        />
       </div>
     </>
   );

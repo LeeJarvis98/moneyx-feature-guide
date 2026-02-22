@@ -5,9 +5,7 @@ import { Progress } from '@mantine/core';
 import Image from 'next/image';
 import PartnerLogin from './PartnerLogin';
 import PartnerDashboard from './PartnerDashboard';
-import PartnerAgreement from './PartnerAgreement';
 import WelcomeScreen from './WelcomeScreen';
-import CongratulationsModal from './CongratulationsModal';
 import { exnessApi } from '@/lib/exness/api';
 import styles from './PartnerApp.module.css';
 
@@ -17,23 +15,14 @@ interface PartnerAppProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
-  onAgreementVisibilityChange?: (visible: boolean) => void;
   partnerRank?: string;
   loadingPlatforms?: boolean;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, onAgreementVisibilityChange, partnerRank, loadingPlatforms }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, partnerRank, loadingPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  // Check if user has partner rank badge (means they're already a partner)
-  // ADMIN users should also skip the agreement and go directly to login
-  const hasPartnerRank = partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN';
-  const isAdmin = partnerRank === 'ADMIN';
-  const [isPartner, setIsPartner] = useState(!!hasPartnerRank || isAdmin);
-  const [checkingPartnerStatus, setCheckingPartnerStatus] = useState(false);
   const [hasSelectedPlatforms, setHasSelectedPlatforms] = useState<boolean | null>(null);
-  const [showCongratulations, setShowCongratulations] = useState(false);
-  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
 
   // Check if user has selected platforms in database
   useEffect(() => {
@@ -82,28 +71,14 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     }
   }, [loadingPlatforms]);
 
-  // Check if user is already a partner and if authenticated on mount
+  // Check if user is already authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       setLoadingProgress(20);
       const token = exnessApi.getToken();
       const partnerId = sessionStorage.getItem('partnerId');
-      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       
       setLoadingProgress(40);
-      
-      // If user has partner rank badge or is ADMIN, they're already a partner - skip check
-      if (hasPartnerRank || isAdmin) {
-        setIsPartner(true);
-        console.log('[PartnerApp] User has partner rank badge or is ADMIN, skipping partner status check');
-      } else {
-        // If user doesn't have a badge, they're definitely not a partner
-        // Set to false immediately to avoid showing PartnerLogin briefly
-        console.log('[PartnerApp] No partner rank badge, user is not a partner');
-        setIsPartner(false);
-      }
-      
-      setLoadingProgress(70);
       
       if (token) {
         try {
@@ -124,7 +99,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     };
 
     checkAuth();
-  }, [setIsAuthenticated, hasPartnerRank, isAdmin]);
+  }, [setIsAuthenticated]);
 
   // Clear aside content when not authenticated
   useEffect(() => {
@@ -147,32 +122,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     sessionStorage.removeItem('platformToken');
     setIsAuthenticated(false);
     console.log('[PartnerApp] Logout complete, isAuthenticated set to false');
-    // Don't set isPartner to false - they're still a partner, just not authenticated
-    // This ensures they go back to PartnerLogin, not PartnerAgreement
   };
-
-  const handleAcceptTerms = async () => {
-    // When user accepts terms, proceed to login
-    // After they log in, the partner status will be checked again
-    setIsPartner(true);
-    if (onAgreementVisibilityChange) {
-      onAgreementVisibilityChange(false);
-    }
-  };
-
-  const handleRegistrationSuccess = (rank: string) => {
-    console.log('[PartnerApp] Registration success callback, rank:', rank);
-    setRegisteredRank(rank);
-    setShowCongratulations(true);
-  };
-
-  // Notify parent about agreement visibility
-  useEffect(() => {
-    if (onAgreementVisibilityChange) {
-      const showingAgreement = !checking && !isAuthenticated && !isPartner;
-      onAgreementVisibilityChange(showingAgreement);
-    }
-  }, [checking, isAuthenticated, isPartner, onAgreementVisibilityChange]);
 
   if (checking || loadingPlatforms || hasSelectedPlatforms === null) {
     return (
@@ -208,9 +158,6 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     );
   }
 
-  // Get userId for PartnerAgreement
-  const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || '';
-
   return (
     <>
       {isAuthenticated ? (
@@ -218,47 +165,20 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onLogout={handleLogout} 
           onAsideContentChange={onAsideContentChange}
         />
-      ) : isPartner ? (
-        !hasSelectedPlatforms ? (
-          <WelcomeScreen />
-        ) : selectedPlatform ? (
-          <PartnerLogin 
-            onLoginSuccess={() => setIsAuthenticated(true)} 
-            selectedPlatform={selectedPlatform}
-            onAsideContentChange={onAsideContentChange}
-          />
-        ) : (
-          <div className={styles.noPlatformMessage}>
-            <h3>Vui lòng chọn một sàn</h3>
-            <p>Nhấp vào một sàn trong thanh điều hướng để đăng nhập.</p>
-          </div>
-        )
-      ) : (
-        <PartnerAgreement 
-          onAccept={handleAcceptTerms}
+      ) : !hasSelectedPlatforms ? (
+        <WelcomeScreen />
+      ) : selectedPlatform ? (
+        <PartnerLogin 
+          onLoginSuccess={() => setIsAuthenticated(true)} 
           selectedPlatform={selectedPlatform}
-          onPlatformSelect={onPlatformSelect}
-          userId={userId || ''}
-          onRegistrationSuccess={handleRegistrationSuccess}
+          onAsideContentChange={onAsideContentChange}
         />
+      ) : (
+        <div className={styles.noPlatformMessage}>
+          <h3>Vui lòng chọn một sàn</h3>
+          <p>Nhấp vào một sàn trong thanh điều hướng để đăng nhập.</p>
+        </div>
       )}
-
-      {/* Congratulations Modal - lifted to PartnerApp level so it persists across transitions */}
-      <CongratulationsModal
-        rank={registeredRank}
-        isOpen={showCongratulations}
-        onClose={() => {
-          console.log('[PartnerApp] Closing congratulations modal');
-          setShowCongratulations(false);
-          // After closing modal, mark user as partner
-          handleAcceptTerms();
-        }}
-        onNavigateToLogin={() => {
-          console.log('[PartnerApp] Navigate to login called from modal');
-          // This is called when user clicks continue on stage 1
-          // We don't navigate yet, just move to stage 2 of the modal
-        }}
-      />
     </>
   );
 }

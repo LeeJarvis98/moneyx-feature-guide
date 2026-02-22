@@ -9,6 +9,7 @@ interface PartnerAgreementProps {
   selectedPlatform: string | null;
   onPlatformSelect: (platform: string) => void;
   userId: string;
+  isPartner?: boolean;
   onRegistrationSuccess: (rank: string) => void;
 }
 
@@ -20,7 +21,7 @@ const partnerTiers = [
   { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Medal },
 ];
 
-export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, onRegistrationSuccess }: PartnerAgreementProps) {
+export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
@@ -158,31 +159,43 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
               </div>
 
               {/* Buttons */}
-              <div className={styles.buttonContainer}>
-                {registrationError && (
-                  <div className={styles.errorMessage}>
-                    {registrationError}
+              {!isPartner && (
+                <div className={styles.buttonContainer}>
+                  {registrationError && (
+                    <div className={styles.errorMessage}>
+                      {registrationError}
+                    </div>
+                  )}
+                  <div className={styles.buttonGrid}>
+                    <button
+                      className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
+                      onClick={() => {
+                        setShowTermsModal(true);
+                        setHasClickedTerms(true);
+                      }}
+                    >
+                      Điều khoản hợp tác & bảo mật
+                    </button>
+                    <button
+                      className={styles.partnerButton}
+                      onClick={handleRegisterAsPartner}
+                      disabled={!canProceed || isRegistering}
+                    >
+                      {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
+                    </button>
                   </div>
-                )}
-                <div className={styles.buttonGrid}>
+                </div>
+              )}
+              {isPartner && (
+                <div className={styles.buttonContainer}>
                   <button
-                    className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
-                    onClick={() => {
-                      setShowTermsModal(true);
-                      setHasClickedTerms(true);
-                    }}
+                    className={`${styles.termsButton} ${styles.termsButtonFilled}`}
+                    onClick={() => setShowTermsModal(true)}
                   >
-                    Điều khoản hợp tác & bảo mật
-                  </button>
-                  <button
-                    className={styles.partnerButton}
-                    onClick={handleRegisterAsPartner}
-                    disabled={!canProceed || isRegistering}
-                  >
-                    {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
+                    Xem điều khoản hợp tác & bảo mật
                   </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -222,48 +235,50 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                 </ol>
               </div>
 
-              {/* Checkboxes */}
-              <div className={styles.checkboxContainer}>
-                <div className={styles.checkboxWrapper}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={hasRead}
-                      onChange={(e) => {
-                        setHasRead(e.target.checked);
-                        if (!e.target.checked) {
-                          setHasConfirmed(false);
-                        }
-                      }}
-                      className={styles.checkbox}
-                    />
-                    <span>Tôi đã đọc và hiểu</span>
-                  </label>
+              {/* Checkboxes - only shown for non-partners */}
+              {!isPartner && (
+                <div className={styles.checkboxContainer}>
+                  <div className={styles.checkboxWrapper}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={hasRead}
+                        onChange={(e) => {
+                          setHasRead(e.target.checked);
+                          if (!e.target.checked) {
+                            setHasConfirmed(false);
+                          }
+                        }}
+                        className={styles.checkbox}
+                      />
+                      <span>Tôi đã đọc và hiểu</span>
+                    </label>
 
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={hasAgreed}
-                      onChange={(e) => {
-                        setHasAgreed(e.target.checked);
-                        if (!e.target.checked) {
-                          setHasConfirmed(false);
-                        }
-                      }}
-                      className={styles.checkbox}
-                    />
-                    <span>Tôi đồng ý với các điều khoản trên</span>
-                  </label>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={hasAgreed}
+                        onChange={(e) => {
+                          setHasAgreed(e.target.checked);
+                          if (!e.target.checked) {
+                            setHasConfirmed(false);
+                          }
+                        }}
+                        className={styles.checkbox}
+                      />
+                      <span>Tôi đồng ý với các điều khoản trên</span>
+                    </label>
+                  </div>
+
+                  <button
+                    className={styles.confirmButton}
+                    onClick={handleConfirm}
+                    disabled={!canConfirm}
+                  >
+                    Xác nhận
+                  </button>
                 </div>
-
-                <button
-                  className={styles.confirmButton}
-                  onClick={handleConfirm}
-                  disabled={!canConfirm}
-                >
-                  Xác nhận
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
