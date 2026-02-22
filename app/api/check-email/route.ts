@@ -23,6 +23,25 @@ function generateOTP(): string {
 
 const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
 
+// Helper function to extract platform credentials from database structure
+function extractPlatformCredentials(platformAccounts: any, platform: string): any {
+  if (!platformAccounts || !Array.isArray(platformAccounts)) {
+    return null;
+  }
+
+  const platformKey = platform.toLowerCase();
+  
+  for (const accountObj of platformAccounts) {
+    if (accountObj && typeof accountObj === 'object') {
+      if (accountObj[platformKey]) {
+        return accountObj[platformKey];
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, platform, referralId, captchaToken, otp, action } = await request.json();
@@ -272,47 +291,89 @@ export async function POST(request: NextRequest) {
     if (!platformToken) {
       console.log('[CHECK-EMAIL] No token provided, retrieving credentials from database...');
       
-      if (!referralId) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Referral ID is required for authentication.' 
-          },
-          { status: 401 }
-        );
-      }
-
       try {
         const supabase = getSupabaseClient();
         
-        // Step 1: Look up in own_referral_id_list table using the referred ID from URL
-        console.log('[CHECK-EMAIL] Step 1: Looking up partner ID in own_referral_id_list with own_referral_id:', referralId);
+        // Step 1: Get user ID from headers
+        const userId = request.headers.get('x-user-id');
+        if (!userId) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'User authentication required.' 
+            },
+            { status: 401 }
+          );
+        }
+
+        // Step 2: Look up user's referral_id in users table
+        console.log('[CHECK-EMAIL] Step 1: Looking up user referral_id in users table for user:', userId);
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('referral_id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (userError) {
+          console.error('[CHECK-EMAIL] Error querying users table:', userError);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Failed to fetch user data.' 
+            },
+            { status: 500 }
+          );
+        }
+
+        if (!userData || !userData.referral_id) {
+          console.log('[CHECK-EMAIL] No referral_id found for user:', userId);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'User has no referral link. Please sign up with a valid referral link.' 
+            },
+            { status: 404 }
+          );
+        }
+
+        const userReferralId = userData.referral_id;
+        console.log('[CHECK-EMAIL] Step 2: Found user referral_id:', userReferralId);
+
+        // Step 3: Look up partner in own_referral_id_list table using user's referral_id
+        console.log('[CHECK-EMAIL] Step 3: Looking up partner ID in own_referral_id_list with own_referral_id:', userReferralId);
         const { data: referralData, error: referralError } = await supabase
           .from('own_referral_id_list')
           .select('id')
-          .eq('own_referral_id', referralId)
+          .eq('own_referral_id', userReferralId)
           .maybeSingle();
 
         if (referralError) {
           console.error('[CHECK-EMAIL] Error querying own_referral_id_list:', referralError);
-        }
-
-        if (!referralData || !referralData.id) {
-          console.log('[CHECK-EMAIL] No partner found with referral ID:', referralId);
           return NextResponse.json(
             { 
               success: false, 
-              error: 'Partner not found. Please check the referral link.' 
+              error: 'Failed to fetch partner data.' 
+            },
+            { status: 500 }
+          );
+        }
+
+        if (!referralData || !referralData.id) {
+          console.log('[CHECK-EMAIL] No partner found with own_referral_id:', userReferralId);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'Partner not found. Please contact support.' 
             },
             { status: 404 }
           );
         }
 
         const actualPartnerId = referralData.id;
-        console.log('[CHECK-EMAIL] Step 2: Found partner ID:', actualPartnerId);
+        console.log('[CHECK-EMAIL] Step 4: Found partner ID:', actualPartnerId);
 
-        // Step 2: Look up platform_accounts in partners table using the actual partner ID
-        console.log('[CHECK-EMAIL] Step 3: Looking up platform_accounts in partners table');
+        // Step 4: Look up platform_accounts in partners table using the actual partner ID
+        console.log('[CHECK-EMAIL] Step 5: Looking up platform_accounts in partners table');
         const { data: partnerData, error: partnerError } = await supabase
           .from('partners')
           .select('platform_accounts')
@@ -334,8 +395,8 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Step 3: Extract platform credentials
-        console.log('[CHECK-EMAIL] Step 4: Extracting credentials for platform:', platform);
+        // Step 5: Extract platform credentials
+        console.log('[CHECK-EMAIL] Step 6: Extracting credentials for platform:', platform);
         const platformCredentials = extractPlatformCredentials(
           partnerData.platform_accounts,
           platform
@@ -351,8 +412,8 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Step 4: Authenticate with platform using retrieved credentials
-        console.log('[CHECK-EMAIL] Step 5: Authenticating with platform using stored credentials...');
+        // Step 6: Authenticate with platform using retrieved credentials
+        console.log('[CHECK-EMAIL] Step 7: Authenticating with platform using stored credentials...');
         
         if (platform.toLowerCase() === 'exness') {
           const authResponse = await fetch(`${request.nextUrl.origin}/api/exness/login`, {
@@ -407,25 +468,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-// Helper function to extract platform credentials from database structure
-function extractPlatformCredentials(platformAccounts: any, platform: string): any {
-  if (!platformAccounts || !Array.isArray(platformAccounts)) {
-    return null;
-  }
-
-  const platformKey = platform.toLowerCase();
-  
-  for (const accountObj of platformAccounts) {
-    if (accountObj && typeof accountObj === 'object') {
-      if (accountObj[platformKey]) {
-        return accountObj[platformKey];
-      }
-    }
-  }
-
-  return null;
-}
 
     // Step 1: Fetch client affiliation from Exness API using the platform token and email
     console.log('[CHECK-EMAIL] Step 1: Fetching client affiliation from Exness API');
@@ -522,29 +564,36 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
         console.log('[CHECK-EMAIL] Final accountsWithStatus:', accountsWithStatus);
 
         // Step 3: Insert all account IDs into licensed_accounts table
-        if (!referralId) {
-          console.warn('[CHECK-EMAIL] No referral ID provided, skipping database insert');
-        } else {
-          try {
-            console.log('[CHECK-EMAIL] Step 3: Inserting account IDs into licensed_accounts table...');
-            
-            // Get user ID from session/cookie if available
-            // For now, we'll get it from the referralId lookup
-            const { data: referralData } = await supabase
-              .from('own_referral_id_list')
-              .select('id')
-              .eq('own_referral_id', referralId)
+        try {
+          console.log('[CHECK-EMAIL] Step 3: Inserting account IDs into licensed_accounts table...');
+          
+          // Get user ID from headers
+          const userId = request.headers.get('x-user-id');
+          
+          // Get partner ID using the same logic as above
+          let partnerId: string | null = null;
+          
+          if (userId) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('referral_id')
+              .eq('id', userId)
               .maybeSingle();
             
-            const partnerId = referralData?.id;
-            
-            if (!partnerId) {
-              console.warn('[CHECK-EMAIL] Partner ID not found, skipping database insert');
-            } else {
-              // Get userId from request or storage (we'll need to pass it from frontend)
-              // For now, let's check if there's a user ID in the request
-              const userId = request.headers.get('x-user-id');
+            if (userData?.referral_id) {
+              const { data: referralData } = await supabase
+                .from('own_referral_id_list')
+                .select('id')
+                .eq('own_referral_id', userData.referral_id)
+                .maybeSingle();
               
+              partnerId = referralData?.id || null;
+            }
+          }
+          
+          if (!partnerId) {
+            console.warn('[CHECK-EMAIL] Partner ID not found, skipping database insert');
+          } else {
               if (!userId) {
                 console.warn('[CHECK-EMAIL] User ID not provided, will insert without owner');
               }
@@ -608,10 +657,10 @@ function extractPlatformCredentials(platformAccounts: any, platform: string): an
                 }
               }
             }
-          } catch (dbError) {
-            console.error('[CHECK-EMAIL] Database insert error:', dbError);
-            // Don't fail the request if database insert fails
           }
+        catch (dbError) {
+          console.error('[CHECK-EMAIL] Database insert error:', dbError);
+          // Don't fail the request if database insert fails
         }
 
         // Return the data with updated account statuses

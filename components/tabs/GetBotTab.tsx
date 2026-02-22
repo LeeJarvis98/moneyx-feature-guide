@@ -42,7 +42,7 @@ interface GetBotTabProps {
 
 export function GetBotTab({ isActive = false }: GetBotTabProps) {
   // TEST MODE FLAG - Set to true to bypass OTP verification for testing
-  const TEST_MODE = false;
+  const TEST_MODE = true;
 
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)

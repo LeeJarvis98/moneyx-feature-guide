@@ -530,13 +530,14 @@ export default function HomePage() {
                             >
                               <User size={18} color="#000000" />
                             </Avatar>
-                            <Text size="sm" fw={500} c="white" visibleFrom="sm">
-                              {loggedInUserId}
-                            </Text>
-                            <ChevronDown size={16} color="white" style={{ opacity: 0.6 }} />
                           </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
+                          <Menu.Item>
+                            <Text size="sm" fw={500} c="white" visibleFrom="sm">
+                              {loggedInUserId}
+                            </Text>
+                          </Menu.Item>
                           <Menu.Item
                             leftSection={<User size={16} />}
                             onClick={() => {
