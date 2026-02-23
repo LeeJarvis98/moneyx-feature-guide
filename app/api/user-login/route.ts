@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!userId || typeof userId !== 'string') {
       return NextResponse.json(
-        { error: 'ID người dùng là bắt buộc' },
+        { error: 'ID hoặc Email là bắt buộc' },
         { status: 400 }
       );
     }
@@ -42,11 +42,11 @@ export async function POST(request: NextRequest) {
     // Set up Supabase client
     const supabase = getSupabaseClient();
 
-    // Find user by id
+    // Find user by id or email
     const { data: foundUser, error: queryError } = await supabase
       .from('users')
       .select('*')
-      .ilike('id', userId)
+      .or(`id.ilike.${userId},email.ilike.${userId}`)
       .maybeSingle() as { data: User | null; error: any };
 
     if (queryError) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Check if user exists
     if (!foundUser) {
       return NextResponse.json(
-        { error: 'ID người dùng không tồn tại' },
+        { error: 'ID hoặc Email không tồn tại' },
         { status: 401 }
       );
     }

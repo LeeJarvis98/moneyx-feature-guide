@@ -5,6 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Turnstile } from '@/components/Turnstile';
 import styles from './LoginTab.module.css';
 import { RegisterModal } from './RegisterModal';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface LoginTabProps {
   onLoginSuccess?: (userId: string, partnerRank?: string, ownReferralId?: string) => void;
@@ -18,6 +19,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
+  const [forgotPasswordModalOpened, setForgotPasswordModalOpened] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +103,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="partnerId" className={styles.label}>
-              ID VNCLC
+              ID VNCLC hoặc Email
             </label>
             <input
               type="text"
@@ -110,9 +112,9 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
               onChange={(e) => setPartnerId(e.target.value)}
               required
               className={styles.input}
-              placeholder="Nhập ID của bạn"
+              placeholder="Nhập ID hoặc Email của bạn"
               disabled={loading || success}
-              autoComplete="username"
+              autoComplete="username email"
               inputMode="text"
             />
           </div>
@@ -146,7 +148,11 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
           </div>
 
           <div className={styles.optionsRow}>
-            <button type="button" className={`${styles.forgotLink} ${styles.buttonReset}`}>
+            <button 
+              type="button" 
+              className={`${styles.forgotLink} ${styles.buttonReset}`}
+              onClick={() => setForgotPasswordModalOpened(true)}
+            >
               Quên mật khẩu?
             </button>
           </div>
@@ -196,6 +202,7 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
       </div>
 
       <RegisterModal isOpen={modalOpened} onClose={() => setModalOpened(false)} />
+      <ForgotPasswordModal isOpen={forgotPasswordModalOpened} onClose={() => setForgotPasswordModalOpened(false)} />
     </div>
   );
 }
