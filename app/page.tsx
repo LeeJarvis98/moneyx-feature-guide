@@ -1,13 +1,14 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Box, TypographyStylesProvider, Loader, Center } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
 import { LoginTab } from '@/components/tabs/LoginTab';
+import { ArticleViewer } from '@/components/tabs/DocumentationTab';
 import PartnerApp from '@/components/partner/PartnerApp';
 import PartnerNavBar from '@/components/partner/PartnerNavBar';
 import PartnerAgreement from '@/components/partner/PartnerAgreement';
@@ -20,47 +21,6 @@ import { exnessApi } from '@/lib/exness/api';
 import classes from './page.module.css';
 
 type NavigationSection = 'features' | 'library' | 'login' | 'account';
-
-// Article Viewer Component
-function ArticleViewer({ selectedArticle }: { selectedArticle: string }) {
-  const [htmlContent, setHtmlContent] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/articles/${selectedArticle}.html`)
-      .then((response) => response.text())
-      .then((html) => {
-        // Extract body content from HTML
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const bodyContent = doc.body.innerHTML;
-        setHtmlContent(bodyContent);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error loading article:', error);
-        setHtmlContent('<p>Error loading article content.</p>');
-        setLoading(false);
-      });
-  }, [selectedArticle]);
-
-  if (loading) {
-    return (
-      <Center style={{ height: '400px' }}>
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
-  return (
-    <Box style={{ width: '100%' }}>
-      <TypographyStylesProvider>
-        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-      </TypographyStylesProvider>
-    </Box>
-  );
-}
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
