@@ -14,6 +14,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_feature: {
+        Row: {
+          feature: string | null
+        }
+        Insert: {
+          feature?: string | null
+        }
+        Update: {
+          feature?: string | null
+        }
+        Relationships: []
+      }
       commission_distributions: {
         Row: {
           commission_pool: number
@@ -108,8 +120,10 @@ export type Database = {
           id: string | null
           licensed_date: string
           licensed_status: string | null
+          lot_volume: number | null
           owner: string | null
           platform: string | null
+          reward: number | null
           uid: string
         }
         Insert: {
@@ -118,8 +132,10 @@ export type Database = {
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
+          lot_volume?: number | null
           owner?: string | null
           platform?: string | null
+          reward?: number | null
           uid: string
         }
         Update: {
@@ -128,8 +144,10 @@ export type Database = {
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
+          lot_volume?: number | null
           owner?: string | null
           platform?: string | null
+          reward?: number | null
           uid?: string
         }
         Relationships: [
@@ -166,6 +184,13 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "own_referral_id_list_id_fkey1"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
         ]
       }
       partner_detail: {
@@ -188,8 +213,8 @@ export type Database = {
           total_refer_reward: number
           total_reward_history: Json[]
           total_tradi_com: number
-          uid: string
           updated_at: string
+          uuid: string
         }
         Insert: {
           accum_client_reward: number
@@ -210,8 +235,8 @@ export type Database = {
           total_refer_reward: number
           total_reward_history?: Json[]
           total_tradi_com: number
-          uid?: string
           updated_at?: string
+          uuid?: string
         }
         Update: {
           accum_client_reward?: number
@@ -232,8 +257,8 @@ export type Database = {
           total_refer_reward?: number
           total_reward_history?: Json[]
           total_tradi_com?: number
-          uid?: string
           updated_at?: string
+          uuid?: string
         }
         Relationships: [
           {
@@ -241,6 +266,13 @@ export type Database = {
             columns: ["id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_detail_id_fkey1"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]

@@ -106,6 +106,18 @@
   opacity: 0.5;
 }
 
+.helperText {
+  margin-top: 6px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.helperText strong {
+  color: #FFB81C;
+  font-weight: 600;
+}
+
 .captchaSection {
   display: flex;
   gap: 12px;

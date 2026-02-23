@@ -29,6 +29,8 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [loadingPlatforms, setLoadingPlatforms] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
+  const [platformDetails, setPlatformDetails] = useState<Record<string, { total_client_lots: number }>>({});
+  const [loadingPlatformDetails, setLoadingPlatformDetails] = useState(false);
 
   // Get partnerId from storage
   useEffect(() => {
@@ -81,6 +83,39 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
   // Load selected platforms from database when partnerId is available
   useEffect(() => {
     loadPlatformsFromDatabase();
+  }, [partnerId]);
+
+  // Load platform details (total_client_lots, etc.) when partnerId is available
+  useEffect(() => {
+    const loadPlatformDetails = async () => {
+      if (!partnerId) {
+        setPlatformDetails({});
+        return;
+      }
+
+      try {
+        setLoadingPlatformDetails(true);
+        const response = await fetch('/api/get-partner-platform-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: partnerId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch platform details');
+        }
+
+        const data = await response.json();
+        setPlatformDetails(data.platformDetails || {});
+      } catch (error) {
+        console.error('[PartnerNavBar] Error loading platform details:', error);
+        setPlatformDetails({});
+      } finally {
+        setLoadingPlatformDetails(false);
+      }
+    };
+
+    loadPlatformDetails();
   }, [partnerId]);
 
   // Handle escape key to close modals
@@ -310,6 +345,14 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
             <div className={styles.platformLabel}>{platform.label}</div>
             {platform.disabled && (
               <div className={styles.comingSoon}>Sắp Ra Mắt</div>
+            )}
+            {!platform.disabled && platformDetails[platform.value] && (
+              <div className={styles.platformStats}>
+                <span className={styles.statsLabel}>Lots:</span>
+                <span className={styles.statsValue}>
+                  {platformDetails[platform.value].total_client_lots.toFixed(2)}
+                </span>
+              </div>
             )}
           </button>
         ))}

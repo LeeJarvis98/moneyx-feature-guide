@@ -4,8 +4,61 @@ import { getSupabaseClient } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
-    const { partnerId } = await request.json();
+    const { partnerId, userId, platform } = await request.json();
 
+    // If checking for existing platform account (new feature)
+    if (userId && platform) {
+      // Get partner record for this user
+      const { data: partner, error: partnerError } = await supabase
+        .from('partners')
+        .select('platform_accounts')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (partnerError) {
+        console.error('[check-partner-status] Error checking partner:', partnerError);
+        return NextResponse.json(
+          { error: 'Failed to check partner status' },
+          { status: 500 }
+        );
+      }
+
+      // No partner record found
+      if (!partner) {
+        return NextResponse.json({
+          exists: false,
+          partnerId: null,
+        });
+      }
+
+      // Check if platform_accounts exists and has the platform
+      // Structure: [{ "exness": { "email": "...", "password": "..." }, "binance": { ... } }]
+      const platformAccounts = partner.platform_accounts as Array<Record<string, { email: string; password: string }>> || [];
+      
+      // Find the account for the specified platform
+      let existingEmail: string | null = null;
+      
+      for (const accountObj of platformAccounts) {
+        if (accountObj[platform] && accountObj[platform].email) {
+          existingEmail = accountObj[platform].email;
+          break;
+        }
+      }
+
+      if (existingEmail) {
+        return NextResponse.json({
+          exists: true,
+          partnerId: existingEmail,
+        });
+      }
+
+      return NextResponse.json({
+        exists: false,
+        partnerId: null,
+      });
+    }
+
+    // Legacy check (original functionality)
     if (!partnerId) {
       return NextResponse.json(
         { error: 'Partner ID is required' },

@@ -36,6 +36,8 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [existingAccount, setExistingAccount] = useState<string | null>(null);
+  const [checkingAccount, setCheckingAccount] = useState(false);
   const [platformRefLinks, setPlatformRefLinks] = useState<PlatformRefLinks>({
     exness: '',
     binance: '',
@@ -56,6 +58,53 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
     const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     setUserId(storedUserId);
   }, []);
+
+  // Check for existing partner account when platform or userId changes
+  useEffect(() => {
+    const checkExistingAccount = async () => {
+      if (!userId || !selectedPlatform) {
+        setExistingAccount(null);
+        setPartnerId('');
+        return;
+      }
+
+      setCheckingAccount(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api/check-partner-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            platform: selectedPlatform,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.exists && data.partnerId) {
+          // Pre-fill with existing account
+          setExistingAccount(data.partnerId);
+          setPartnerId(data.partnerId);
+        } else {
+          // No existing account found
+          setExistingAccount(null);
+          setPartnerId('');
+        }
+      } catch (err) {
+        console.error('Error checking existing account:', err);
+        setExistingAccount(null);
+        setPartnerId('');
+      } finally {
+        setCheckingAccount(false);
+      }
+    };
+
+    checkExistingAccount();
+  }, [userId, selectedPlatform]);
 
   // Stable handler for ref links changes
   const handleRefLinksChange = useCallback((refLinks: PlatformRefLinks) => {
@@ -197,12 +246,15 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               onChange={(e) => setPartnerId(e.target.value)}
               required
               className={styles.input}
-              placeholder={selectedPlatform
-                ? `Nhập ID Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
-                : 'Nhập ID Đối tác của bạn'}
-              disabled={loading || success}
+              placeholder={checkingAccount
+                ? 'Đang kiểm tra tài khoản...'
+                : selectedPlatform
+                  ? `Nhập ID Đối tác ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} của bạn`
+                  : 'Nhập ID Đối tác của bạn'}
+              disabled={loading || success || checkingAccount || !!existingAccount}
               autoComplete="username"
               inputMode="text"
+              readOnly={!!existingAccount}
             />
           </div>
 

@@ -111,6 +111,29 @@
   flex: 1;
 }
 
+.platformStats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 4px 10px;
+  background: rgba(255, 184, 28, 0.15);
+  border: 1px solid rgba(255, 184, 28, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.statsLabel {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.statsValue {
+  color: #FFB81C;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .comingSoon {
   background: rgba(255, 184, 28, 0.9);
   color: #000;
