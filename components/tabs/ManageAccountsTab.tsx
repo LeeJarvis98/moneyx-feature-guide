@@ -20,6 +20,13 @@ interface EmailGroup {
   accounts: AccountRow[];
 }
 
+interface AccountSummary {
+  totalRegisteredEmails: number;
+  totalLicensedAccounts: number;
+  totalLotVolume: number;
+  totalReward: number;
+}
+
 interface ManageAccountsTabProps {
   isActive?: boolean;
 }
@@ -28,6 +35,8 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
   const [loading, setLoading] = useState(true);
   const [emailGroups, setEmailGroups] = useState<EmailGroup[]>([]);
   const [error, setError] = useState<string>('');
+  const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEmailGroup, setSelectedEmailGroup] = useState<EmailGroup | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
@@ -43,6 +52,7 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
   useEffect(() => {
     if (isActive) {
       fetchOwnAccounts();
+      fetchAccountSummary();
     }
   }, [isActive]);
 
@@ -52,6 +62,34 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  const fetchAccountSummary = async () => {
+    try {
+      setLoadingSummary(true);
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      
+      if (!userId) {
+        return;
+      }
+
+      const response = await fetch('/api/get-account-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch account summary');
+      }
+
+      const data = await response.json();
+      setAccountSummary(data.summary);
+    } catch (err) {
+      console.error('Error fetching account summary:', err);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
 
   const fetchOwnAccounts = async () => {
     try {
@@ -241,6 +279,7 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
 
       // Refresh data
       await fetchOwnAccounts();
+      await fetchAccountSummary();
       setModalOpen(false);
       setSelectedAccounts([]);
       setAccountsMarkedForDeletion([]);
@@ -286,6 +325,7 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
 
       // Refresh data
       await fetchOwnAccounts();
+      await fetchAccountSummary();
       setModalOpen(false);
       setSelectedAccounts([]);
       setAccountsMarkedForDeletion([]);
@@ -316,6 +356,44 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
 
   return (
     <Stack gap="xl" className={classes.container}>
+      {/* Summary Cards */}
+      {accountSummary && (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+          <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.summaryCard}>
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed" fw={500}>
+                Tổng email đã đăng ký
+              </Text>
+              <Text size="xl" fw={700} c="white">
+                {accountSummary.totalRegisteredEmails}
+              </Text>
+            </Stack>
+          </Card>
+
+          <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.summaryCard}>
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed" fw={500}>
+                Tổng ID đã cấp phép
+              </Text>
+              <Text size="xl" fw={700} c="white">
+                {accountSummary.totalLicensedAccounts}
+              </Text>
+            </Stack>
+          </Card>
+
+          <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.summaryCard}>
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed" fw={500}>
+                Tổng khối lượng (Lô)
+              </Text>
+              <Text size="xl" fw={700} c="white">
+                {accountSummary.totalLotVolume.toFixed(2)}
+              </Text>
+            </Stack>
+          </Card>
+        </SimpleGrid>
+      )}
+
       <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.card}>
         <Stack gap="md">
           <Group align="center" gap="sm">

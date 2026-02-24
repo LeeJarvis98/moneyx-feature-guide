@@ -12,6 +12,18 @@
   background-color: var(--mantine-color-dark-7);
 }
 
+.summaryCard {
+  background: linear-gradient(135deg, rgba(37, 40, 42, 0.95) 0%, rgba(20, 22, 24, 0.98) 100%);
+  border: 1px solid rgba(255, 184, 28, 0.3);
+  transition: all 0.3s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(255, 184, 28, 0.2);
+  border-color: rgba(255, 184, 28, 0.5);
+}
+
 .emailCard {
   background-color: var(--mantine-color-dark-6);
   cursor: pointer;

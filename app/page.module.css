@@ -129,6 +129,67 @@
 }
 
 /* Tier-specific colors */
+.rankBadgeSale {
+  color: #ffffff !important;
+  animation: saleGlow 2s ease-in-out infinite;
+}
+
+.rankBadgeSale:hover {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.8), 0 0 50px rgba(236, 72, 153, 0.6);
+}
+
+@keyframes saleGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(236, 72, 153, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.7), 0 0 45px rgba(236, 72, 153, 0.5);
+  }
+}
+
+.rankBadgeKimCuong {
+  color: #000000 !important;
+}
+
+.rankBadgeKimCuong:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.4);
+}
+
+.rankBadgeBachKim {
+  color: #000000 !important;
+}
+
+.rankBadgeBachKim:hover {
+  box-shadow: 0 0 20px rgba(209, 213, 219, 0.8), 0 0 40px rgba(229, 231, 235, 0.6);
+}
+
+.rankBadgeVang {
+  color: #000000 !important;
+  background-color: #FFD700 !important;
+}
+
+.rankBadgeVang:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5);
+}
+
+.rankBadgeBac {
+  color: #ffffff !important;
+  background-color: #4B5563 !important;
+}
+
+.rankBadgeBac:hover {
+  box-shadow: 0 0 20px rgba(75, 85, 99, 0.6), 0 0 40px rgba(107, 114, 128, 0.4);
+}
+
+.rankBadgeDong {
+  color: #ffffff !important;
+  background-color: #8B4513 !important;
+}
+
+.rankBadgeDong:hover {
+  box-shadow: 0 0 20px rgba(139, 69, 19, 0.6), 0 0 40px rgba(160, 82, 45, 0.4);
+}
+
 .rankBadgeDiamond {
   color: #000000 !important;
 }

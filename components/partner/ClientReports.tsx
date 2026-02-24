@@ -182,7 +182,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               <p className={styles.summaryValue}>{clientAccountsReport.totals.clients_count || 0}</p>
             </div>
             <div className={styles.summaryCard}>
-              <h4>Khối lượng (Lô)</h4>
+              <h4>Khối lượng (Lot)</h4>
               <p className={styles.summaryValue}>{formatNumber(clientAccountsReport.totals.volume_lots, 2)}</p>
             </div>
             <div className={styles.summaryCard}>
@@ -251,7 +251,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               },
               { 
                 accessor: 'volume_lots', 
-                title: 'Khối lượng (Lô)',
+                title: 'Khối lượng (Lot)',
                 width: 130,
                 sortable: true,
                 render: (record) => formatNumber(record.volume_lots, 2)

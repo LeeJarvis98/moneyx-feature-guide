@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
@@ -372,6 +372,7 @@ export default function HomePage() {
                       {/* Show rank badge for partners */}
                       {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
+                          'SALE': Zap,
                           'Kim Cương': Gem,
                           'Bạch Kim': Star,
                           'Vàng': Award,
@@ -379,6 +380,7 @@ export default function HomePage() {
                           'Đồng': Shield,
                         };
                         const rankPercentages: Record<string, string> = {
+                          'SALE': '95%',
                           'Kim Cương': '90%',
                           'Bạch Kim': '85%',
                           'Vàng': '80%',
@@ -386,6 +388,7 @@ export default function HomePage() {
                           'Đồng': '70%',
                         };
                         const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
+                          'SALE': { variant: 'gradient', gradient: { from: 'violet', to: 'pink', deg: 90 }, className: classes.rankBadgeSale },
                           'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
                           'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.4', deg: 90 }, className: classes.rankBadgeBachKim },
                           'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
