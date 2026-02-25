@@ -415,6 +415,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_auto_ranked: boolean
           partner_rank: string
           password: string
           referral_id: string
@@ -425,6 +426,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          is_auto_ranked?: boolean
           partner_rank?: string
           password: string
           referral_id: string
@@ -435,6 +437,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_auto_ranked?: boolean
           partner_rank?: string
           password?: string
           referral_id?: string

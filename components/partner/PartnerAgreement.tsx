@@ -49,11 +49,18 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
     setRegistrationError(null);
 
     try {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('/api/register-partner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -91,7 +98,13 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       onRegistrationSuccess(newRank);
     } catch (error) {
       console.error('[PartnerAgreement] Registration error:', error);
-      setRegistrationError(error instanceof Error ? error.message : 'Failed to register');
+      
+      // Check if error is due to timeout
+      if (error instanceof Error && error.name === 'AbortError') {
+        setRegistrationError('Đăng ký quá lâu. Vui lòng thử lại hoặc kiểm tra kết nối mạng.');
+      } else {
+        setRegistrationError(error instanceof Error ? error.message : 'Failed to register');
+      }
     } finally {
       setIsRegistering(false);
     }
