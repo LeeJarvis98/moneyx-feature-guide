@@ -47,31 +47,37 @@ export async function POST(request: NextRequest) {
     const { email, platform, referralId, captchaToken, otp, action } = await request.json();
     let platformToken = request.headers.get('x-platform-token');
     
+    // Server-only test mode flag - never exposed to the client bundle
+    const TEST_MODE = process.env.TEST_MODE === 'true';
+
     console.log('[CHECK-EMAIL] Received email:', email);
     console.log('[CHECK-EMAIL] Platform:', platform);
     console.log('[CHECK-EMAIL] Referral ID:', referralId);
     console.log('[CHECK-EMAIL] Action:', action);
     console.log('[CHECK-EMAIL] Captcha token present:', !!captchaToken);
     console.log('[CHECK-EMAIL] Platform token in header:', !!platformToken);
+    if (TEST_MODE) console.log('[CHECK-EMAIL] TEST_MODE enabled - bypassing captcha and OTP checks');
 
-    // Verify captcha token first
-    if (!captchaToken) {
-      return NextResponse.json(
-        { success: false, error: 'Captcha verification is required' },
-        { status: 400 }
-      );
+    // Verify captcha token (skipped in TEST_MODE)
+    if (!TEST_MODE) {
+      if (!captchaToken) {
+        return NextResponse.json(
+          { success: false, error: 'Captcha verification is required' },
+          { status: 400 }
+        );
+      }
+
+      const isCaptchaValid = await verifyTurnstileToken(captchaToken);
+      if (!isCaptchaValid) {
+        console.log('[CHECK-EMAIL] Captcha verification failed');
+        return NextResponse.json(
+          { success: false, error: 'Captcha verification failed. Please try again.' },
+          { status: 400 }
+        );
+      }
+
+      console.log('[CHECK-EMAIL] Captcha verified successfully');
     }
-
-    const isCaptchaValid = await verifyTurnstileToken(captchaToken);
-    if (!isCaptchaValid) {
-      console.log('[CHECK-EMAIL] Captcha verification failed');
-      return NextResponse.json(
-        { success: false, error: 'Captcha verification failed. Please try again.' },
-        { status: 400 }
-      );
-    }
-
-    console.log('[CHECK-EMAIL] Captcha verified successfully');
 
     if (!email) {
       return NextResponse.json(
@@ -82,6 +88,15 @@ export async function POST(request: NextRequest) {
 
     // Handle OTP sending
     if (action === 'send-otp') {
+      // TEST_MODE: Skip email existence check, OTP generation and sending
+      if (TEST_MODE) {
+        console.log('[CHECK-EMAIL] TEST_MODE: Skipping OTP send, returning instant success');
+        return NextResponse.json(
+          { success: true, message: 'OTP đã được gửi đến email của bạn', otpSent: true },
+          { status: 200 }
+        );
+      }
+
       console.log('[CHECK-EMAIL] Sending OTP to:', email);
       
       // Validate email format
@@ -201,12 +216,8 @@ export async function POST(request: NextRequest) {
 
       console.log('[CHECK-EMAIL] Verifying OTP for:', email);
 
-      // TEST MODE: Allow hardcoded OTP 'OK123456' to bypass database verification
-      const TEST_OTP = 'OK123456';
-      if (otp === TEST_OTP) {
-        console.log('[CHECK-EMAIL] TEST MODE: Bypassing OTP verification for test OTP');
-        // Skip database verification and proceed to account checking
-      } else {
+      // TEST_MODE: Accept any OTP without database verification
+      if (!TEST_MODE) {
         // Normal OTP verification flow
         const supabase = getSupabaseClient();
 

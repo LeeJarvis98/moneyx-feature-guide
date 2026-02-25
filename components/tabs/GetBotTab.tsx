@@ -41,9 +41,6 @@ interface GetBotTabProps {
 }
 
 export function GetBotTab({ isActive = false }: GetBotTabProps) {
-  // TEST MODE FLAG - Set to true to bypass OTP verification for testing
-  const TEST_MODE = true;
-
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)
   const partnerId = pathname.startsWith('/') && pathname !== '/' ? pathname.slice(1).split('/')[0] : null;
@@ -199,18 +196,6 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
     setAccountStatus('checking');
     setErrorMessage('');
 
-    // TEST MODE: Skip OTP sending and proceed directly to account checking
-    if (TEST_MODE) {
-      console.log('[TEST MODE] Bypassing OTP verification');
-      setOtpSent(true);
-      setOtpVerified(true);
-      setOtp('OK123456');
-      setAccountStatus('idle');
-      // Proceed to check account status with hardcoded OTP
-      setTimeout(() => checkAccountStatus('OK123456'), 100);
-      return;
-    }
-
     try {
       const response = await fetch('/api/check-email', {
         method: 'POST',
@@ -252,7 +237,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
   };
 
   // Function to verify OTP and check account status
-  const checkAccountStatus = async (testOtp?: string) => {
+  const checkAccountStatus = async () => {
     setVerifyingOtp(true);
     setErrorMessage('');
     setAccountData(null);
@@ -273,9 +258,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
       // Get userId from storage to pass to API
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
-      // Use testOtp if provided (TEST_MODE), otherwise use state otp
-      const otpToSend = testOtp || otp;
-      console.log('[CHECK-EMAIL] Sending OTP:', otpToSend);
+      console.log('[CHECK-EMAIL] Sending OTP:', otp);
 
       // Call check-email API with OTP verification
       const response = await fetch('/api/check-email', {
@@ -289,7 +272,7 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
           platform: selectedPlatform,
           referralId: referralId,
           captchaToken: captchaToken,
-          otp: otpToSend,
+          otp: otp,
           action: 'verify-otp',
         }),
       });
