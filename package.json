@@ -12,11 +12,13 @@
     "types:update": "npm run types:generate && echo Types updated successfully!"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^2.0.4",
     "@mantine/carousel": "^8.3.11",
     "@mantine/core": "^7.15.5",
     "@mantine/hooks": "^7.15.5",
     "@marsidev/react-turnstile": "^1.4.1",
     "@supabase/supabase-js": "^2.90.1",
+    "@xyflow/react": "^12.10.1",
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.469.0",

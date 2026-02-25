@@ -295,7 +295,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          partnerId: partnerId,
+          partnerId: userIdToUpdate || partnerId, // Return actual user ID (e.g., "AndyBao", "ADMIN")
+          platformEmail: partnerId, // Keep the platform email for reference
           platform: platform,
           platformToken: platformData.token || null,
           message: 'Login successful'

@@ -1,0 +1,33 @@
+﻿.container {
+  width: 100%;
+}
+
+.summaryCard {
+  transition: transform 0.2s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.tableWrapper table {
+  min-width: 1200px;
+  font-size: 14px;
+}
+
+.tableWrapper thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  padding: 12px;
+  white-space: nowrap;
+}
+
+.tableWrapper tbody td {
+  padding: 12px;
+  vertical-align: top;
+}

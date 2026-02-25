@@ -46,6 +46,7 @@ When a user upgrades to a Partner, their starting rank is determined by their po
 | **Vàng** | 80% | 20% | Total 500 lots |  |
 | **Bạc** | 75% | 25% | Total 100 lots |  |
 | **Đồng** | 70% | 30% | Default starting rank (if deep in chain) | Minimum rank |
+| **None** | 0% | 0% | N/A | Normal member, not a partner |
 
 ---
 
@@ -58,10 +59,10 @@ Rewards are calculated and distributed on the **1st day of every month**. The lo
 For any given Partner ($P$) generating a total monthly reward ($R_{total}$), their base "Share Percentage" ($S_{percentage}$) creates a Commission Pool ($C_{pool}$) that flows upward.
 $$C_{pool} = R_{total} \times S_{percentage}$$
 
-From this pool, Tradi takes a flat 5% fee:
-$$C_{tradi} = C_{pool} \times 0.05$$
+From the total reward, Tradi takes a flat 5% fee:
+$$C_{tradi} = R_{total} \times 0.05$$
 
-The remaining pool ($P_{remaining}$) is then distributed to the upline:
+The remaining pool ($P_{remaining}$) is calculated by subtracting Tradi's fee from the initial commission pool:
 $$P_{remaining} = C_{pool} - C_{tradi}$$
 
 The **direct referrer** (the partner immediately to the left) takes 50% of the remaining pool:
@@ -81,11 +82,11 @@ $$Keep_{partner} = R_{total} - C_{pool}$$
 * **Target:** John (Rank: Đồng / 30% Upline Share)
 * **Generated Reward:** $300
 * **Commission Pool:** $300 * 30% = **$90**
-* **Tradi Fee:** $90 * 5% = **$4.50**
-* **Remaining Pool:** $90 - $4.50 = **$85.50**
-* **Direct Referrer (D):** $85.50 * 50% = **$42.75**
-* **Indirect Upline (SALE, A, B, C):** $42.75 / 4 = **$10.68** each
-* **John's Keep:** $300 - $90 = **$210**
+* **Tradi Fee:** $300 * 5% = **$15**
+* **Remaining Pool:** $90 - $15 = **$75**
+* **Direct Referrer (D):** $75 / 2 = **$37.50**
+* **Indirect Upline (SALE, A, B, C):** $37.50 / 4 = **$9.375** each
+* **John's Keep:** $300 - ($15 + $37.50 + $9.375 * 4) = $300 * 70% = **$210**
 
 **Scenario 2: Direct to SALE (Case 1)**
 
@@ -93,10 +94,10 @@ $$Keep_{partner} = R_{total} - C_{pool}$$
 * **Target:** John (Rank: Kim Cương / 10% Upline Share)
 * **Generated Reward:** $300
 * **Commission Pool:** $300 * 10% = **$30**
-* **Tradi Fee:** $30 * 5% = **$1.50**
-* **Remaining Pool:** $30 - $1.50 = **$28.50**
-* **Direct Referrer (SALE):** Takes the entirety of the remaining pool = **$28.50** (Because there are no other indirect partners between SALE and ADMIN)
-* **John's Keep:** $300 - $30 = **$270**
+* **Tradi Fee:** $300 * 5% = **$15**
+* **Remaining Pool:** $30 - $15 = **$15**
+* **Direct Referrer (SALE):** Takes the entirety of the remaining pool = **$15** (Because there are no other indirect partners between SALE and ADMIN)
+* **John's Keep:** $300 - ($15 + $15) = $300 * 90% = **$270**
 
 **Scenario 3: SALE Node (Case 2)**
 
@@ -104,5 +105,6 @@ $$Keep_{partner} = R_{total} - C_{pool}$$
 * **Target:** SALE (Rank: SALE / 5% Upline Share)
 * **Generated Reward:** $300
 * **Commission Pool:** $300 * 5% = **$15**
-* **Tradi Fee:** Takes the entirety of the pool = **$15**
-* **SALE's Keep:** $300 - $15 = **$285**
+* **Tradi Fee:** $300 * 5% = **$15**
+* **Remaining Pool:** $15 - $15 = **$0**
+* **SALE's Keep:** $300 - $15 = $300 * 95% = **$285**

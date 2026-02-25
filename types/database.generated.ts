@@ -26,6 +26,98 @@ export type Database = {
         }
         Relationships: []
       }
+      chain_commission_snapshots: {
+        Row: {
+          chain_root_id: string | null
+          commission_pool: number
+          depth: number
+          own_keep: number
+          recipient_id: string
+          remaining_pool: number
+          snapshot_at: string
+          source_email: string | null
+          source_partner_id: string
+          source_rank: string
+          source_total_reward: number
+          total_upliner_count: number
+          tradi_fee: number
+          updated_at: string
+          upliner_share: number
+          uuid: string
+          your_cut: number
+          your_role: string
+        }
+        Insert: {
+          chain_root_id?: string | null
+          commission_pool?: number
+          depth: number
+          own_keep?: number
+          recipient_id: string
+          remaining_pool?: number
+          snapshot_at?: string
+          source_email?: string | null
+          source_partner_id: string
+          source_rank: string
+          source_total_reward?: number
+          total_upliner_count?: number
+          tradi_fee?: number
+          updated_at?: string
+          upliner_share?: number
+          uuid?: string
+          your_cut?: number
+          your_role: string
+        }
+        Update: {
+          chain_root_id?: string | null
+          commission_pool?: number
+          depth?: number
+          own_keep?: number
+          recipient_id?: string
+          remaining_pool?: number
+          snapshot_at?: string
+          source_email?: string | null
+          source_partner_id?: string
+          source_rank?: string
+          source_total_reward?: number
+          total_upliner_count?: number
+          tradi_fee?: number
+          updated_at?: string
+          upliner_share?: number
+          uuid?: string
+          your_cut?: number
+          your_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chain_commission_snapshots_chain_root_id_fkey"
+            columns: ["chain_root_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chain_commission_snapshots_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chain_commission_snapshots_source_partner_id_fkey"
+            columns: ["source_partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chain_commission_snapshots_source_rank_fkey"
+            columns: ["source_rank"]
+            isOneToOne: false
+            referencedRelation: "partner_rank_list"
+            referencedColumns: ["partner_rank"]
+          },
+        ]
+      }
       commission_distributions: {
         Row: {
           commission_pool: number
@@ -197,66 +289,54 @@ export type Database = {
         Row: {
           accum_client_reward: number
           accum_partner_reward: number
-          accum_refer_reward: number
           accum_time_remaining: number
           claim_time_remaining: number
           id: string
           partner_list: Json[]
           platform: string | null
-          this_month_tradi_com: number
           total_client_lots: number
           total_client_reward: number
           total_clients: number
           total_partner_lots: number
           total_partner_reward: number
           total_partners: number
-          total_refer_reward: number
           total_reward_history: Json[]
-          total_tradi_com: number
           updated_at: string
           uuid: string
         }
         Insert: {
           accum_client_reward: number
           accum_partner_reward: number
-          accum_refer_reward: number
           accum_time_remaining?: number
           claim_time_remaining?: number
           id: string
           partner_list?: Json[]
           platform?: string | null
-          this_month_tradi_com: number
           total_client_lots: number
           total_client_reward: number
           total_clients?: number
           total_partner_lots: number
           total_partner_reward: number
           total_partners?: number
-          total_refer_reward: number
           total_reward_history?: Json[]
-          total_tradi_com: number
           updated_at?: string
           uuid?: string
         }
         Update: {
           accum_client_reward?: number
           accum_partner_reward?: number
-          accum_refer_reward?: number
           accum_time_remaining?: number
           claim_time_remaining?: number
           id?: string
           partner_list?: Json[]
           platform?: string | null
-          this_month_tradi_com?: number
           total_client_lots?: number
           total_client_reward?: number
           total_clients?: number
           total_partner_lots?: number
           total_partner_reward?: number
           total_partners?: number
-          total_refer_reward?: number
           total_reward_history?: Json[]
-          total_tradi_com?: number
           updated_at?: string
           uuid?: string
         }

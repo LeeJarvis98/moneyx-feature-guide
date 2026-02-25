@@ -245,7 +245,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
               },
               { 
                 accessor: 'licensed_date', 
-                title: 'Ngày cấp phép',
+                title: 'Ngày cấp bản quyền',
                 width: 180,
                 sortable: true
               },
