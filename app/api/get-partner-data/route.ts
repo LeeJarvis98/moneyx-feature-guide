@@ -34,9 +34,8 @@ export async function POST(request: NextRequest) {
       .from('partner_detail')
       .select(`
         id,
-        uid,
+        uuid,
         platform,
-        partner_list,
         total_clients,
         total_client_lots,
         total_client_reward,
@@ -44,11 +43,8 @@ export async function POST(request: NextRequest) {
         total_partner_lots,
         total_partner_reward,
         total_refer_reward,
-        total_tradi_com,
-        this_month_tradi_com,
         accum_client_reward,
         accum_partner_reward,
-        accum_refer_reward,
         accum_time_remaining,
         claim_time_remaining,
         total_reward_history,
@@ -61,11 +57,46 @@ export async function POST(request: NextRequest) {
       console.error('Error fetching partner detail data:', detailError);
     }
 
-    // Merge both data sets
-    const combinedData = {
-      ...partnerData,
-      ...partnerDetailData,
-    };
+    // Fetch user rank information from users table joined with partner_rank_list
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select(`
+        id,
+        email,
+        partner_rank,
+        partner_rank_list (
+          partner_rank,
+          reward_percentage,
+          lot_volume,
+          upline_share_percentage
+        )
+      `)
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user rank data:', userError);
+    }
+
+    // Build user_rank object
+    let userRank = null;
+    if (userData && userData.partner_rank_list && !Array.isArray(userData.partner_rank_list)) {
+      const rankData = userData.partner_rank_list as any;
+      userRank = {
+        partner_rank: userData.partner_rank,
+        reward_percentage: rankData.reward_percentage,
+        lot_volume: rankData.lot_volume,
+        upline_share_percentage: rankData.upline_share_percentage,
+      };
+    }
+
+    // Merge all data sets
+    const combinedData = Object.assign(
+      {},
+      partnerData,
+      partnerDetailData || {},
+      { user_rank: userRank }
+    );
 
     return NextResponse.json({
       success: true,

@@ -228,7 +228,6 @@ export async function POST(request: NextRequest) {
               .insert({
                 id: userIdToUpdate,
                 platform: platform.toLowerCase(),
-                partner_list: [],
                 total_clients: 0,
                 total_client_lots: 0,
                 total_client_reward: 0,

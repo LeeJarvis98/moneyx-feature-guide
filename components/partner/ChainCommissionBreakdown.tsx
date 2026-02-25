@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import { useMemo, useState } from 'react';
-import { Stack, SimpleGrid, Paper, Text, Badge, Select, Table } from '@mantine/core';
+import { Stack, SimpleGrid, Paper, Text, Badge, Select } from '@mantine/core';
+import { DataTable } from 'mantine-datatable';
 import styles from './ChainCommissionBreakdown.module.css';
 
 interface ChainCommissionRow {
@@ -158,92 +159,105 @@ export default function ChainCommissionBreakdown({
 
         {/* Commission Table */}
         <Paper withBorder>
-          <div className={styles.tableWrapper}>
-            <Table striped highlightOnHover>
-              <thead>
-                <tr>
-                  <th>Partner</th>
-                  <th>Rank</th>
-                  <th>Your Role</th>
-                  <th>Their Reward</th>
-                  <th>Commission Pool</th>
-                  <th>Tradi Fee (5%)</th>
-                  <th>Remaining Pool</th>
-                  <th>Total Upline Partners</th>
-                  <th>Upline Share</th>
-                  <th>Your Commission</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '20px' }}>
-                      <Text c="dimmed">No commission data available</Text>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredRows.map((row, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <Stack gap={2}>
-                          <Text size="sm" fw={600}>
-                            {row.source_email || 'N/A'}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {row.source_partner_id}
-                          </Text>
-                        </Stack>
-                      </td>
-                      <td>
-                        <Badge variant="light" color="violet" size="sm">
-                          {row.source_rank}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge variant="dot" color={getRoleBadgeColor(row.your_role)} size="sm">
-                          {row.your_role}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Text size="sm">${row.source_total_reward.toFixed(4)}</Text>
-                      </td>
-                      <td>
-                        <Stack gap={2}>
-                          <Text size="sm">${row.commission_pool.toFixed(4)}</Text>
-                          <Text size="xs" c="dimmed">
-                            {((row.commission_pool / row.source_total_reward) * 100).toFixed(1)}% upline share
-                          </Text>
-                        </Stack>
-                      </td>
-                      <td>
-                        <Text size="sm" c="dimmed">
-                          ${row.tradi_fee.toFixed(4)}
-                        </Text>
-                      </td>
-                      <td>
-                        <Text size="sm" c="orange" fw={600}>
-                          ${row.remaining_pool.toFixed(4)}
-                        </Text>
-                      </td>
-                      <td>
-                        <Text size="sm">{row.total_upliner_count}</Text>
-                      </td>
-                      <td>
-                        <Text size="sm" c="teal">
-                          {row.total_upliner_count === 0 ? '' : `$${row.upliner_share.toFixed(4)}`}
-                        </Text>
-                      </td>
-                      <td>
-                        <Text size="sm" fw={700} c="blue">
-                          ${row.your_cut.toFixed(4)}
-                        </Text>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </div>
+          <DataTable
+            striped
+            highlightOnHover
+            withTableBorder={false}
+            records={filteredRows}
+            columns={[
+              {
+                accessor: 'source_email',
+                title: 'Partner',
+                render: (row) => (
+                  <Stack gap={2}>
+                    <Text size="sm" fw={600}>
+                      {row.source_email || 'N/A'}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {row.source_partner_id}
+                    </Text>
+                  </Stack>
+                ),
+              },
+              {
+                accessor: 'source_rank',
+                title: 'Rank',
+                render: (row) => (
+                  <Badge variant="light" color="violet" size="sm">
+                    {row.source_rank}
+                  </Badge>
+                ),
+              },
+              {
+                accessor: 'your_role',
+                title: 'Your Role',
+                render: (row) => (
+                  <Badge variant="dot" color={getRoleBadgeColor(row.your_role)} size="sm">
+                    {row.your_role}
+                  </Badge>
+                ),
+              },
+              {
+                accessor: 'source_total_reward',
+                title: 'Their Reward',
+                render: (row) => <Text size="sm">${row.source_total_reward.toFixed(4)}</Text>,
+              },
+              {
+                accessor: 'commission_pool',
+                title: 'Commission Pool',
+                render: (row) => (
+                  <Stack gap={2}>
+                    <Text size="sm">${row.commission_pool.toFixed(4)}</Text>
+                    <Text size="xs" c="dimmed">
+                      {((row.commission_pool / row.source_total_reward) * 100).toFixed(1)}% upline share
+                    </Text>
+                  </Stack>
+                ),
+              },
+              {
+                accessor: 'tradi_fee',
+                title: 'Tradi Fee (5%)',
+                render: (row) => (
+                  <Text size="sm" c="dimmed">
+                    ${row.tradi_fee.toFixed(4)}
+                  </Text>
+                ),
+              },
+              {
+                accessor: 'remaining_pool',
+                title: 'Remaining Pool',
+                render: (row) => (
+                  <Text size="sm" c="orange" fw={600}>
+                    ${row.remaining_pool.toFixed(4)}
+                  </Text>
+                ),
+              },
+              {
+                accessor: 'total_upliner_count',
+                title: 'Total Upline Partners',
+                render: (row) => <Text size="sm">{row.total_upliner_count}</Text>,
+              },
+              {
+                accessor: 'upliner_share',
+                title: 'Upline Share',
+                render: (row) => (
+                  <Text size="sm" c="teal">
+                    {row.total_upliner_count === 0 ? '' : `$${row.upliner_share.toFixed(4)}`}
+                  </Text>
+                ),
+              },
+              {
+                accessor: 'your_cut',
+                title: 'Your Commission',
+                render: (row) => (
+                  <Text size="sm" fw={700} c="blue">
+                    ${row.your_cut.toFixed(4)}
+                  </Text>
+                ),
+              },
+            ]}
+            noRecordsText="No commission data available"
+          />
         </Paper>
       </Stack>
     </div>

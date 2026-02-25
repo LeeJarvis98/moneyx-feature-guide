@@ -292,7 +292,6 @@ export type Database = {
           accum_time_remaining: number
           claim_time_remaining: number
           id: string
-          partner_list: Json[]
           platform: string | null
           total_client_lots: number
           total_client_reward: number
@@ -310,7 +309,6 @@ export type Database = {
           accum_time_remaining?: number
           claim_time_remaining?: number
           id: string
-          partner_list?: Json[]
           platform?: string | null
           total_client_lots: number
           total_client_reward: number
@@ -328,7 +326,6 @@ export type Database = {
           accum_time_remaining?: number
           claim_time_remaining?: number
           id?: string
-          partner_list?: Json[]
           platform?: string | null
           total_client_lots?: number
           total_client_reward?: number

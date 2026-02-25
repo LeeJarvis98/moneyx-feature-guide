@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { TextInput } from '@mantine/core';
-import { DataTable, DataTableSortStatus } from 'mantine-datatable';
-import 'mantine-datatable/styles.layer.css';
+import { useState, useEffect } from 'react';
+import ChainCommissionBreakdown from './ChainCommissionBreakdown';
+import AccountChainFlow from './AccountChainFlow';
 import styles from './PartnerSystem.module.css';
 
 interface PartnerSystemProps {
@@ -16,17 +15,66 @@ const formatNumber = (value: any, decimals: number = 2): string => {
    return isNaN(num) ? '0.00' : num.toFixed(decimals);
 };
 
+// Helper function to build proper parent relationships from commission snapshot data
+const buildPartnerTree = async (commissionData: any[], currentUserId: string) => {
+   if (!Array.isArray(commissionData) || commissionData.length === 0) {
+      return [];
+   }
+
+   console.log('[PartnerSystem] buildPartnerTree called with currentUserId:', currentUserId);
+   console.log('[PartnerSystem] Commission data:', commissionData);
+
+   // Get all partner IDs
+   const partnerIds = commissionData.map(row => row.source_partner_id);
+   console.log('[PartnerSystem] Partner IDs to fetch:', partnerIds);
+   
+   // Fetch referral chains for all partners to determine parent relationships
+   const parentMap = new Map<string, string>(); // partnerId -> parentId
+   
+   for (const partnerId of partnerIds) {
+      try {
+         console.log(`[PartnerSystem] Fetching chain for ${partnerId}...`);
+         const response = await fetch(`/api/referral-chain?id=${partnerId}`);
+         if (response.ok) {
+            const data = await response.json();
+            console.log(`[PartnerSystem] Chain data for ${partnerId}:`, data);
+            // The direct parent is the one who referred this partner
+            if (data.directReferrerId) {
+               console.log(`[PartnerSystem] Setting parent of ${partnerId} to ${data.directReferrerId}`);
+               parentMap.set(partnerId, data.directReferrerId);
+            } else {
+               console.log(`[PartnerSystem] No directReferrerId for ${partnerId}, will use fallback`);
+            }
+         } else {
+            console.error(`[PartnerSystem] Failed to fetch chain for ${partnerId}, status:`, response.status);
+         }
+      } catch (error) {
+         console.error(`[PartnerSystem] Error fetching chain for ${partnerId}:`, error);
+      }
+   }
+
+   console.log('[PartnerSystem] Final parent map:', Object.fromEntries(parentMap));
+
+   // Map commission data with proper parent relationships
+   const result = commissionData.map((row: any) => ({
+      ...row,
+      parentUserId: parentMap.get(row.source_partner_id) || currentUserId,
+   }));
+   
+   console.log('[PartnerSystem] Partner tree result:', result.map((r: any) => ({ id: r.source_partner_id, parent: r.parentUserId })));
+   
+   return result;
+};
+
 export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) {
    const [partnerData, setPartnerData] = useState<any>(null);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
 
-   // Partner list sort and filter state
-   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
-      columnAccessor: 'index',
-      direction: 'asc',
-   });
-   const [filterQuery, setFilterQuery] = useState('');
+   // Chain commission and referral chain data
+   const [chainCommissionRows, setChainCommissionRows] = useState<any[]>([]);
+   const [referralChain, setReferralChain] = useState<any>(null);
+   const [partnerTree, setPartnerTree] = useState<any[]>([]);
 
    // Auto-fetch partner data on mount if enabled
    useEffect(() => {
@@ -138,6 +186,48 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
          }
 
          setPartnerData(data.data);
+
+         // Fetch chain commission snapshot
+         let commissionData: any[] = [];
+         try {
+            const commissionResponse = await fetch(`/api/chain-commission-snapshot?id=${userId}`);
+            if (commissionResponse.ok) {
+               commissionData = await commissionResponse.json();
+               setChainCommissionRows(commissionData || []);
+            }
+         } catch (commissionError) {
+            console.error('[PartnerSystem] Error fetching chain commission:', commissionError);
+         }
+
+         // Fetch referral chain
+         try {
+            const chainResponse = await fetch(`/api/referral-chain?id=${userId}`);
+            if (chainResponse.ok) {
+               const chainData = await chainResponse.json();
+               setReferralChain(chainData || null);
+            }
+         } catch (chainError) {
+            console.error('[PartnerSystem] Error fetching referral chain:', chainError);
+         }
+
+         // Build partner tree from commission snapshot data (like PartnerDashboard does)
+         if (commissionData && commissionData.length > 0) {
+            const enhancedCommissionData = await buildPartnerTree(commissionData, userId);
+            // Map to PartnerTreeNode format for AccountChainFlow
+            const tree = enhancedCommissionData.map((row: any) => ({
+               id: row.source_partner_id,
+               email: row.source_email || '',
+               partner_rank: row.source_rank,
+               reward_percentage: row.source_total_reward > 0 
+                  ? ((row.source_total_reward - row.commission_pool) / row.source_total_reward) * 100
+                  : 0,
+               total_lots: 0,
+               total_reward: row.source_total_reward,
+               parentUserId: row.parentUserId || userId,
+               depth: row.depth || 1,
+            }));
+            setPartnerTree(tree);
+         }
       } catch (err) {
          const error = err as Error;
          setError(error.message || 'Không thể tải dữ liệu đối tác');
@@ -145,59 +235,6 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
          setLoading(false);
       }
    };
-
-   // Prepare partner list table records
-   const partnerListRecords = useMemo(() => {
-      if (!partnerData || !partnerData.partner_list) return [];
-
-      const records = (partnerData.partner_list as any[]).map((partner, index) => ({
-         index: index + 1,
-         id: partner.id || 'N/A',
-         email: partner.email || 'N/A',
-         partner_rank: partner.partner_rank || 'N/A',
-         total_lots: partner.total_lots || 0,
-         total_reward: partner.total_reward || 0,
-         refer_reward: partner.refer_reward || 0,
-         reward_percentage: partner.reward_percentage || 0,
-         refer_percentage: partner.refer_percentage || 0,
-      }));
-
-      // Apply filter
-      const filtered = filterQuery
-         ? records.filter((record) => {
-            const query = filterQuery.toLowerCase();
-            return (
-               record.id.toLowerCase().includes(query) ||
-               record.email.toLowerCase().includes(query) ||
-               record.partner_rank.toLowerCase().includes(query)
-            );
-         })
-         : records;
-
-      // Apply sorting
-      const sorted = [...filtered].sort((a, b) => {
-         const accessor = sortStatus.columnAccessor as keyof typeof a;
-         const aValue = a[accessor];
-         const bValue = b[accessor];
-
-         // Handle numeric sorting
-         if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return sortStatus.direction === 'asc' ? aValue - bValue : bValue - aValue;
-         }
-
-         // Handle string sorting
-         const aStr = String(aValue).toLowerCase();
-         const bStr = String(bValue).toLowerCase();
-
-         if (sortStatus.direction === 'asc') {
-            return aStr > bStr ? 1 : aStr < bStr ? -1 : 0;
-         } else {
-            return aStr < bStr ? 1 : aStr > bStr ? -1 : 0;
-         }
-      });
-
-      return sorted;
-   }, [partnerData, sortStatus, filterQuery]);
 
    return (
       <div className={styles.section}>
@@ -234,10 +271,6 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <h4>Tổng Com Đối Tác</h4>
                      <p className={styles.summaryValue}>${formatNumber(partnerData.total_partner_reward, 2)}</p>
                   </div>
-                  <div className={styles.summaryCard}>
-                     <h4>Tổng Com Ref.</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.total_refer_reward, 2)}</p>
-                  </div>
                </div>
                <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
@@ -248,112 +281,39 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <h4>Com Đối Tác tích lũy tháng này</h4>
                      <p className={styles.summaryValue}>${formatNumber(partnerData.accum_partner_reward, 2)}</p>
                   </div>
-                  <div className={styles.summaryCard}>
-                     <h4>Com Ref. tích lũy tháng này</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.accum_refer_reward, 2)}</p>
-                  </div>
                </div>
 
-               {/* Partner List Table */}
-               <h3 className={styles.sectionListHeading}>Danh sách Đối Tác ({partnerData.total_partners})</h3>
-
-               <TextInput
-                  placeholder="Tìm kiếm theo ID, email, hạng hoặc loại..."
-                  value={filterQuery}
-                  onChange={(e) => setFilterQuery(e.currentTarget.value)}
-                  style={{
-                     marginBottom: '-10px',
-                     maxWidth: '400px'
-                  }}
-                  styles={{
-                     input: {
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        color: 'white',
-                        border: '1px solid rgba(255, 184, 28, 0.3)',
-                        '&:focus': {
-                           borderColor: '#FFB81C',
-                        },
-                     },
-                  }}
+               {/* Chain Commission Breakdown */}
+               <h3 className={styles.sectionListHeading}>Phân tích Commission Chi tiết</h3>
+               <ChainCommissionBreakdown
+                  rows={chainCommissionRows}
+                  userRewardPercentage={
+                     partnerData.user_rank?.reward_percentage
+                        ? partnerData.user_rank.reward_percentage * 100
+                        : undefined
+                  }
+                  userTotalReward={partnerData.user_rank?.lot_volume || undefined}
                />
 
-               <DataTable
-                  columns={[
-                     {
-                        accessor: 'index',
-                        title: '#',
-                        width: 60,
-                        textAlign: 'center',
-                        sortable: true
-                     },
-                     {
-                        accessor: 'id',
-                        title: 'ID Đối tác',
-                        width: 120,
-                        sortable: true
-                     },
-                     {
-                        accessor: 'email',
-                        title: 'Email',
-                        width: 200,
-                        sortable: true
-                     },
-                     {
-                        accessor: 'partner_rank',
-                        title: 'Hạng',
-                        width: 100,
-                        sortable: true
-                     },
-                     {
-                        accessor: 'total_lots',
-                        title: 'Tổng lot',
-                        width: 100,
-                        sortable: true,
-                        render: (record) => formatNumber(record.total_lots, 2)
-                     },
-                     {
-                        accessor: 'total_reward',
-                        title: 'Tổng thưởng',
-                        width: 120,
-                        sortable: true,
-                        render: (record) => `$${formatNumber(record.total_reward, 2)}`
-                     },
-                     {
-                        accessor: 'refer_reward',
-                        title: 'Thưởng Ref.',
-                        width: 120,
-                        sortable: true,
-                        render: (record) => `$${formatNumber(record.refer_reward, 2)}`
-                     },
-                     {
-                        accessor: 'reward_percentage',
-                        title: '% Thưởng',
-                        width: 100,
-                        sortable: true,
-                        render: (record) => `${formatNumber((record.reward_percentage as number) * 100, 1)}%`
-                     },
-                     {
-                        accessor: 'refer_percentage',
-                        title: '% Ref.',
-                        width: 100,
-                        sortable: true,
-                        render: (record) => `${formatNumber((record.refer_percentage as number) * 100, 1)}%`
-                     },
-                  ]}
-                  records={partnerListRecords}
-                  sortStatus={sortStatus}
-                  onSortStatusChange={setSortStatus}
-                  noRecordsText="Không tìm thấy đối tác"
-                  noRecordsIcon={<></>}
-                  styles={{
-                     header: {
-                        backgroundColor: 'rgba(255, 184, 28, 0.1)',
-                     },
-                     table: {
-                        backgroundColor: 'transparent',
-                     }
+               {/* Account Chain Flow */}
+               <h3 className={styles.sectionListHeadingSpaced}>Sơ đồ Chuỗi Giới thiệu</h3>
+               <AccountChainFlow
+                  referralChain={referralChain}
+                  partnerTree={partnerTree}
+                  userId={localStorage.getItem('userId') || sessionStorage.getItem('userId') || ''}
+                  userRank={
+                     partnerData.user_rank
+                        ? {
+                           partner_rank: partnerData.user_rank.partner_rank,
+                           reward_percentage: partnerData.user_rank.reward_percentage * 100,
+                           lot_volume: partnerData.user_rank.lot_volume,
+                        }
+                        : null
+                  }
+                  exnessTotals={{
+                     volume_lots: partnerData.user_rank?.lot_volume || 0,
+                     reward_usd: partnerData.user_rank?.lot_volume || 0,
                   }}
-                  highlightOnHover
                />
             </>
          )}

@@ -54,12 +54,12 @@ interface AccountChainFlowProps {
   exnessTotals: { volume_lots: number; reward_usd: number };
 }
 
-// Role styles
+// Role styles (Dark Mode)
 const ROLE_STYLE = {
-  current_user: { border: '#228be6', bg: '#e7f5ff', label: 'You', miniColor: '#339af0' },
-  upline: { border: '#40c057', bg: '#ebfbee', label: 'Upline', miniColor: '#51cf66' },
-  direct_partner: { border: '#f59f00', bg: '#fff9db', label: 'Direct Partner', miniColor: '#fcc419' },
-  indirect_partner: { border: '#ae3ec9', bg: '#f8f0fc', label: 'Indirect Partner', miniColor: '#cc5de8' },
+  current_user: { border: '#4dabf7', bg: '#1a1f2e', label: 'You', miniColor: '#339af0' },
+  upline: { border: '#51cf66', bg: '#1a2e1f', label: 'Upline', miniColor: '#51cf66' },
+  direct_partner: { border: '#fcc419', bg: '#2e261a', label: 'Direct Partner', miniColor: '#fcc419' },
+  indirect_partner: { border: '#cc5de8', bg: '#2e1a2e', label: 'Indirect Partner', miniColor: '#cc5de8' },
 };
 
 const RANK_COLOURS = {
@@ -112,15 +112,15 @@ function ChainNode({ data }: { data: any }) {
         </Group>
 
         <Stack gap={4}>
-          <Text size="xs" fw={600}>{data.userId}</Text>
-          <Text size="xs" c="dimmed">{data.email}</Text>
+          <Text size="xs" fw={600} c="#e9ecef">{data.userId}</Text>
+          <Text size="xs" c="#adb5bd">{data.email}</Text>
         </Stack>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
           {data.metrics.map((metric: { label: string; value: string }, idx: number) => (
             <div key={idx}>
-              <Text size="xs" c="dimmed">{metric.label}</Text>
-              <Text size="sm" fw={600}>{metric.value}</Text>
+              <Text size="xs" c="#adb5bd">{metric.label}</Text>
+              <Text size="sm" fw={600} c="#f1f3f5">{metric.value}</Text>
             </div>
           ))}
         </div>
@@ -407,13 +407,14 @@ function AccountChainFlowInner({
           minZoom={0.05}
           attributionPosition="bottom-left"
         >
-          <Background variant="dots" />
+          <Background variant="dots" color="#3a3f4b" gap={16} size={1} />
           <Controls />
           <MiniMap
             nodeColor={(node) => {
               const role = node.data.role as keyof typeof ROLE_STYLE;
               return ROLE_STYLE[role]?.miniColor || '#ccc';
             }}
+            maskColor="rgba(20, 25, 35, 0.6)"
           />
         </ReactFlow>
       </div>
