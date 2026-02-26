@@ -487,14 +487,14 @@ export default function HomePage() {
                         className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'features' ? classes.linkActive : ''}`}
                         onClick={() => handleNavigationChange('features')}
                       >
-                        Cổng đối tác
+                        Đối tác Tradi
                       </button>
                     )}
                     <button
                       className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'library' ? classes.linkActive : ''}`}
                       onClick={() => handleNavigationChange('library')}
                     >
-                      Khách hàng
+                      Cá nhân
                     </button>
                     {!isUserLoggedIn ? (
                       <Button

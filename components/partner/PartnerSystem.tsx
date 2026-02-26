@@ -230,7 +230,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
          }
       } catch (err) {
          const error = err as Error;
-         setError(error.message || 'Không thể tải dữ liệu đối tác');
+         setError(error.message || 'Không thể tải dữ liệu đại lý');
       } finally {
          setLoading(false);
       }
@@ -239,7 +239,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
    return (
       <div className={styles.section}>
          <div className={styles.sectionHeader}>
-            <h2>Hệ thống Đối Tác</h2>
+            <h2>Hệ thống Đại lý</h2>
             <button
                onClick={fetchPartnerData}
                disabled={loading}
@@ -268,7 +268,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <p className={styles.summaryValue}>${formatNumber(partnerData.total_client_reward, 2)}</p>
                   </div>
                   <div className={styles.summaryCard}>
-                     <h4>Tổng Com Đối Tác</h4>
+                     <h4>Tổng Com Đại lý</h4>
                      <p className={styles.summaryValue}>${formatNumber(partnerData.total_partner_reward, 2)}</p>
                   </div>
                </div>
@@ -278,7 +278,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <p className={styles.summaryValue}>${formatNumber(partnerData.accum_client_reward, 2)}</p>
                   </div>
                   <div className={styles.summaryCard}>
-                     <h4>Com Đối Tác tích lũy tháng này</h4>
+                     <h4>Com Đại lý tích lũy tháng này</h4>
                      <p className={styles.summaryValue}>${formatNumber(partnerData.accum_partner_reward, 2)}</p>
                   </div>
                </div>

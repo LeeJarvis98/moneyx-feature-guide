@@ -62,7 +62,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
             />
             
             <NavLink
-              label="Hệ thống đối tác"
+              label="Hệ thống Đại lý"
               active={activeSection === 'partnerSystem'}
               fw={activeSection === 'partnerSystem' ? 700 : undefined}
               onClick={() => setActiveSection('partnerSystem')}

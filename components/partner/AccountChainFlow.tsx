@@ -1,12 +1,13 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, type CSSProperties } from 'react';
 import {
   ReactFlow,
   Node,
   Edge,
   Controls,
   Background,
+  BackgroundVariant,
   MiniMap,
   useNodesState,
   useEdgesState,
@@ -54,6 +55,15 @@ interface AccountChainFlowProps {
   exnessTotals: { volume_lots: number; reward_usd: number };
 }
 
+// Node data type
+interface ChainNodeData extends Record<string, unknown> {
+  role: keyof typeof ROLE_STYLE;
+  userId: string;
+  email: string;
+  rank: string;
+  metrics: { label: string; value: string }[];
+}
+
 // Role styles (Dark Mode)
 const ROLE_STYLE = {
   current_user: { border: '#4dabf7', bg: '#1a1f2e', label: 'You', miniColor: '#339af0' },
@@ -74,19 +84,13 @@ const RANK_COLOURS = {
 };
 
 // Custom Node Component
-function ChainNode({ data }: { data: any }) {
-  const roleStyle = ROLE_STYLE[data.role as keyof typeof ROLE_STYLE];
+function ChainNode({ data }: { data: ChainNodeData }) {
+  const roleStyle = ROLE_STYLE[data.role];
 
   return (
     <div
-      style={{
-        width: 220,
-        border: `2px solid ${roleStyle.border}`,
-        backgroundColor: roleStyle.bg,
-        borderRadius: 8,
-        padding: 12,
-        position: 'relative',
-      }}
+      className={styles.chainNode}
+      style={{ '--node-border': roleStyle.border, '--node-bg': roleStyle.bg } as CSSProperties}
     >
       {/* Handle for incoming connections (from above) */}
       <Handle
@@ -116,7 +120,7 @@ function ChainNode({ data }: { data: any }) {
           <Text size="xs" c="#adb5bd">{data.email}</Text>
         </Stack>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+        <div className={styles.chainNodeMetrics}>
           {data.metrics.map((metric: { label: string; value: string }, idx: number) => (
             <div key={idx}>
               <Text size="xs" c="#adb5bd">{metric.label}</Text>
@@ -147,7 +151,10 @@ const nodeTypes = {
 };
 
 // Layout function using Dagre
-function getLayoutedElements(nodes: Node[], edges: Edge[]) {
+function getLayoutedElements<TData extends Record<string, unknown>>(
+  nodes: Node<TData>[],
+  edges: Edge[]
+): { nodes: Node<TData>[]; edges: Edge[] } {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: 'TB', nodesep: 70, ranksep: 90 });
@@ -183,12 +190,12 @@ function AccountChainFlowInner({
   userRank,
   exnessTotals,
 }: AccountChainFlowProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<ChainNodeData>>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   // Build nodes and edges
   useEffect(() => {
-    const newNodes: Node[] = [];
+    const newNodes: Node<ChainNodeData>[] = [];
     const newEdges: Edge[] = [];
 
     // 1. Add upline chain nodes
@@ -349,7 +356,7 @@ function AccountChainFlowInner({
     ];
 
     nodes.forEach((node) => {
-      const data = node.data;
+      const data = node.data as ChainNodeData;
       csvRows.push([
         data.role,
         data.userId,
@@ -407,7 +414,7 @@ function AccountChainFlowInner({
           minZoom={0.05}
           attributionPosition="bottom-left"
         >
-          <Background variant="dots" color="#3a3f4b" gap={16} size={1} />
+          <Background variant={BackgroundVariant.Dots} color="#3a3f4b" gap={16} size={1} />
           <Controls />
           <MiniMap
             nodeColor={(node) => {

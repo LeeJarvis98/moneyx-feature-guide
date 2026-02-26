@@ -20,3 +20,19 @@
   position: relative;
   height: 100%;
 }
+
+.chainNode {
+  width: 220px;
+  border: 2px solid var(--node-border);
+  background-color: var(--node-bg);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+}
+
+.chainNodeMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
