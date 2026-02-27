@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Button, Group, Stack, SimpleGrid, Paper, Text, Badge, Select, Tooltip } from '@mantine/core';
+import { Stack, SimpleGrid, Paper, Text, Badge, Select } from '@mantine/core';
 import { DataTable, useDataTableColumns, type DataTableColumn } from 'mantine-datatable';
 import styles from './ChainCommissionBreakdown.module.css';
 
@@ -144,17 +144,17 @@ export default function ChainCommissionBreakdown({
         </Badge>
       ),
     },
-    {
-      accessor: 'your_role',
-      title: 'Vai trò',
-      width: 100,
-      resizable: true,
-      render: (row) => (
-        <Badge variant="dot" color={getRoleBadgeColor(row.your_role)} size="sm">
-          {row.your_role}
-        </Badge>
-      ),
-    },
+    // {
+    //   accessor: 'your_role',
+    //   title: 'Vai trò',
+    //   width: 100,
+    //   resizable: true,
+    //   render: (row) => (
+    //     <Badge variant="dot" color={getRoleBadgeColor(row.your_role)} size="sm">
+    //       {row.your_role}
+    //     </Badge>
+    //   ),
+    // },
     {
       accessor: 'source_total_reward',
       title: 'Com Đại lý',
@@ -187,35 +187,35 @@ export default function ChainCommissionBreakdown({
         </Text>
       ),
     },
-    {
-      accessor: 'remaining_pool',
-      title: 'Quỹ còn lại',
-      width: 130,
-      resizable: true,
-      render: (row) => (
-        <Text size="sm" c="orange" fw={600}>
-          ${fmt(row.remaining_pool)}
-        </Text>
-      ),
-    },
-    {
-      accessor: 'total_upliner_count',
-      title: 'Tổng Đại lý upline',
-      width: 160,
-      resizable: true,
-      render: (row) => <Text size="sm">{row.total_upliner_count}</Text>,
-    },
-    {
-      accessor: 'upliner_share',
-      title: 'Upline 50% chia đều',
-      width: 120,
-      resizable: true,
-      render: (row) => (
-        <Text size="sm" c="teal">
-          {row.total_upliner_count === 0 ? '' : `$${fmt(row.upliner_share)}`}
-        </Text>
-      ),
-    },
+    // {
+    //   accessor: 'remaining_pool',
+    //   title: 'Quỹ còn lại',
+    //   width: 130,
+    //   resizable: true,
+    //   render: (row) => (
+    //     <Text size="sm" c="orange" fw={600}>
+    //       ${fmt(row.remaining_pool)}
+    //     </Text>
+    //   ),
+    // },
+    // {
+    //   accessor: 'total_upliner_count',
+    //   title: 'Tổng Đại lý upline',
+    //   width: 160,
+    //   resizable: true,
+    //   render: (row) => <Text size="sm">{row.total_upliner_count}</Text>,
+    // },
+    // {
+    //   accessor: 'upliner_share',
+    //   title: 'Upline 50% chia đều',
+    //   width: 120,
+    //   resizable: true,
+    //   render: (row) => (
+    //     <Text size="sm" c="teal">
+    //       {row.total_upliner_count === 0 ? '' : `$${fmt(row.upliner_share)}`}
+    //     </Text>
+    //   ),
+    // },
     {
       accessor: 'your_cut',
       title: 'Hoa hồng của bạn',
@@ -230,11 +230,7 @@ export default function ChainCommissionBreakdown({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
-  const {
-    effectiveColumns,
-    resetColumnsWidth,
-    measureAndSetColumnWidths,
-  } = useDataTableColumns<ChainCommissionRow>({
+  const { effectiveColumns } = useDataTableColumns<ChainCommissionRow>({
     key: STORE_KEY,
     columns: columnDefs,
     scrollViewportRef,
@@ -248,43 +244,34 @@ export default function ChainCommissionBreakdown({
           <Paper p="md" withBorder className={styles.summaryCard}>
             <Stack gap={4}>
               <Text size="sm" c="dimmed">
-                Com Khách tích lũy tháng này
-              </Text>
-              <Text size="xl" fw={700} c="blue">
-                ${fmt(summary.ownKeep)}
-              </Text>
-              <Text size="xs" c="dimmed">
                 {userRewardPercentage && userTotalReward
                   ? `${userRewardPercentage}% của $${userTotalReward}`
                   : 'Phần thưởng từ khách hàng của bạn'}
               </Text>
+              <Text size="xl" fw={700} c="blue">
+                ${fmt(summary.ownKeep)}
+              </Text>
             </Stack>
           </Paper>
 
           <Paper p="md" withBorder className={styles.summaryCard}>
             <Stack gap={4}>
               <Text size="sm" c="dimmed">
-                 Từ chuỗi Đại lý
+                 Com từ các Đại lý
               </Text>
               <Text size="xl" fw={700} c="orange">
                 ${fmt(summary.totalFromChain)}
               </Text>
-              <Text size="xs" c="dimmed">
-                Tổng {summary.activePartners} đại lý
-              </Text>
             </Stack>
           </Paper>
 
           <Paper p="md" withBorder className={styles.summaryCard}>
             <Stack gap={4}>
               <Text size="sm" c="dimmed">
-                Thực nhận tháng này
+                Thưởng tháng này ({`${userRewardPercentage}% + Com từ các Đại lý`})
               </Text>
               <Text size="xl" fw={700} c="green">
                 ${fmt(summary.totalChainCommission)}
-              </Text>
-              <Text size="xs" c="dimmed">
-                Com Khách tích lũy tháng này + Chuỗi Đại lý
               </Text>
             </Stack>
           </Paper>
@@ -313,27 +300,6 @@ export default function ChainCommissionBreakdown({
 
         {/* Commission Table — indirect partners are invisible here but counted in summary */}
         <Paper withBorder>
-          <Group justify="flex-end" px="md" pt="sm" gap="xs">
-            <Tooltip label="Tự động khớp cột với nội dung">
-              <Button
-                size="xs"
-                variant="subtle"
-                onClick={measureAndSetColumnWidths}
-              >
-                Tự khớp
-              </Button>
-            </Tooltip>
-            <Tooltip label="Đặt lại độ rộng cột">
-              <Button
-                size="xs"
-                variant="subtle"
-                color="gray"
-                onClick={resetColumnsWidth}
-              >
-                Đặt lại
-              </Button>
-            </Tooltip>
-          </Group>
           <DataTable
             striped
             highlightOnHover

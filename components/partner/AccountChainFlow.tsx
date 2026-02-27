@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useCallback, type CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import {
   ReactFlow,
   Node,
@@ -17,7 +17,7 @@ import {
   Position,
 } from '@xyflow/react';
 import dagre from '@dagrejs/dagre';
-import { Badge, Group, Stack, Text, Button } from '@mantine/core';
+import { Badge, Group, Stack, Text } from '@mantine/core';
 import '@xyflow/react/dist/style.css';
 import styles from './AccountChainFlow.module.css';
 
@@ -66,10 +66,10 @@ interface ChainNodeData extends Record<string, unknown> {
 
 // Role styles (Dark Mode)
 const ROLE_STYLE = {
-  current_user: { border: '#4dabf7', bg: '#1a1f2e', label: 'You', miniColor: '#339af0' },
+  current_user: { border: '#4dabf7', bg: '#1a1f2e', label: 'Bạn', miniColor: '#339af0' },
   upline: { border: '#51cf66', bg: '#1a2e1f', label: 'Upline', miniColor: '#51cf66' },
-  direct_partner: { border: '#fcc419', bg: '#2e261a', label: 'Direct Partner', miniColor: '#fcc419' },
-  indirect_partner: { border: '#cc5de8', bg: '#2e1a2e', label: 'Indirect Partner', miniColor: '#cc5de8' },
+  direct_partner: { border: '#fcc419', bg: '#2e261a', label: 'Đại lý trực tiếp', miniColor: '#fcc419' },
+  indirect_partner: { border: '#cc5de8', bg: '#2e1a2e', label: 'Đại lý gián tiếp', miniColor: '#cc5de8' },
 };
 
 const RANK_COLOURS = {
@@ -213,58 +213,44 @@ function AccountChainFlowInner({
     const newNodes: Node<ChainNodeData>[] = [];
     const newEdges: Edge[] = [];
 
-    // 1. Add upline chain nodes
+    // 1. Add current user node only
     if (referralChain && referralChain.chain) {
-      referralChain.chain.forEach((member) => {
-        const isCurrentUser = member.userId === userId;
-        const role = isCurrentUser ? 'current_user' : 'upline';
-
-        let metrics = [];
-        if (isCurrentUser && userRank) {
-          const totalFromChain = partnerTree.reduce((sum, p) => sum + p.total_reward, 0);
-          metrics = [
-            { label: 'Keep %', value: `${userRank.reward_percentage}%` },
-            { label: ' Upline %', value: `${100 - userRank.reward_percentage}%` },
-            { label: 'Own Keep', value: `$${(exnessTotals.reward_usd * (userRank.reward_percentage / 100)).toFixed(2)}` },
-            { label: ' From Chain', value: `$${totalFromChain.toFixed(2)}` },
-          ];
-        } else {
-          metrics = [
-            { label: 'Keep %', value: '' },
-            { label: ' Upline %', value: '' },
-            { label: 'Lots', value: '' },
-            { label: 'Reward', value: '' },
-          ];
-        }
+      const currentUserMember = referralChain.chain.find((m) => m.userId === userId);
+      if (currentUserMember) {
+        const totalFromChain = partnerTree
+          .filter((p) => p.parentUserId === userId)
+          .reduce((sum, p) => sum + p.total_reward, 0);
+        const metrics = userRank
+          ? [
+              { label: '% Thưởng', value: `${userRank.reward_percentage}%` },
+              { label: '% Hệ thống', value: `${100 - userRank.reward_percentage}%` },
+            ]
+          : [];
 
         newNodes.push({
-          id: member.userId,
+          id: currentUserMember.userId,
           type: 'chainNode',
           position: { x: 0, y: 0 },
           data: {
-            role,
-            userId: member.userId,
-            email: member.email,
-            rank: member.partnerRank,
+            role: 'current_user',
+            userId: currentUserMember.userId,
+            email: currentUserMember.email,
+            rank: currentUserMember.partnerRank,
             metrics,
           },
         });
-      });
+      }
     }
 
-    // 2. Add partner tree nodes
+    // 2. Add direct partner nodes only
     partnerTree.forEach((partner) => {
       if (partner.partner_rank === 'None') return; // Skip non-partners
-
-      const isDirectPartner = partner.parentUserId === userId;
-      const role = isDirectPartner ? 'direct_partner' : 'indirect_partner';
+      if (partner.parentUserId !== userId) return; // Skip indirect partners
 
       const keepPct = RANK_KEEP_PCT[partner.partner_rank] ?? partner.reward_percentage;
       const metrics = [
-        { label: 'Keep %', value: `${keepPct}%` },
-        { label: ' Upline %', value: `${100 - keepPct}%` },
-        { label: 'Their Reward', value: `$${partner.total_lots.toFixed(2)}` },
-        { label: 'Your Cut', value: `$${partner.total_reward.toFixed(2)}` },
+        { label: '% Thưởng', value: `${keepPct}%` },
+        { label: '% Hệ thống', value: `${100 - keepPct}%` },
       ];
 
       newNodes.push({
@@ -272,7 +258,7 @@ function AccountChainFlowInner({
         type: 'chainNode',
         position: { x: 0, y: 0 },
         data: {
-          role,
+          role: 'direct_partner',
           userId: partner.id,
           email: partner.email,
           rank: partner.partner_rank,
@@ -281,141 +267,41 @@ function AccountChainFlowInner({
       });
     });
 
-    // 3. Create all edges AFTER all nodes are created
-    // This ensures both source and target nodes exist
-    const nodeIds = new Set(newNodes.map(n => n.id));
-    
-    // 3a. Add edges for referral chain
-    if (referralChain && referralChain.chain && referralChain.chain.length > 1) {
-      for (let idx = 1; idx < referralChain.chain.length; idx++) {
-        const sourceMember = referralChain.chain[idx - 1];
-        const targetMember = referralChain.chain[idx];
-        
-        // Only create edge if both nodes exist
-        if (nodeIds.has(sourceMember.userId) && nodeIds.has(targetMember.userId)) {
-          newEdges.push({
-            id: `e-${sourceMember.userId}-${targetMember.userId}`,
-            source: sourceMember.userId,
-            target: targetMember.userId,
-            sourceHandle: 'bottom',
-            targetHandle: 'top',
-            type: 'smoothstep',
-            style: { stroke: '#adb5bd', strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#adb5bd' },
-          });
-        }
-      }
-    }
-    
-    // Track existing edges to prevent duplicates
-    const existingEdges = new Set(newEdges.map(e => `${e.source}-${e.target}`));
-    
-    // 3b. Add edges for partner tree (only if not already in referral chain)
+    // 3. Create edges from current user to direct partners
+    const nodeIds = new Set(newNodes.map((n) => n.id));
+
     partnerTree.forEach((partner) => {
-      if (partner.partner_rank === 'None') return; // Skip non-partners
-      
-      // Only create edge if both parent and child nodes exist
-      if (partner.parentUserId && nodeIds.has(partner.parentUserId) && nodeIds.has(partner.id)) {
-        const edgeKey = `${partner.parentUserId}-${partner.id}`;
-        
-        // Skip if this edge already exists (from referral chain)
-        if (existingEdges.has(edgeKey)) {
-          console.log('[AccountChainFlow] Skipping duplicate edge:', edgeKey);
-          return;
-        }
-        
-        const isDirectPartner = partner.parentUserId === userId;
-        
-        console.log('[AccountChainFlow] Adding partner tree edge:', {
-          parent: partner.parentUserId,
-          child: partner.id,
-          email: partner.email,
-        });
-        
-        newEdges.push({
-          id: `e-${partner.parentUserId}-${partner.id}`,
-          source: partner.parentUserId,
-          target: partner.id,
-          sourceHandle: 'bottom',
-          targetHandle: 'top',
-          type: 'smoothstep',
-          style: {
-            stroke: isDirectPartner ? '#f59f00' : '#ae3ec9',
-            strokeWidth: 2,
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: isDirectPartner ? '#f59f00' : '#ae3ec9',
-          },
-        });
-      }
+      if (partner.partner_rank === 'None') return;
+      if (partner.parentUserId !== userId) return;
+      if (!nodeIds.has(partner.id)) return;
+
+      newEdges.push({
+        id: `e-${userId}-${partner.id}`,
+        source: userId,
+        target: partner.id,
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        type: 'smoothstep',
+        style: { stroke: '#f59f00', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#f59f00' },
+      });
     });
 
-    // Debug logging
-    console.log('[AccountChainFlow] Created nodes:', newNodes.length, newNodes.map(n => n.id));
-    console.log('[AccountChainFlow] Referral chain:', referralChain?.chain?.map(m => m.userId));
-    console.log('[AccountChainFlow] Partner tree:', partnerTree.map(p => ({ id: p.id, parent: p.parentUserId })));
-    console.log('[AccountChainFlow] Created edges:', newEdges.length, newEdges.map(e => `${e.source}->${e.target}`));
-    console.log('[AccountChainFlow] Node IDs set:', nodeIds);
-
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(newNodes, newEdges);
-    
-    console.log('[AccountChainFlow] Setting layouted nodes and edges');
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
   }, [referralChain, partnerTree, userId, userRank, exnessTotals, setNodes, setEdges]);
 
-  // Export to CSV
-  const handleExportCSV = useCallback(() => {
-    const csvRows = [
-      ['type', 'user_id', 'email', 'partner_rank', 'reward_pct_keep_%', 'upline_share_pct_%', 'total_lots', 'total_reward_usd', 'parent_user_id', 'depth'],
-    ];
-
-    nodes.forEach((node) => {
-      const data = node.data as ChainNodeData;
-      csvRows.push([
-        data.role,
-        data.userId,
-        data.email,
-        data.rank,
-        '', // Would need to extract from metrics
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]);
-    });
-
-    const csvContent = csvRows.map((row) => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'account-chain-flow.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [nodes]);
-
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <div className={styles.header} style={{ background: '#0d1117', borderBottom: '1px solid #1e2533' }}>
         <Group gap="md">
           <Badge variant="dot" color={ROLE_STYLE.current_user.miniColor}>
             {ROLE_STYLE.current_user.label}
           </Badge>
-          <Badge variant="dot" color={ROLE_STYLE.upline.miniColor}>
-            {ROLE_STYLE.upline.label}
-          </Badge>
           <Badge variant="dot" color={ROLE_STYLE.direct_partner.miniColor}>
             {ROLE_STYLE.direct_partner.label}
           </Badge>
-          <Badge variant="dot" color={ROLE_STYLE.indirect_partner.miniColor}>
-            {ROLE_STYLE.indirect_partner.label}
-          </Badge>
-          <Button size="xs" variant="outline" onClick={handleExportCSV}>
-            Export CSV
-          </Button>
         </Group>
       </div>
 

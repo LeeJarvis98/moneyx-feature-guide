@@ -290,7 +290,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                />
 
                {/* Account Chain Flow */}
-               <h3 className={styles.sectionListHeadingSpaced}>Sơ đồ Chuỗi Giới thiệu</h3>
+               <h3 className={styles.sectionListHeadingSpaced}>Sơ đồ Đại lý</h3>
                <AccountChainFlow
                   referralChain={referralChain}
                   partnerTree={partnerTree}
