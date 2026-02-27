@@ -255,7 +255,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
       )}
 
       {loading && (
-        <div className={styles.loadingState}>Đang tải dữ liệu...</div>
+        <div className={styles.loading}>Đang tải...</div>
       )}
 
       {!loading && hasFetched && (

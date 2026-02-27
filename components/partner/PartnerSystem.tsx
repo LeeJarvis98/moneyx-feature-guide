@@ -243,6 +243,11 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
             <span className={styles.updateNotice}>Dữ liệu sẽ được cập nhật vào 0h mỗi ngày</span>
          </div>
 
+         {/* Loading Display */}
+         {loading && (
+            <div className={styles.loading}>Đang tải...</div>
+         )}
+
          {/* Error Display */}
          {error && (
             <div className={styles.error} role="alert">

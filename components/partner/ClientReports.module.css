@@ -23,6 +23,13 @@
   font-style: italic;
 }
 
+.loading {
+  padding: 16px;
+  text-align: center;
+  color: #909296;
+  font-size: 14px;
+}
+
 .error {
   padding: 16px;
   background-color: rgba(239, 68, 68, 0.1);
