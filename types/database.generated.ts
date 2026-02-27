@@ -218,6 +218,7 @@ export type Database = {
           lot_volume: number | null
           owner: string | null
           platform: string | null
+          registered_at: string | null
           reward: number | null
           uid: string
         }
@@ -230,6 +231,7 @@ export type Database = {
           lot_volume?: number | null
           owner?: string | null
           platform?: string | null
+          registered_at?: string | null
           reward?: number | null
           uid: string
         }
@@ -242,6 +244,7 @@ export type Database = {
           lot_volume?: number | null
           owner?: string | null
           platform?: string | null
+          registered_at?: string | null
           reward?: number | null
           uid?: string
         }
