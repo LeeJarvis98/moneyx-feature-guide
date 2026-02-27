@@ -83,6 +83,15 @@ const RANK_COLOURS = {
   None: 'dark',
 };
 
+// Canonical keep percentages per rank (source: docs/VNCLC.md)
+const RANK_KEEP_PCT: Record<string, number> = {
+  'Kim Cương': 90,
+  'Bạch Kim': 85,
+  'Vàng': 80,
+  'Bạc': 75,
+  'Đồng': 70,
+};
+
 // Custom Node Component
 function ChainNode({ data }: { data: ChainNodeData }) {
   const roleStyle = ROLE_STYLE[data.role];
@@ -110,24 +119,30 @@ function ChainNode({ data }: { data: ChainNodeData }) {
           <Text size="xs" fw={700} tt="uppercase" c={roleStyle.border}>
             {roleStyle.label}
           </Text>
-          <Badge size="xs" color={RANK_COLOURS[data.rank as keyof typeof RANK_COLOURS] || 'dark'}>
-            {data.rank}
-          </Badge>
+          {!(data.role === 'upline' && (data.rank === 'ADMIN' || data.rank === 'SALE')) && (
+            <Badge size="xs" color={RANK_COLOURS[data.rank as keyof typeof RANK_COLOURS] || 'dark'}>
+              {data.rank}
+            </Badge>
+          )}
         </Group>
 
         <Stack gap={4}>
           <Text size="xs" fw={600} c="#e9ecef">{data.userId}</Text>
-          <Text size="xs" c="#adb5bd">{data.email}</Text>
+          {data.role !== 'upline' && (
+            <Text size="xs" c="#adb5bd">{data.email}</Text>
+          )}
         </Stack>
 
-        <div className={styles.chainNodeMetrics}>
-          {data.metrics.map((metric: { label: string; value: string }, idx: number) => (
-            <div key={idx}>
-              <Text size="xs" c="#adb5bd">{metric.label}</Text>
-              <Text size="sm" fw={600} c="#f1f3f5">{metric.value}</Text>
-            </div>
-          ))}
-        </div>
+        {data.role !== 'upline' && (
+          <div className={styles.chainNodeMetrics}>
+            {data.metrics.map((metric: { label: string; value: string }, idx: number) => (
+              <div key={idx}>
+                <Text size="xs" c="#adb5bd">{metric.label}</Text>
+                <Text size="sm" fw={600} c="#f1f3f5">{metric.value}</Text>
+              </div>
+            ))}
+          </div>
+        )}
       </Stack>
 
       {/* Handle for outgoing connections (to below) */}
@@ -244,11 +259,12 @@ function AccountChainFlowInner({
       const isDirectPartner = partner.parentUserId === userId;
       const role = isDirectPartner ? 'direct_partner' : 'indirect_partner';
 
+      const keepPct = RANK_KEEP_PCT[partner.partner_rank] ?? partner.reward_percentage;
       const metrics = [
-        { label: 'Keep %', value: `${partner.reward_percentage}%` },
-        { label: ' Upline %', value: `${(100 - partner.reward_percentage)}%` },
-        { label: 'Lots', value: partner.total_lots.toFixed(2) },
-        { label: 'Reward', value: `$${partner.total_reward.toFixed(2)}` },
+        { label: 'Keep %', value: `${keepPct}%` },
+        { label: ' Upline %', value: `${100 - keepPct}%` },
+        { label: 'Their Reward', value: `$${partner.total_lots.toFixed(2)}` },
+        { label: 'Your Cut', value: `$${partner.total_reward.toFixed(2)}` },
       ];
 
       newNodes.push({

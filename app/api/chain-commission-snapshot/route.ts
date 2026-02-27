@@ -23,6 +23,7 @@ interface ChainCommissionRow {
   total_upliner_count: number;
   upliner_share: number;
   own_keep: number;
+  total_chain_commission: number;
   snapshot_at: string;
 }
 
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
       total_upliner_count: snapshot.total_upliner_count,
       upliner_share: snapshot.upliner_share,
       own_keep: snapshot.own_keep,
+      total_chain_commission: snapshot.total_chain_commission,
       snapshot_at: snapshot.snapshot_at,
     }));
 

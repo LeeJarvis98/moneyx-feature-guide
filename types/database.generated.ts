@@ -39,6 +39,7 @@ export type Database = {
           source_partner_id: string
           source_rank: string
           source_total_reward: number
+          total_chain_commission: number
           total_upliner_count: number
           tradi_fee: number
           updated_at: string
@@ -59,6 +60,7 @@ export type Database = {
           source_partner_id: string
           source_rank: string
           source_total_reward?: number
+          total_chain_commission?: number
           total_upliner_count?: number
           tradi_fee?: number
           updated_at?: string
@@ -79,6 +81,7 @@ export type Database = {
           source_partner_id?: string
           source_rank?: string
           source_total_reward?: number
+          total_chain_commission?: number
           total_upliner_count?: number
           tradi_fee?: number
           updated_at?: string

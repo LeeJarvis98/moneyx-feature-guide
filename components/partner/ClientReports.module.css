@@ -17,26 +17,10 @@
   margin: 0;
 }
 
-.fetchButton {
-  padding: 10px 20px;
-  background-color: #FFB81C;
-  color: #000000;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.fetchButton:hover:not(:disabled) {
-  background-color: #ffc94d;
-  box-shadow: 0 4px 12px rgba(255, 184, 28, 0.3);
-}
-
-.fetchButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.updateNotice {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
 }
 
 .error {

@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
         total_partners,
         total_partner_lots,
         total_partner_reward,
-        total_refer_reward,
         accum_client_reward,
         accum_partner_reward,
         accum_time_remaining,

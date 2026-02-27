@@ -157,13 +157,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <h2>Khách hàng</h2>
-        <button
-          onClick={fetchClientAccountsReport}
-          disabled={loading}
-          className={styles.fetchButton}
-        >
-          {loading ? 'Đang tải...' : 'Làm mới'}
-        </button>
+        <span className={styles.updateNotice}>Dữ liệu sẽ được cập nhật vào 0h mỗi ngày</span>
       </div>
 
       {/* Error Display */}

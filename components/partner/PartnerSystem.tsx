@@ -221,8 +221,8 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                reward_percentage: row.source_total_reward > 0 
                   ? ((row.source_total_reward - row.commission_pool) / row.source_total_reward) * 100
                   : 0,
-               total_lots: 0,
-               total_reward: row.source_total_reward,
+               total_lots: row.source_total_reward,   // partner's own total reward
+               total_reward: row.your_cut,             // current user's commission from this partner
                parentUserId: row.parentUserId || userId,
                depth: row.depth || 1,
             }));
@@ -240,13 +240,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
       <div className={styles.section}>
          <div className={styles.sectionHeader}>
             <h2>Hệ thống Đại lý</h2>
-            <button
-               onClick={fetchPartnerData}
-               disabled={loading}
-               className={styles.fetchButton}
-            >
-               {loading ? 'Đang tải...' : 'Làm mới'}
-            </button>
+            <span className={styles.updateNotice}>Dữ liệu sẽ được cập nhật vào 0h mỗi ngày</span>
          </div>
 
          {/* Error Display */}
@@ -264,22 +258,22 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                </p>
                <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
-                     <h4>Tổng Com Khách</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.total_client_reward, 2)}</p>
+                     <h4>Tổng Com Khách (sàn)</h4>
+                     <p className={styles.summaryValue}>${partnerData.total_client_reward}</p>
                   </div>
                   <div className={styles.summaryCard}>
-                     <h4>Tổng Com Đại lý</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.total_partner_reward, 2)}</p>
+                     <h4>Tổng Com Đại lý (Tradi)</h4>
+                     <p className={styles.summaryValue}>${partnerData.total_partner_reward}</p>
                   </div>
                </div>
                <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
                      <h4>Com Khách tích lũy tháng này</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.accum_client_reward, 2)}</p>
+                     <p className={styles.summaryValue}>${partnerData.accum_client_reward}</p>
                   </div>
                   <div className={styles.summaryCard}>
                      <h4>Com Đại lý tích lũy tháng này</h4>
-                     <p className={styles.summaryValue}>${formatNumber(partnerData.accum_partner_reward, 2)}</p>
+                     <p className={styles.summaryValue}>${partnerData.accum_partner_reward}</p>
                   </div>
                </div>
 
@@ -292,7 +286,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                         ? partnerData.user_rank.reward_percentage * 100
                         : undefined
                   }
-                  userTotalReward={partnerData.user_rank?.lot_volume || undefined}
+                  userTotalReward={partnerData.total_client_reward || undefined}
                />
 
                {/* Account Chain Flow */}
@@ -312,7 +306,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                   }
                   exnessTotals={{
                      volume_lots: partnerData.user_rank?.lot_volume || 0,
-                     reward_usd: partnerData.user_rank?.lot_volume || 0,
+                     reward_usd: partnerData.total_client_reward || 0,
                   }}
                />
             </>
