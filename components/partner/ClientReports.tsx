@@ -82,7 +82,15 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
     setError(null);
 
     try {
-      const res = await fetch('/api/get-registered-accounts');
+      const partnerId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+      if (!partnerId) {
+        setError('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.');
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`/api/get-registered-accounts?partnerId=${encodeURIComponent(partnerId)}`);
       const json = await res.json();
 
       if (!json.success) {
@@ -255,7 +263,7 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
       )}
 
       {loading && (
-        <div className={styles.loading}>Đang tải...</div>
+        <div className={styles.loadingState}>Đang tải dữ liệu...</div>
       )}
 
       {!loading && hasFetched && (

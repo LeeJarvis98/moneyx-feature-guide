@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // Fetch all licensed accounts for this user (where owner = userId)
+    // Fetch all accounts for this user
     const { data: licensedAccounts, error } = await supabase
       .from('licensed_accounts')
-      .select('email, lot_volume, reward, licensed_status')
+      .select('email, lot_volume, reward, licensed_status, registered_at')
       .eq('owner', userId);
 
     if (error) {
@@ -28,22 +28,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Filter only accounts with licensed status
+    // Licensed accounts only (for email count and licensed ID count)
     const activeLicensedAccounts = (licensedAccounts || []).filter(
       acc => acc.licensed_status === 'licensed'
+    );
+
+    // Registered accounts (registered_at IS NOT NULL) — both licensed and unlicensed
+    const registeredAccounts = (licensedAccounts || []).filter(
+      acc => acc.registered_at != null
     );
 
     // Calculate summary statistics
     const uniqueEmails = new Set(activeLicensedAccounts.map(acc => acc.email));
     const totalRegisteredEmails = uniqueEmails.size;
-    
+
     const totalLicensedAccounts = activeLicensedAccounts.length;
-    
-    const totalLotVolume = activeLicensedAccounts.reduce((sum, acc) => {
+
+    // Lot volume and reward summed from all registered accounts (licensed + unlicensed)
+    const totalLotVolume = registeredAccounts.reduce((sum, acc) => {
       return sum + (acc.lot_volume || 0);
     }, 0);
-    
-    const totalReward = activeLicensedAccounts.reduce((sum, acc) => {
+
+    const totalReward = registeredAccounts.reduce((sum, acc) => {
       return sum + (acc.reward || 0);
     }, 0);
 

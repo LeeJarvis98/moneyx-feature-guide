@@ -16,11 +16,22 @@ const formatTimestamp = (dateString: string | null): string | null => {
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const partnerId = searchParams.get('partnerId');
+
+    if (!partnerId) {
+      return NextResponse.json(
+        { success: false, error: 'partnerId is required' },
+        { status: 400 }
+      );
+    }
+
     const supabase = getSupabaseClient();
 
     const { data, error } = await supabase
       .from('licensed_accounts')
-      .select('account_id, email, uid, platform, licensed_date, licensed_status, registered_at, lot_volume, reward')
+      .select('id, account_id, email, platform, licensed_date, licensed_status, registered_at, lot_volume, reward')
+      .eq('id', partnerId)
       .not('registered_at', 'is', null)
       .order('registered_at', { ascending: false });
 
@@ -34,8 +45,8 @@ export async function GET(request: NextRequest) {
 
     const accounts = (data || []).map((row) => ({
       accountId: row.account_id,
+      partnerId: row.id ?? '',
       email: row.email,
-      uid: row.uid,
       platform: row.platform || 'exness',
       licensedDate: formatTimestamp(row.licensed_date),
       licensedStatus: row.licensed_status ?? 'licensed',

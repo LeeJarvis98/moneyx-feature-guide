@@ -97,80 +97,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
             return;
          }
 
-         // First, get the partner's platform credentials from Supabase
-         const credentialsResponse = await fetch('/api/get-partner-data', {
-            method: 'POST',
-            headers: {
-               'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId }),
-         });
-
-         const credentialsData = await credentialsResponse.json();
-
-         if (!credentialsResponse.ok) {
-            throw new Error(credentialsData.error || 'Không thể tải thông tin đối tác');
-         }
-
-         // Get platform accounts from the response
-         const platformAccounts = credentialsData.data?.platform_accounts;
-
-         console.log('[REFRESH] Platform accounts:', platformAccounts);
-
-         // Call ngrok refresh-account API for each platform
-         let hasSuccessfulRefresh = false;
-         if (platformAccounts && Array.isArray(platformAccounts) && platformAccounts.length > 0) {
-            // Iterate through the array of platform account objects
-            for (const accountGroup of platformAccounts) {
-               // Each accountGroup is an object with platform names as keys
-               const platforms = Object.keys(accountGroup);
-
-               for (const platform of platforms) {
-                  const credentials = accountGroup[platform];
-
-                  if (credentials && credentials.email && credentials.password) {
-                     try {
-                        console.log(`[REFRESH] Calling ngrok API for platform: ${platform}`);
-
-                        const ngrokResponse = await fetch('/api/refresh-partner-account', {
-                           method: 'POST',
-                           headers: {
-                              'Content-Type': 'application/json',
-                           },
-                           body: JSON.stringify({
-                              id: userId,
-                              login: credentials.email,
-                              password: credentials.password,
-                              platform: platform,
-                           }),
-                        });
-
-                        if (!ngrokResponse.ok) {
-                           console.error(`[REFRESH] Ngrok API call failed for ${platform}`);
-                           const errorData = await ngrokResponse.json().catch(() => ({}));
-                           console.error(`[REFRESH] Error details:`, errorData);
-                        } else {
-                           console.log(`[REFRESH] Ngrok API call successful for ${platform}`);
-                           hasSuccessfulRefresh = true;
-                        }
-                     } catch (ngrokError) {
-                        console.error(`[REFRESH] Error calling ngrok API for ${platform}:`, ngrokError);
-                        // Continue with other platforms
-                     }
-                  }
-               }
-            }
-         }
-
-         // Only fetch updated partner data if at least one ngrok API call succeeded
-         if (!hasSuccessfulRefresh) {
-            setError('Không thể làm mới dữ liệu tài khoản từ các nền tảng. Vui lòng thử lại.');
-            return;
-         }
-
-         console.log('[REFRESH] At least one platform refreshed successfully, fetching updated data...');
-
-         // Now fetch updated partner data from Supabase
+         // Fetch partner data from Supabase
          const response = await fetch('/api/get-partner-data', {
             method: 'POST',
             headers: {
@@ -270,8 +197,6 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <h4>Tổng Com Đại lý (Tradi)</h4>
                      <p className={styles.summaryValue}>${partnerData.total_partner_reward}</p>
                   </div>
-               </div>
-               <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
                      <h4>Com Khách tích lũy tháng này</h4>
                      <p className={styles.summaryValue}>${partnerData.accum_client_reward}</p>
@@ -291,7 +216,8 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                         ? partnerData.user_rank.reward_percentage * 100
                         : undefined
                   }
-                  userTotalReward={partnerData.total_client_reward || undefined}
+                  // userTotalReward={partnerData.accum_partner_reward ?? undefined}
+                  userTotalReward={0}
                />
 
                {/* Account Chain Flow */}

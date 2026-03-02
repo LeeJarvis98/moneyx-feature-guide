@@ -384,7 +384,7 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
           <Card shadow="sm" padding="lg" radius="md" withBorder className={classes.summaryCard}>
             <Stack gap="xs">
               <Text size="sm" c="dimmed" fw={500}>
-                Tổng khối lượng (Lô)
+                Tổng khối lượng Lot
               </Text>
               <Text size="xl" fw={700} c="white">
                 {accountSummary.totalLotVolume.toFixed(2)}

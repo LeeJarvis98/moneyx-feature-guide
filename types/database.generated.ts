@@ -121,69 +121,6 @@ export type Database = {
           },
         ]
       }
-      commission_distributions: {
-        Row: {
-          commission_pool: number
-          created_at: string | null
-          period_month: string
-          recipient_amount: number
-          recipient_partner_id: string
-          recipient_type: string
-          remaining_pool: number
-          source_partner_id: string
-          source_total_reward: number
-          source_upline_share_pct: number
-          tradi_fee: number
-          upline_position: number
-          uuid: string
-        }
-        Insert: {
-          commission_pool?: number
-          created_at?: string | null
-          period_month: string
-          recipient_amount?: number
-          recipient_partner_id: string
-          recipient_type: string
-          remaining_pool?: number
-          source_partner_id: string
-          source_total_reward?: number
-          source_upline_share_pct?: number
-          tradi_fee?: number
-          upline_position?: number
-          uuid?: string
-        }
-        Update: {
-          commission_pool?: number
-          created_at?: string | null
-          period_month?: string
-          recipient_amount?: number
-          recipient_partner_id?: string
-          recipient_type?: string
-          remaining_pool?: number
-          source_partner_id?: string
-          source_total_reward?: number
-          source_upline_share_pct?: number
-          tradi_fee?: number
-          upline_position?: number
-          uuid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commission_distributions_recipient_partner_id_fkey"
-            columns: ["recipient_partner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "commission_distributions_source_partner_id_fkey"
-            columns: ["source_partner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       email_otps: {
         Row: {
           created_at: string | null
@@ -298,6 +235,8 @@ export type Database = {
           accum_time_remaining: number
           claim_time_remaining: number
           id: string
+          last_month_client_reward: number
+          last_month_partner_reward: number
           platform: string | null
           total_client_lots: number
           total_client_reward: number
@@ -315,6 +254,8 @@ export type Database = {
           accum_time_remaining?: number
           claim_time_remaining?: number
           id: string
+          last_month_client_reward?: number
+          last_month_partner_reward?: number
           platform?: string | null
           total_client_lots: number
           total_client_reward: number
@@ -332,6 +273,8 @@ export type Database = {
           accum_time_remaining?: number
           claim_time_remaining?: number
           id?: string
+          last_month_client_reward?: number
+          last_month_partner_reward?: number
           platform?: string | null
           total_client_lots?: number
           total_client_reward?: number
@@ -380,6 +323,62 @@ export type Database = {
           upline_share_percentage?: number | null
         }
         Relationships: []
+      }
+      partner_reward_history: {
+        Row: {
+          accum_client_reward: number
+          accum_partner_reward: number
+          created_at: string
+          partner_id: string
+          period_month: string
+          recorded_at: string
+          total_client_lots: number
+          total_client_reward: number
+          total_clients: number
+          total_partner_lots: number
+          total_partner_reward: number
+          total_partners: number
+          uuid: string
+        }
+        Insert: {
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          created_at?: string
+          partner_id: string
+          period_month: string
+          recorded_at?: string
+          total_client_lots?: number
+          total_client_reward?: number
+          total_clients?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          uuid?: string
+        }
+        Update: {
+          accum_client_reward?: number
+          accum_partner_reward?: number
+          created_at?: string
+          partner_id?: string
+          period_month?: string
+          recorded_at?: string
+          total_client_lots?: number
+          total_client_reward?: number
+          total_clients?: number
+          total_partner_lots?: number
+          total_partner_reward?: number
+          total_partners?: number
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_reward_history_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partners: {
         Row: {
@@ -473,25 +472,6 @@ export type Database = {
           account_id?: string | null
         }
         Relationships: []
-      }
-      monthly_referral_earnings: {
-        Row: {
-          direct_earned: number | null
-          indirect_earned: number | null
-          period_month: string | null
-          recipient_partner_id: string | null
-          source_count: number | null
-          total_earned: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commission_distributions_recipient_partner_id_fkey"
-            columns: ["recipient_partner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Functions: {

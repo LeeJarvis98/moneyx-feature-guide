@@ -244,9 +244,7 @@ export default function ChainCommissionBreakdown({
           <Paper p="md" withBorder className={styles.summaryCard}>
             <Stack gap={4}>
               <Text size="sm" c="dimmed">
-                {userRewardPercentage && userTotalReward
-                  ? `${userRewardPercentage}% của $${userTotalReward}`
-                  : 'Phần thưởng từ khách hàng của bạn'}
+                {`${userRewardPercentage}% của $${userTotalReward}`}
               </Text>
               <Text size="xl" fw={700} c="blue">
                 ${fmt(summary.ownKeep)}
