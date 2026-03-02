@@ -390,7 +390,7 @@ export default function HomePage() {
                         const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
                           'SALE': { variant: 'gradient', gradient: { from: 'violet', to: 'pink', deg: 90 }, className: classes.rankBadgeSale },
                           'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
-                          'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.4', deg: 90 }, className: classes.rankBadgeBachKim },
+                          'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.6', deg: 90 }, className: classes.rankBadgeBachKim },
                           'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
                           'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
                           'Đồng': { variant: 'filled', color: 'orange.9', className: classes.rankBadgeDong },

@@ -805,7 +805,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 điều khoản dịch vụ
               </a>{' '}
               và{' '}
-              <a href="#" className={styles.link} target="_blank" rel="noopener noreferrer">
+              <a href="https://drive.google.com/file/d/1WHDQ28C95SOx6MiMbcMzs8FF5S6Sa1IA/view" className={styles.link} target="_blank" rel="noopener noreferrer">
                 chính sách bảo mật
               </a>
             </label>
