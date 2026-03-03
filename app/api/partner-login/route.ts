@@ -234,12 +234,12 @@ export async function POST(request: NextRequest) {
                 total_partners: 0,
                 total_partner_lots: 0,
                 total_partner_reward: 0,
-                total_tradi_com: 0,
-                this_month_tradi_com: 0,
                 accum_client_reward: 0,
                 accum_partner_reward: 0,
                 accum_time_remaining: 0,
                 claim_time_remaining: 0,
+                last_month_client_reward: 0,
+                last_month_partner_reward: 0,
                 total_reward_history: [],
               });
 
@@ -254,6 +254,37 @@ export async function POST(request: NextRequest) {
       } catch (detailError) {
         console.error('[PARTNER-LOGIN] Error checking/creating partner detail:', detailError);
         // Don't fail the login if partner detail creation fails
+      }
+
+      // Trigger account refresh — required before granting dashboard access
+      try {
+        const refreshPartnerId = userIdToUpdate || partnerId;
+        const ngrokRefreshUrl = process.env.NGROK_REFRESH_URL;
+        const ngrokApiKey = process.env.NGROK_API_KEY;
+
+        console.log('[PARTNER-LOGIN] Triggering account refresh for partner:', refreshPartnerId);
+        const refreshResponse = await fetch(`${ngrokRefreshUrl}/api/trigger-refresh/${encodeURIComponent(refreshPartnerId)}`, {
+          method: 'POST',
+          headers: {
+            'X-API-Key': ngrokApiKey || '',
+          },
+        });
+
+        if (!refreshResponse.ok) {
+          console.error('[PARTNER-LOGIN] Account refresh failed with status:', refreshResponse.status);
+          return NextResponse.json(
+            { error: 'Account refresh failed. Please try again later.' },
+            { status: 503 }
+          );
+        }
+
+        console.log('[PARTNER-LOGIN] Account refresh completed successfully');
+      } catch (refreshError) {
+        console.error('[PARTNER-LOGIN] Account refresh request failed:', refreshError);
+        return NextResponse.json(
+          { error: 'Account refresh is unavailable. Please try again later.' },
+          { status: 503 }
+        );
       }
 
       // Return success with platform info
