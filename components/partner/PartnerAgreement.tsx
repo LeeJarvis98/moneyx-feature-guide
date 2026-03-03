@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Gem, Diamond, Star, Award, Medal, Shield } from 'lucide-react';
+import { Gem, Diamond, Star, Award, Medal, Shield, Mail, CheckCircle } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
 
 interface PartnerAgreementProps {
@@ -11,6 +11,7 @@ interface PartnerAgreementProps {
   userId: string;
   isPartner?: boolean;
   onRegistrationSuccess: (rank: string) => void;
+  partnerStatus?: string;
 }
 
 const partnerTiers = [
@@ -21,7 +22,7 @@ const partnerTiers = [
   { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Medal },
 ];
 
-export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess }: PartnerAgreementProps) {
+export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess, partnerStatus }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
@@ -29,6 +30,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [hasClickedTerms, setHasClickedTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   // No referrer check needed - single partner type system
 
@@ -93,7 +95,14 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         }));
       }
       
-      // Trigger registration success callback
+      // Registration requires email confirmation before partner access
+      if (data.requiresEmailConfirmation) {
+        setShowEmailModal(true);
+        // Don't call onRegistrationSuccess yet — wait for email confirmation
+        return;
+      }
+
+      // Fallback: immediate success (should not happen with new flow)
       console.log('[PartnerAgreement] Calling onRegistrationSuccess with rank:', newRank);
       onRegistrationSuccess(newRank);
     } catch (error) {
@@ -209,6 +218,19 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                   </button>
                 </div>
               )}
+              
+              {/* Inactive partner notice */}
+              {isPartner && partnerStatus === 'inactive' && (
+                <div className={styles.inactiveNotice}>
+                  <Mail size={20} className={styles.inactiveNoticeIcon} />
+                  <div>
+                    <p className={styles.inactiveNoticeTitle}>Tài khoản chờ xác nhận</p>
+                    <p className={styles.inactiveNoticeText}>
+                      Vui lòng kiểm tra email và nhấn nút &ldquo;Tôi đã đọc và xác nhận&rdquo; trong thư hợp đồng để kích hoạt tài khoản đối tác.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -292,6 +314,45 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Verification Modal — shown after successful registration */}
+      {showEmailModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.emailModalBody}>
+              <div className={styles.emailModalIcon}>
+                <Mail size={40} />
+              </div>
+              <h2 className={styles.emailModalTitle}>Kiểm tra email của bạn!</h2>
+              <p className={styles.emailModalSubtitle}>
+                Đăng ký đại lý thành công. Chúng tôi đã gửi <strong>Hợp Đồng Đối Tác Tradi</strong> đến email của bạn.
+              </p>
+              <div className={styles.emailModalSteps}>
+                <div className={styles.emailModalStep}>
+                  <span className={styles.emailModalStepNum}>1</span>
+                  <span>Mở email từ VNCLC trong hộp thư của bạn</span>
+                </div>
+                <div className={styles.emailModalStep}>
+                  <span className={styles.emailModalStepNum}>2</span>
+                  <span>Đọc kỹ Hợp Đồng Đối Tác Tradi</span>
+                </div>
+                <div className={styles.emailModalStep}>
+                  <span className={styles.emailModalStepNum}>3</span>
+                  <span>Nhấn nút <strong>&ldquo;Tôi đã đọc và xác nhận&rdquo;</strong> trong email</span>
+                </div>
+                <div className={styles.emailModalStep}>
+                  <span className={styles.emailModalStepNum}>4</span>
+                  <span>Quay lại đây và đăng nhập vào giao diện Đối Tác</span>
+                </div>
+              </div>
+              <div className={styles.emailModalWarning}>
+                <CheckCircle size={16} />
+                <span>Tài khoản sẽ chỉ được kích hoạt sau khi bạn xác nhận trong email.</span>
+              </div>
             </div>
           </div>
         </div>

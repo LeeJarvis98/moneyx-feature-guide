@@ -300,3 +300,51 @@
   border: none;
   cursor: pointer;
 }
+
+/* ─── Inactive Partner Pending Panel ─────────────────────── */
+.inactivePartnerPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 24px;
+  text-align: center;
+  gap: 16px;
+}
+
+.inactivePartnerIcon {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 184, 28, 0.1);
+  border: 2px solid rgba(255, 184, 28, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.inactivePartnerTitle {
+  color: #fff;
+  font-size: 20px;
+  margin: 0;
+}
+
+.inactivePartnerText {
+  color: #aaa;
+  font-size: 14px;
+  max-width: 420px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.inactivePartnerText strong {
+  color: #FFB81C;
+}
+
+.inactivePartnerHint {
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+}

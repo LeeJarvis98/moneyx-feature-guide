@@ -666,3 +666,125 @@
   background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
 }
+
+/* ─── Inactive Partner Notice ─────────────────────────────── */
+.inactiveNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 184, 28, 0.08);
+  border: 1px solid rgba(255, 184, 28, 0.25);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+
+.inactiveNoticeIcon {
+  color: #FFB81C;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.inactiveNoticeTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFB81C;
+  margin: 0 0 4px;
+}
+
+.inactiveNoticeText {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ─── Email Verification Modal ────────────────────────────── */
+.emailModalBody {
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.emailModalIcon {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 184, 28, 0.12);
+  border: 2px solid rgba(255, 184, 28, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #FFB81C;
+}
+
+.emailModalTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.emailModalSubtitle {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.emailModalSubtitle strong {
+  color: #FFB81C;
+}
+
+.emailModalSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.emailModalStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.emailModalStepNum {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background: #FFB81C;
+  color: #000;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emailModalStep span:last-child {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.emailModalStep strong {
+  color: #FFB81C;
+}
+
+.emailModalWarning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 184, 28, 0.06);
+  border: 1px solid rgba(255, 184, 28, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #FFB81C;
+  font-size: 13px;
+}

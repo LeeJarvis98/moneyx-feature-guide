@@ -42,6 +42,7 @@ export default function HomePage() {
   const [loadingPlatforms, setLoadingPlatforms] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
+  const [partnerStatus, setPartnerStatus] = useState<string>('active');
   const theme = useMantineTheme();
 
   // Debug: Log referralId changes
@@ -171,6 +172,21 @@ export default function HomePage() {
             console.log('[HomePage] Setting partner rank:', data.rank);
             setPartnerRank(data.rank);
           }
+          // Track partner activation status
+          const status = data.partnerStatus ?? 'active';
+          setPartnerStatus(status);
+
+          // Show congratulations modal when a newly confirmed partner visits for the first time
+          if (status === 'active') {
+            const congratsKey = `partnerCongratShown_${userId}`;
+            if (!localStorage.getItem(congratsKey)) {
+              const rank = data.rank || localStorage.getItem('partnerRank') || 'Đồng';
+              setRegisteredRank(rank);
+              setShowCongratulations(true);
+              localStorage.setItem(congratsKey, '1');
+            }
+          }
+
           if (data.referralId) {
             console.log('[HomePage] Setting referral ID from API:', data.referralId);
             setReferralId(data.referralId);
@@ -192,8 +208,8 @@ export default function HomePage() {
     }
   };
 
-  // Determine if user is a partner (has partner rank that's not 'None')
-  const isPartner = partnerRank && partnerRank !== 'None';
+  // Determine if user is an active partner (has partner rank that's not 'None' AND email confirmed)
+  const isPartner = partnerRank && partnerRank !== 'None' && partnerStatus !== 'inactive';
 
   // Debug logging for tab visibility
   useEffect(() => {
@@ -369,8 +385,8 @@ export default function HomePage() {
                       Việt Nam Chất Lượng Cao
                     </Title>
                     <Group gap="xs" onClick={(e) => e.stopPropagation()}>
-                      {/* Show rank badge for partners */}
-                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && (() => {
+                      {/* Show rank badge for active partners only */}
+                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && partnerStatus !== 'inactive' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
                           'SALE': Zap,
                           'Kim Cương': Gem,
@@ -418,8 +434,8 @@ export default function HomePage() {
                         );
                       })()}
                       
-                      {/* Show "Chưa là đối tác" badge for non-partners */}
-                      {isUserLoggedIn && partnerRank === 'None' && (
+                      {/* Show "Chưa là đối tác" badge for non-partners and inactive (unconfirmed) partners */}
+                      {isUserLoggedIn && (partnerRank === 'None' || partnerStatus === 'inactive') && (
                         <Badge
                           variant="outline"
                           color="gray"
@@ -440,7 +456,7 @@ export default function HomePage() {
                           gap="xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (partnerRank === 'None') {
+                            if (partnerRank === 'None' || partnerStatus === 'inactive') {
                               handleNavigationChange('features');
                             }
                           }}
@@ -449,7 +465,7 @@ export default function HomePage() {
                             borderRadius: '8px',
                             backgroundColor: 'rgba(255, 184, 28, 0.1)',
                             border: '1px solid rgba(255, 184, 28, 0.3)',
-                            cursor: partnerRank === 'None' ? 'pointer' : 'default',
+                            cursor: (partnerRank === 'None' || partnerStatus === 'inactive') ? 'pointer' : 'default',
                           }}
                         >
                           <Text size="sm" fw={600} c="yellow">
@@ -942,27 +958,44 @@ export default function HomePage() {
                       onPlatformSelect={setSelectedPlatform}
                       userId={loggedInUserId || ''}
                       isPartner={!!isPartner}
+                      partnerStatus={partnerStatus}
                       onRegistrationSuccess={(rank: string) => {
-                        console.log('[HomePage] Partner registration successful, rank:', rank);
-                        // Update partner rank
+                        console.log('[HomePage] Partner registration initiated, waiting for email confirmation. Rank:', rank);
+                        // Update partner rank but don't show congratulations yet
+                        // (congratulations will show after email confirmation on next page load)
                         setPartnerRank(rank);
                         localStorage.setItem('partnerRank', rank);
-                        // Show congratulations modal
-                        setRegisteredRank(rank);
-                        setShowCongratulations(true);
+                        setPartnerStatus('inactive');
                       }}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value="partner">
-                    <PartnerApp
-                      onAsideContentChange={setPartnerAside}
-                      selectedPlatform={selectedPlatform}
-                      onPlatformSelect={setSelectedPlatform}
-                      isAuthenticated={isPartnerAuthenticated}
-                      setIsAuthenticated={setIsPartnerAuthenticated}
-                      partnerRank={partnerRank}
-                      loadingPlatforms={loadingPlatforms}
-                    />
+                    {partnerStatus === 'inactive' ? (
+                      <div className={classes.inactivePartnerPanel}>
+                        <div className={classes.inactivePartnerIcon}>✉️</div>
+                        <h3 className={classes.inactivePartnerTitle}>
+                          Xác nhận email để truy cập
+                        </h3>
+                        <p className={classes.inactivePartnerText}>
+                          Tài khoản đối tác của bạn đang chờ xác nhận. Vui lòng kiểm tra email và nhấn nút
+                          <strong>&nbsp;&ldquo;Tôi đã đọc và xác nhận&rdquo;&nbsp;</strong>
+                          trong thư Hợp Đồng Đối Tác để kích hoạt tài khoản.
+                        </p>
+                        <p className={classes.inactivePartnerHint}>
+                          Sau khi xác nhận, hãy tải lại trang để truy cập giao diện Đối Tác.
+                        </p>
+                      </div>
+                    ) : (
+                      <PartnerApp
+                        onAsideContentChange={setPartnerAside}
+                        selectedPlatform={selectedPlatform}
+                        onPlatformSelect={setSelectedPlatform}
+                        isAuthenticated={isPartnerAuthenticated}
+                        setIsAuthenticated={setIsPartnerAuthenticated}
+                        partnerRank={partnerRank}
+                        loadingPlatforms={loadingPlatforms}
+                      />
+                    )}
                   </Tabs.Panel>
                 </>
               )}

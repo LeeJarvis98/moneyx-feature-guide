@@ -193,6 +193,13 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "licensed_accounts_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       own_referral_id_list: {
@@ -382,27 +389,36 @@ export type Database = {
       }
       partners: {
         Row: {
+          agreement_token: string | null
+          agreement_token_expires_at: string | null
           created_at: string
           id: string
           platform_accounts: Json[]
           platform_ref_links: Json[]
           selected_platform: Json[]
+          status: string
           support_link: string | null
         }
         Insert: {
+          agreement_token?: string | null
+          agreement_token_expires_at?: string | null
           created_at?: string
           id: string
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
+          status?: string
           support_link?: string | null
         }
         Update: {
+          agreement_token?: string | null
+          agreement_token_expires_at?: string | null
           created_at?: string
           id?: string
           platform_accounts?: Json[]
           platform_ref_links?: Json[]
           selected_platform?: Json[]
+          status?: string
           support_link?: string | null
         }
         Relationships: [
