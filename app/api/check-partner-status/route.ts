@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Check if user exists in partners table
     const { data: partner, error: partnerError } = await supabase
       .from('partners')
-      .select('id, status')
+      .select('id, status, congrats_shown, agreement_token_expires_at')
       .eq('id', partnerId)
       .maybeSingle();
 
@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
       rank: userData?.partner_rank || null,
       referralId: referralData?.own_referral_id || null,
       partnerStatus: partner?.status ?? 'active',
+      congratsShown: partner?.congrats_shown ?? false,
+      agreementTokenExpiresAt: partner?.status === 'inactive' ? (partner?.agreement_token_expires_at ?? null) : null,
     });
   } catch (error) {
     console.error('[check-partner-status] Error:', error);

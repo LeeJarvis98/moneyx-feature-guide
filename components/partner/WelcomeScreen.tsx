@@ -1,6 +1,6 @@
 'use client';
 
-import { Crown } from 'lucide-react';
+import { Crown, Info } from 'lucide-react';
 import styles from './WelcomeScreen.module.css';
 
 export default function WelcomeScreen() {
@@ -35,11 +35,7 @@ export default function WelcomeScreen() {
                </div>
             </div>
             <div className={styles.welcomeHint}>
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-               </svg>
+               <Info size={20} />
                <span>Bạn có thể chọn nhiều sàn và chuyển đổi giữa chúng bất cứ lúc nào</span>
             </div>
          </div>

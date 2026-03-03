@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Gem, Diamond, Star, Award, Medal, Shield, Mail, CheckCircle } from 'lucide-react';
+import { Gem, Diamond, Star, Award, Medal, Shield, Mail, CheckCircle, RefreshCw, Clock } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
 
 interface PartnerAgreementProps {
@@ -10,8 +10,9 @@ interface PartnerAgreementProps {
   onPlatformSelect: (platform: string) => void;
   userId: string;
   isPartner?: boolean;
-  onRegistrationSuccess: (rank: string) => void;
+  onRegistrationSuccess: () => void;
   partnerStatus?: string;
+  tokenExpiresAt?: string | null;
 }
 
 const partnerTiers = [
@@ -22,7 +23,7 @@ const partnerTiers = [
   { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Medal },
 ];
 
-export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess, partnerStatus }: PartnerAgreementProps) {
+export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess, partnerStatus, tokenExpiresAt }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
@@ -31,6 +32,12 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
+
+  const isTokenExpired = tokenExpiresAt ? new Date(tokenExpiresAt) < new Date() : false;
 
   // No referrer check needed - single partner type system
 
@@ -46,6 +53,14 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
 
   const handleRegisterAsPartner = async () => {
     if (!canProceed || isRegistering) return;
+
+    // Intercept: user already has a pending inactive partner record
+    if (partnerStatus === 'inactive') {
+      setResendSuccess(false);
+      setResendError(null);
+      setShowPendingModal(true);
+      return;
+    }
 
     setIsRegistering(true);
     setRegistrationError(null);
@@ -70,40 +85,30 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         throw new Error(data.error || 'Failed to register as partner');
       }
 
-      // Get rank from response or use default
-      const newRank = data.rank || 'Đồng';
-      
-      // Store rank and referral ID for page update
-      localStorage.setItem('partnerRank', newRank);
-      
-      // Dispatch custom event for same-window update
-      window.dispatchEvent(new CustomEvent('partnerRankUpdated', { 
-        detail: { rank: newRank } 
-      }));
-      
       // Store and dispatch referral ID if provided
       if (data.referralId) {
         // Store in both sessionStorage and localStorage for persistence
         sessionStorage.setItem('referralId', data.referralId);
         localStorage.setItem('referralId', data.referralId);
         // Dispatch custom event for referral ID update
-        window.dispatchEvent(new CustomEvent('referralIdUpdated', { 
-          detail: { referralId: data.referralId } 
+        window.dispatchEvent(new CustomEvent('referralIdUpdated', {
+          detail: { referralId: data.referralId }
         }));
       }
-      
+
       // Registration requires email confirmation before partner access
       if (data.requiresEmailConfirmation) {
         setShowEmailModal(true);
-        // Don't call onRegistrationSuccess yet — wait for email confirmation
+        // Notify parent that the partner record now exists but is inactive
+        onRegistrationSuccess();
         return;
       }
 
       // Fallback: immediate success (should not happen with new flow)
-      onRegistrationSuccess(newRank);
+      onRegistrationSuccess();
     } catch (error) {
       console.error('[PartnerAgreement] Registration error:', error);
-      
+
       // Check if error is due to timeout
       if (error instanceof Error && error.name === 'AbortError') {
         setRegistrationError('Đăng ký quá lâu. Vui lòng thử lại hoặc kiểm tra kết nối mạng.');
@@ -112,6 +117,26 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       }
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (isResending) return;
+    setIsResending(true);
+    setResendError(null);
+    try {
+      const res = await fetch('/api/resend-agreement-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gửi email thất bại');
+      setResendSuccess(true);
+    } catch (err) {
+      setResendError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -135,7 +160,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       <div className={styles.content}>
         <div className={styles.mainContent}>
           <h1 className={styles.title}>HOA HỒNG ĐỐI TÁC</h1>
-          
+
           <p className={styles.description}>
             Đối tác được hưởng hoa hồng theo 5 cấp độ và chia sẻ phí dịch vụ Tradi khi giới thiệu thành công Bot VNCLC cho user mới.
           </p>
@@ -156,22 +181,22 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                   {partnerTiers.map((tier, index) => {
                     const IconComponent = tier.icon;
                     return (
-                    <div key={index} className={styles.tableRow}>
-                      <div className={styles.tableCell}>
-                        <IconComponent size={18} className={styles.checkmark} />
-                        <span className={styles.tierName}>{tier.name}</span>
+                      <div key={index} className={styles.tableRow}>
+                        <div className={styles.tableCell}>
+                          <IconComponent size={18} className={styles.checkmark} />
+                          <span className={styles.tierName}>{tier.name}</span>
+                        </div>
+                        <div className={styles.tableCell}>
+                          <span className={styles.percentage}>{tier.partner}</span>
+                        </div>
+                        <div className={styles.tableCell}>
+                          <span className={styles.tradiPercentage}>{tier.tradi}</span>
+                        </div>
+                        <div className={styles.tableCell}>
+                          <span className={styles.conditionText}>{tier.condition}</span>
+                        </div>
                       </div>
-                      <div className={styles.tableCell}>
-                        <span className={styles.percentage}>{tier.partner}</span>
-                      </div>
-                      <div className={styles.tableCell}>
-                        <span className={styles.tradiPercentage}>{tier.tradi}</span>
-                      </div>
-                      <div className={styles.tableCell}>
-                        <span className={styles.conditionText}>{tier.condition}</span>
-                      </div>
-                    </div>
-                  );
+                    );
                   })}
                 </div>
               </div>
@@ -214,7 +239,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                   </button>
                 </div>
               )}
-              
+
               {/* Inactive partner notice */}
               {isPartner && partnerStatus === 'inactive' && (
                 <div className={styles.inactiveNotice}>
@@ -236,39 +261,111 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       {showTermsModal && (
         <div className={styles.modalOverlay} onClick={() => setShowTermsModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
               className={styles.modalClose}
               onClick={() => setShowTermsModal(false)}
             >
               ✕
             </button>
-            
-            <div className={styles.termsSection}>
-              <h3 className={styles.termsTitle}>Điều khoản chung</h3>
-              
-              <div className={styles.termsContent}>
-                <h4 className={styles.termsSectionTitle}>ĐỐI TÁC GIỚI THIỆU TRADI:</h4>
-                <ol className={styles.termsList}>
-                  <li>Đối tác giới thiệu là cá nhân/tổ chức sử dụng sản phẩm Bot Trade của Tradi để giới thiệu cho khách hàng khác.</li>
-                  <li>Đối tác được nhận hoa hồng do sàn Forex chi trả theo hoạt động giao dịch của khách hàng do mình giới thiệu.</li>
-                  <li>Đối tác đồng ý thanh toán cho Tradi khoản phí sử dụng công nghệ Bot Trade từ 5%-30% trên hoa hồng sàn nhận được.</li>
-                  <li>Việc thanh toán phí và nhận affiliate được thực hiện thông qua hệ thống website của Tradi.</li>
-                  <li>Tradi không cam kết lợi nhuận, không can thiệp và không chịu trách nhiệm kết quả giao dịch của khách hàng.</li>
-                  <li>Đối tác tự chịu trách nhiệm về nội dung giới thiệu, cam kết không quảng cáo sai sự thật hoặc gây hiểu nhầm.</li>
-                  <li> Mọi thông tin khách hàng, hoa hồng, dữ liệu hệ thống đều được bảo mật và không chia sẻ cho bên thứ ba.</li>
-                  <li>Đối tác không được sao chép, bán lại hoặc chuyển giao sản phẩm Bot Trade khi chưa có sự chấp thuận của Tradi.</li>
-                  <li>Tradi có quyền tạm ngưng hoặc chấm dứt hợp tác nếu đối tác vi phạm điều khoản.</li>
-                  <li> Việc tiếp tục sử dụng dịch vụ được xem là đối tác đã đồng ý toàn bộ điều khoản này.</li>
-                </ol>
 
-                <h4 className={styles.termsSectionTitle}>HỆ THỐNG HOA HỔNG:</h4>
-                <ol className={styles.termsList}>
-                  <li>Đối tác bắt đầu từ cấp độ Đồng (70%), chia sẻ hoa hồng cho người giới thiệu.</li>
-                  <li>Cấp độ tăng dần theo tổng khối lượng giao dịch tích lũy của khách hàng giới thiệu, tối đa lên đến Kim Cương (90%).</li>
-                  <li>Hoa hồng được tính và chi trả vào ngày 1 hàng tháng.</li>
-                  <li>Công thức chia hoa hồng: 5% cho Tradi, 50% cho người giới thiệu trực tiếp, 50% còn lại chia đều cho upline gián tiếp.</li>
-                  <li>Cấp bậc tăng dần dựa vào tổng khối lượng giao dịch tích lũy.</li>
-                </ol>
+            <div className={styles.termsSection}>
+              {/* Modal Header */}
+              <div className={styles.termsHeader}>
+                <h3 className={styles.termsTitle}>HỢP ĐỒNG ĐỐI TÁC TRADI</h3>
+                <p className={styles.termsSubtitle}>Vui lòng đọc kỹ trước khi xác nhận tham gia</p>
+              </div>
+
+              <div className={styles.termsContent}>
+
+                {/* Section I */}
+                <div className={styles.termsBlock}>
+                  <h4 className={styles.termsSectionTitle}>I. CÁC BÊN KÝ KẾT</h4>
+                  <div className={styles.termsHighlightBox}>
+                    <p className={styles.termsHighlightItem}>
+                      <strong className={styles.termsStrong}>BÊN A (CÔNG TY TRADI):</strong> Công ty cung cấp nền tảng Bot giao dịch VNCLC và hệ thống quản lý đối tác.
+                    </p>
+                    <p className={`${styles.termsHighlightItem} ${styles.termsHighlightItemLast}`}>
+                      <strong className={styles.termsStrong}>BÊN B (ĐỐI TÁC):</strong> Cá nhân hoặc tổ chức đăng ký tham gia chương trình đại lý nhằm mục đích giới thiệu dịch vụ và nhận hoa hồng.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section II */}
+                <div className={styles.termsBlock}>
+                  <h4 className={styles.termsSectionTitle}>II. NGHĨA VỤ VÀ QUY ĐỊNH ĐỐI TÁC</h4>
+                  <ol className={styles.termsList}>
+                    <li>Mọi thông tin liên quan đến khách hàng và tài khoản giao dịch phải được <strong className={styles.termsStrong}>bảo mật tuyệt đối</strong>. Không được tiết lộ cho bên thứ ba dưới bất kỳ hình thức nào.</li>
+                    <li>Mọi hành vi vi phạm bảo mật gây thiệt hại cho Tradi hoặc khách hàng sẽ phải <strong className={styles.termsStrong}>hoàn toàn chịu trách nhiệm pháp lý</strong> theo quy định của pháp luật hiện hành.</li>
+                    <li>Bot VNCLC là sản phẩm <strong className={styles.termsStrong}>miễn phí</strong>. Đối tác chỉ được phép chia sẻ Link Referral của cộng đồng. <strong className={styles.termsDanger}>Nghiêm cấm mua bán</strong> Bot hoặc tài khoản dưới mọi hình thức.</li>
+                    <li>Đối tác phải đạt cấp <strong className={styles.termsStrong}>Bạc trở lên</strong> mới có thể sử dụng tính năng Partner System tìm kiếm nhanh trên hệ thống.</li>
+                    <li>Đối tác có trách nhiệm cung cấp <strong className={styles.termsStrong}>Link Referral sàn giao dịch</strong> và thông tin liên hệ hợp lệ để Tradi thiết lập hệ thống hoa hồng trên website.</li>
+                    <li>Cấp bậc đối tác được xác định dựa trên <strong className={styles.termsStrong}>vị trí trong chuỗi giới thiệu</strong> và <strong className={styles.termsStrong}>tổng khối lượng giao dịch</strong> tích lũy của toàn bộ mạng lưới.</li>
+                    <li>Đối tác cam kết không thực hiện các hành vi gian lận, tạo tài khoản ảo hoặc bất kỳ hành vi nào nhằm trục lợi bất hợp pháp từ hệ thống hoa hồng.</li>
+                  </ol>
+                </div>
+
+                {/* Section III */}
+                <div className={styles.termsBlock}>
+                  <h4 className={styles.termsSectionTitle}>III. HỆ THỐNG HOA HỒNG</h4>
+                  <ol className={styles.termsList}>
+                    <li>Đối tác bắt đầu từ cấp độ <strong className={styles.termsGold}>Đồng (70%)</strong> và chia sẻ phần hoa hồng còn lại theo cấu trúc upline.</li>
+                    <li>Hoa hồng được tính toán và <strong className={styles.termsStrong}>chi trả vào ngày 1 hàng tháng</strong> cho kỳ giao dịch của tháng trước.</li>
+                    <li>Công thức phân chia: <strong className={styles.termsStrong}>5%</strong> cho Tradi · <strong className={styles.termsStrong}>50%</strong> cho người giới thiệu trực tiếp · <strong className={styles.termsStrong}>50%</strong> còn lại chia đều cho upline gián tiếp trong chuỗi.</li>
+                    <li>Cấp bậc đối tác tăng dần dựa vào tổng khối lượng giao dịch tích lũy của toàn mạng lưới bên dưới.</li>
+                  </ol>
+
+                  {/* Rank table */}
+                  <div className={styles.termsRankTable}>
+                    <div className={styles.termsRankHeader}>
+                      <span>Cấp Độ</span>
+                      <span>Đối Tác</span>
+                      <span>Tradi</span>
+                      <span>Điều Kiện</span>
+                    </div>
+                    <div className={styles.termsRankRow}>
+                      <span className={styles.rankDiamond}>💎 Kim Cương</span>
+                      <span>90%</span><span className={styles.rankTradi}>10%</span><span>2.000 Lot</span>
+                    </div>
+                    <div className={`${styles.termsRankRow} ${styles.termsRankRowAlt}`}>
+                      <span className={styles.rankPlatinum}>⭐ Bạch Kim</span>
+                      <span>85%</span><span className={styles.rankTradi}>15%</span><span>1.000 Lot</span>
+                    </div>
+                    <div className={styles.termsRankRow}>
+                      <span className={styles.rankGold}>🏆 Vàng</span>
+                      <span>80%</span><span className={styles.rankTradi}>20%</span><span>500 Lot</span>
+                    </div>
+                    <div className={`${styles.termsRankRow} ${styles.termsRankRowAlt}`}>
+                      <span className={styles.rankSilver}>🥈 Bạc</span>
+                      <span>75%</span><span className={styles.rankTradi}>25%</span><span>100 Lot</span>
+                    </div>
+                    <div className={styles.termsRankRow}>
+                      <span className={styles.rankBronze}>🔰 Đồng</span>
+                      <span>70%</span><span className={styles.rankTradi}>30%</span><span>Hoàn thành đăng ký</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section IV */}
+                <div className={styles.termsBlock}>
+                  <h4 className={styles.termsSectionTitle}>IV. ĐIỀU KHOẢN CHẤM DỨT HỢP ĐỒNG</h4>
+                  <ol className={styles.termsList}>
+                    <li>Hợp đồng có thể bị chấm dứt nếu đối tác vi phạm bất kỳ điều khoản nào được quy định trong tài liệu này.</li>
+                    <li>Tradi có quyền thu hồi quyền truy cập hệ thống và dừng chi trả hoa hồng ngay lập tức khi phát hiện vi phạm.</li>
+                    <li>Đối tác có thể tự chấm dứt hợp đồng bằng cách thông báo bằng văn bản cho Tradi trước <strong className={styles.termsStrong}>30 ngày</strong>.</li>
+                    <li>Sau khi chấm dứt hợp đồng, hoa hồng tích lũy hợp lệ vẫn được chi trả theo lịch thông thường.</li>
+                  </ol>
+                </div>
+
+                {/* Section V */}
+                <div className={styles.termsBlock}>
+                  <h4 className={styles.termsSectionTitle}>V. ĐIỀU KHOẢN CHUNG</h4>
+                  <ol className={styles.termsList}>
+                    <li>Hợp đồng này có hiệu lực kể từ khi đối tác xác nhận đồng ý bằng cách nhấn nút bên dưới.</li>
+                    <li>Tradi có quyền cập nhật các điều khoản và sẽ thông báo đến đối tác qua email đăng ký ít nhất <strong className={styles.termsStrong}>7 ngày</strong> trước khi có hiệu lực.</li>
+                    <li>Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng; nếu không đạt được, sẽ theo quy định pháp luật Việt Nam.</li>
+                  </ol>
+                </div>
+
               </div>
 
               {/* Checkboxes - only shown for non-partners */}
@@ -320,10 +417,80 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         </div>
       )}
 
-      {/* Email Verification Modal — shown after successful registration */}
-      {showEmailModal && (
+      {/* Pending Confirmation Modal */}
+      {showPendingModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setShowPendingModal(false)}>&#x2715;</button>
+            <div className={styles.pendingModalBody}>
+              <div className={`${styles.pendingModalIcon} ${isTokenExpired ? styles.pendingModalIconExpired : ''}`}>
+                {isTokenExpired ? <Clock size={36} /> : <Mail size={36} />}
+              </div>
+
+              {!isTokenExpired ? (
+                <>
+                  <h2 className={styles.pendingModalTitle}>Xác nhận email của bạn</h2>
+                  <p className={styles.pendingModalSubtitle}>
+                    Bạn đã đăng ký đại lý trước đó. Vui lòng kiểm tra hộp thư và nhấn nút
+                    <strong> &ldquo;Tôi đã đọc và xác nhận&rdquo; </strong>
+                    trong email Hợp Đồng Đối Tác Tradi để kích hoạt tài khoản.
+                  </p>
+                  <div className={styles.pendingSteps}>
+                    <div className={styles.pendingStep}>
+                      <span className={styles.pendingStepNum}>1</span>
+                      <span>Mở email từ VNCLC trong hộp thư của bạn</span>
+                    </div>
+                    <div className={styles.pendingStep}>
+                      <span className={styles.pendingStepNum}>2</span>
+                      <span>Nhấn nút <strong>&ldquo;Tôi đã đọc và xác nhận&rdquo;</strong> trong email</span>
+                    </div>
+                    <div className={styles.pendingStep}>
+                      <span className={styles.pendingStepNum}>3</span>
+                      <span>Quay lại đây và tải lại trang</span>
+                    </div>
+                  </div>
+                  <div className={styles.pendingHint}>
+                    <Clock size={14} />
+                    <span>Liên kết xác nhận hết hạn sau <strong>72 giờ</strong> kể từ khi nhận được email.</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className={styles.pendingModalTitle}>Liên kết đã hết hạn</h2>
+                  <p className={styles.pendingModalSubtitle}>
+                    Liên kết xác nhận hợp đồng của bạn đã quá 72 giờ.
+                    Nhấn nút bên dưới để nhận lại email xác nhận mới.
+                  </p>
+                  {!resendSuccess ? (
+                    <>
+                      {resendError && (
+                        <div className={styles.pendingResendError}>{resendError}</div>
+                      )}
+                      <button
+                        className={styles.pendingResendButton}
+                        onClick={handleResendEmail}
+                        disabled={isResending}
+                      >
+                        <RefreshCw size={16} className={isResending ? styles.spinning : ''} />
+                        {isResending ? 'Đang gửi...' : 'Gửi lại email xác nhận'}
+                      </button>
+                    </>
+                  ) : (
+                    <div className={styles.pendingResendSuccess}>
+                      <CheckCircle size={20} />
+                      <span>Email đã được gửi! Vui lòng kiểm tra hộp thư và nhấn xác nhận trong vòng 72 giờ.</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showEmailModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowEmailModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setShowEmailModal(false)}>&#x2715;</button>
             <div className={styles.emailModalBody}>
               <div className={styles.emailModalIcon}>
                 <Mail size={40} />

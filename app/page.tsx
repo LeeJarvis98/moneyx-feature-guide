@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap } from 'lucide-react';
@@ -43,6 +43,9 @@ export default function HomePage() {
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
   const [partnerStatus, setPartnerStatus] = useState<string>('active');
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<string | null>(null);
+  // Invocation counter: lets us discard results from stale in-flight checkPartnerRank calls
+  const checkPartnerRankCallId = useRef(0);
   const theme = useMantineTheme();
 
   // Fetch Internet time and calculate days to month end
@@ -88,20 +91,6 @@ export default function HomePage() {
       checkPartnerRank(userId);
     }
 
-    // Listen for localStorage changes for rank updates (different windows)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'partnerRank' && e.newValue) {
-        setPartnerRank(e.newValue);
-      }
-    };
-
-    // Listen for custom event for same-window updates
-    const handleRankUpdate = (e: CustomEvent) => {
-      if (e.detail && e.detail.rank) {
-        setPartnerRank(e.detail.rank);
-      }
-    };
-
     // Listen for referral ID update
     const handleReferralIdUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.referralId) {
@@ -111,24 +100,20 @@ export default function HomePage() {
       }
     };
 
-    // Also check rank on focus (for same-window updates)
+    // Re-check rank from the server whenever the tab regains focus.
+    // This ensures that confirming an email in another tab is reflected immediately
+    // without the user having to navigate. We read userId fresh from storage so
+    // the stale closure is not an issue.
     const handleFocus = () => {
-      const rank = localStorage.getItem('partnerRank');
-      if (rank) {
-        setPartnerRank(rank);
+      const uid = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (uid) {
+        checkPartnerRank(uid);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
     window.addEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
     window.addEventListener('focus', handleFocus);
 
-    // Check rank and referralId immediately in case they were just set
-    const currentRank = localStorage.getItem('partnerRank');
-    if (currentRank) {
-      setPartnerRank(currentRank);
-    }
     const currentReferralId = localStorage.getItem('referralId') || sessionStorage.getItem('referralId');
     if (currentReferralId) {
       setReferralId(currentReferralId);
@@ -138,8 +123,6 @@ export default function HomePage() {
     }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('partnerRankUpdated', handleRankUpdate as EventListener);
       window.removeEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
       window.removeEventListener('focus', handleFocus);
     };
@@ -147,6 +130,9 @@ export default function HomePage() {
 
   // Function to check partner rank and partner type
   const checkPartnerRank = async (userId: string) => {
+    // Stamp this invocation. If a newer call starts before this one resolves,
+    // the result of this call will be silently discarded to prevent stale writes.
+    const callId = ++checkPartnerRankCallId.current;
     try {
       const response = await fetch('/api/check-partner-status', {
         method: 'POST',
@@ -154,8 +140,15 @@ export default function HomePage() {
         body: JSON.stringify({ partnerId: userId }),
       });
 
+      // Discard if a newer invocation has already started
+      if (callId !== checkPartnerRankCallId.current) return;
+
       if (response.ok) {
         const data = await response.json();
+
+        // Discard stale result once more after the async json() parse
+        if (callId !== checkPartnerRankCallId.current) return;
+
         if (data.isPartner) {
           if (data.rank) {
             setPartnerRank(data.rank);
@@ -163,16 +156,13 @@ export default function HomePage() {
           // Track partner activation status
           const status = data.partnerStatus ?? 'active';
           setPartnerStatus(status);
+          setTokenExpiresAt(data.agreementTokenExpiresAt ?? null);
 
           // Show congratulations modal when a newly confirmed partner visits for the first time
-          if (status === 'active') {
-            const congratsKey = `partnerCongratShown_${userId}`;
-            if (!localStorage.getItem(congratsKey)) {
-              const rank = data.rank || localStorage.getItem('partnerRank') || 'Đồng';
-              setRegisteredRank(rank);
-              setShowCongratulations(true);
-              localStorage.setItem(congratsKey, '1');
-            }
+          if (status === 'active' && !data.congratsShown) {
+            const rank = data.rank || localStorage.getItem('partnerRank') || 'Đồng';
+            setRegisteredRank(rank);
+            setShowCongratulations(true);
           }
 
           if (data.referralId) {
@@ -930,11 +920,11 @@ export default function HomePage() {
                       userId={loggedInUserId || ''}
                       isPartner={!!isPartner}
                       partnerStatus={partnerStatus}
-                      onRegistrationSuccess={(rank: string) => {
-                        // Update partner rank but don't show congratulations yet
-                        // (congratulations will show after email confirmation on next page load)
-                        setPartnerRank(rank);
-                        localStorage.setItem('partnerRank', rank);
+                      tokenExpiresAt={tokenExpiresAt}
+                      onRegistrationSuccess={() => {
+                        // Rank is no longer assigned at registration — it is assigned only
+                        // when the partner confirms the agreement email. Just mark the
+                        // account as pending so the UI shows the correct inactive state.
                         setPartnerStatus('inactive');
                       }}
                     />
@@ -1129,6 +1119,14 @@ export default function HomePage() {
           isOpen={showCongratulations}
           onClose={() => {
             setShowCongratulations(false);
+            // Mark as seen in the database
+            if (loggedInUserId) {
+              fetch('/api/mark-congrats-shown', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ partnerId: loggedInUserId }),
+              }).catch(() => {}); // fire-and-forget
+            }
             // Switch to partner tab after closing modal
             setActiveTab('partner');
             // Refresh partner data

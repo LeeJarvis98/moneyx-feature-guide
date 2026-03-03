@@ -298,41 +298,174 @@
   height: 100%;
 }
 
-.termsTitle {
-  font-size: 1.15rem;
-  font-weight: bold;
-  color: #FFD700;
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+/* ─── Terms Modal Header ─────────────────────────────── */
+.termsHeader {
   text-align: center;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 184, 28, 0.3);
+}
+
+.termsTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #FFB81C;
+  margin: 0 0 5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.termsSubtitle {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
 }
 
 .termsContent {
   flex: 1;
   overflow: visible;
   padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ─── Terms Sections ────────────────────────────────── */
+.termsBlock {
+  margin-bottom: 20px;
 }
 
 .termsSectionTitle {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #FFD700;
-  margin-top: 0.75rem;
-  margin-bottom: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #FFB81C;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 184, 28, 0.15);
+}
+
+/* Left-bordered highlight box (Bên Ký Kết) */
+.termsHighlightBox {
+  background: rgba(255, 184, 28, 0.05);
+  border-left: 3px solid #FFB81C;
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+}
+
+.termsHighlightItem {
+  margin: 0 0 8px;
+  color: #ccc;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.termsHighlightItemLast {
+  margin-bottom: 0;
+}
+
+.termsStrong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.termsDanger {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.termsGold {
+  color: #FFB81C;
+  font-weight: 600;
 }
 
 .termsList {
   list-style: decimal;
-  padding-left: 1.5rem;
-  color: #e0e0e0;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
+  padding-left: 1.4rem;
+  color: #ccc;
+  line-height: 1.8;
+  margin: 0 0 12px;
 }
 
 .termsList li {
-  margin-bottom: 0.35rem;
-  font-size: 0.9rem;
+  margin-bottom: 2px;
+  font-size: 0.875rem;
 }
+
+/* ─── Rank Table ─────────────────────────────────────── */
+.termsRankTable {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 184, 28, 0.15);
+  font-size: 0.825rem;
+}
+
+.termsRankHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  background: rgba(255, 184, 28, 0.15);
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255, 184, 28, 0.3);
+}
+
+.termsRankHeader span {
+  color: #FFB81C;
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.termsRankHeader span:first-child {
+  text-align: left;
+}
+
+.termsRankRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease;
+}
+
+.termsRankRow:last-child {
+  border-bottom: none;
+}
+
+.termsRankRow:hover {
+  background: rgba(255, 184, 28, 0.06);
+}
+
+.termsRankRowAlt {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.termsRankRow span {
+  color: #e0e0e0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.termsRankRow span:first-child {
+  justify-content: flex-start;
+  font-weight: 500;
+}
+
+.rankTradi {
+  color: #888 !important;
+  font-weight: 500 !important;
+}
+
+.rankDiamond  { color: #a78bfa !important; }
+.rankPlatinum { color: #e2e8f0 !important; }
+.rankGold     { color: #fbbf24 !important; }
+.rankSilver   { color: #94a3b8 !important; }
+.rankBronze   { color: #b45309 !important; }
 
 .subItem {
   list-style-type: none;
@@ -700,8 +833,48 @@
 }
 
 /* ─── Email Verification Modal ────────────────────────────── */
+.emailModalContent {
+  position: relative;
+  background: rgba(20, 20, 20, 0.97);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid rgba(255, 184, 28, 0.25);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.emailModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 0;
+}
+
+.emailModalCloseBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #aaa;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.emailModalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
 .emailModalBody {
-  padding: 12px 8px;
+  padding: 8px 24px 24px;
   text-align: center;
 }
 
@@ -787,4 +960,153 @@
   padding: 12px 14px;
   color: #FFB81C;
   font-size: 13px;
+}
+
+/* ─── Pending Confirmation Modal ────────────────────────────────── */
+.pendingModalBody {
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.pendingModalIcon {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 184, 28, 0.12);
+  border: 2px solid rgba(255, 184, 28, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #FFB81C;
+}
+
+.pendingModalIconExpired {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.pendingModalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.pendingModalSubtitle {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.pendingModalSubtitle strong {
+  color: #FFB81C;
+}
+
+.pendingSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.pendingStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.pendingStepNum {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: #FFB81C;
+  color: #000;
+  font-weight: 700;
+  font-size: 11px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pendingHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 184, 28, 0.06);
+  border: 1px solid rgba(255, 184, 28, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #FFB81C;
+  font-size: 12px;
+}
+
+.pendingResendButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #FFB81C 0%, #f59e0b 100%);
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 184, 28, 0.4);
+}
+
+.pendingResendButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 184, 28, 0.6);
+}
+
+.pendingResendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pendingResendError {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.pendingResendSuccess {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  color: #86efac;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
 }

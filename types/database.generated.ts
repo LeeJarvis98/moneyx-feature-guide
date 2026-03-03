@@ -391,6 +391,7 @@ export type Database = {
         Row: {
           agreement_token: string | null
           agreement_token_expires_at: string | null
+          congrats_shown: boolean
           created_at: string
           id: string
           platform_accounts: Json[]
@@ -402,6 +403,7 @@ export type Database = {
         Insert: {
           agreement_token?: string | null
           agreement_token_expires_at?: string | null
+          congrats_shown?: boolean
           created_at?: string
           id: string
           platform_accounts?: Json[]
@@ -413,6 +415,7 @@ export type Database = {
         Update: {
           agreement_token?: string | null
           agreement_token_expires_at?: string | null
+          congrats_shown?: boolean
           created_at?: string
           id?: string
           platform_accounts?: Json[]
