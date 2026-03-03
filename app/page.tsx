@@ -45,11 +45,6 @@ export default function HomePage() {
   const [partnerStatus, setPartnerStatus] = useState<string>('active');
   const theme = useMantineTheme();
 
-  // Debug: Log referralId changes
-  useEffect(() => {
-    console.log('[HomePage] ReferralId state changed:', referralId);
-  }, [referralId]);
-
   // Fetch Internet time and calculate days to month end
   useEffect(() => {
     const fetchInternetTime = async () => {
@@ -110,7 +105,6 @@ export default function HomePage() {
     // Listen for referral ID update
     const handleReferralIdUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.referralId) {
-        console.log('[HomePage] Received referralIdUpdated event:', e.detail.referralId);
         setReferralId(e.detail.referralId);
         sessionStorage.setItem('referralId', e.detail.referralId);
         localStorage.setItem('referralId', e.detail.referralId);
@@ -137,7 +131,6 @@ export default function HomePage() {
     }
     const currentReferralId = localStorage.getItem('referralId') || sessionStorage.getItem('referralId');
     if (currentReferralId) {
-      console.log('[HomePage] Found referralId in storage:', currentReferralId);
       setReferralId(currentReferralId);
       // Ensure it's in both storages
       localStorage.setItem('referralId', currentReferralId);
@@ -154,7 +147,6 @@ export default function HomePage() {
 
   // Function to check partner rank and partner type
   const checkPartnerRank = async (userId: string) => {
-    console.log('[HomePage] Checking partner rank for userId:', userId);
     try {
       const response = await fetch('/api/check-partner-status', {
         method: 'POST',
@@ -162,14 +154,10 @@ export default function HomePage() {
         body: JSON.stringify({ partnerId: userId }),
       });
 
-      console.log('[HomePage] Partner status response:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('[HomePage] Partner status data:', data);
         if (data.isPartner) {
           if (data.rank) {
-            console.log('[HomePage] Setting partner rank:', data.rank);
             setPartnerRank(data.rank);
           }
           // Track partner activation status
@@ -188,15 +176,11 @@ export default function HomePage() {
           }
 
           if (data.referralId) {
-            console.log('[HomePage] Setting referral ID from API:', data.referralId);
             setReferralId(data.referralId);
             sessionStorage.setItem('referralId', data.referralId);
             localStorage.setItem('referralId', data.referralId);
-          } else {
-            console.log('[HomePage] No referral ID returned from API, keeping existing value');
           }
         } else {
-          console.log('[HomePage] User is not a partner, setting rank to None');
           setPartnerRank('None');
           setReferralId('');
           sessionStorage.removeItem('referralId');
@@ -211,17 +195,6 @@ export default function HomePage() {
   // Determine if user is an active partner (has partner rank that's not 'None' AND email confirmed)
   const isPartner = partnerRank && partnerRank !== 'None' && partnerStatus !== 'inactive';
 
-  // Debug logging for tab visibility
-  useEffect(() => {
-    console.log('[HomePage] Tab visibility check:', {
-      partnerRank,
-      isPartner,
-      isUserLoggedIn,
-      navigationSection,
-      activeTab
-    });
-  }, [partnerRank, isPartner, isUserLoggedIn, navigationSection, activeTab]);
-
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
     setNavigationSection(value as NavigationSection);
@@ -230,7 +203,6 @@ export default function HomePage() {
       // Show partner tab first for existing partners, agreement for non-partners
       setActiveTab(isPartner ? 'partner' : 'agreement');
       // Clear partner authentication when clicking "Cổng đối tác"
-      console.log('[HomePage] Navigating to features, clearing partner session');
       setIsPartnerAuthenticated(false);
       // Clear partner session using exnessApi
       exnessApi.clearToken();
@@ -238,7 +210,6 @@ export default function HomePage() {
         sessionStorage.removeItem('partnerId');
         sessionStorage.removeItem('platformToken');
       }
-      console.log('[HomePage] Partner session cleared');
       // Refresh partner data when navigating to features
       if (loggedInUserId) {
         checkPartnerRank(loggedInUserId);
@@ -960,7 +931,6 @@ export default function HomePage() {
                       isPartner={!!isPartner}
                       partnerStatus={partnerStatus}
                       onRegistrationSuccess={(rank: string) => {
-                        console.log('[HomePage] Partner registration initiated, waiting for email confirmation. Rank:', rank);
                         // Update partner rank but don't show congratulations yet
                         // (congratulations will show after email confirmation on next page load)
                         setPartnerRank(rank);
@@ -1158,7 +1128,6 @@ export default function HomePage() {
           rank={registeredRank}
           isOpen={showCongratulations}
           onClose={() => {
-            console.log('[HomePage] Closing congratulations modal');
             setShowCongratulations(false);
             // Switch to partner tab after closing modal
             setActiveTab('partner');
@@ -1168,7 +1137,6 @@ export default function HomePage() {
             }
           }}
           onNavigateToLogin={() => {
-            console.log('[HomePage] Navigate to login called from modal');
             // This is called when user clicks continue on stage 1
             // We don't navigate yet, just move to stage 2 of the modal
           }}

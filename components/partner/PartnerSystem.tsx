@@ -21,29 +21,20 @@ const buildPartnerTree = async (commissionData: any[], currentUserId: string) =>
       return [];
    }
 
-   console.log('[PartnerSystem] buildPartnerTree called with currentUserId:', currentUserId);
-   console.log('[PartnerSystem] Commission data:', commissionData);
-
    // Get all partner IDs
    const partnerIds = commissionData.map(row => row.source_partner_id);
-   console.log('[PartnerSystem] Partner IDs to fetch:', partnerIds);
    
    // Fetch referral chains for all partners to determine parent relationships
    const parentMap = new Map<string, string>(); // partnerId -> parentId
    
    for (const partnerId of partnerIds) {
       try {
-         console.log(`[PartnerSystem] Fetching chain for ${partnerId}...`);
          const response = await fetch(`/api/referral-chain?id=${partnerId}`);
          if (response.ok) {
             const data = await response.json();
-            console.log(`[PartnerSystem] Chain data for ${partnerId}:`, data);
             // The direct parent is the one who referred this partner
             if (data.directReferrerId) {
-               console.log(`[PartnerSystem] Setting parent of ${partnerId} to ${data.directReferrerId}`);
                parentMap.set(partnerId, data.directReferrerId);
-            } else {
-               console.log(`[PartnerSystem] No directReferrerId for ${partnerId}, will use fallback`);
             }
          } else {
             console.error(`[PartnerSystem] Failed to fetch chain for ${partnerId}, status:`, response.status);
@@ -53,15 +44,11 @@ const buildPartnerTree = async (commissionData: any[], currentUserId: string) =>
       }
    }
 
-   console.log('[PartnerSystem] Final parent map:', Object.fromEntries(parentMap));
-
    // Map commission data with proper parent relationships
    const result = commissionData.map((row: any) => ({
       ...row,
       parentUserId: parentMap.get(row.source_partner_id) || currentUserId,
    }));
-   
-   console.log('[PartnerSystem] Partner tree result:', result.map((r: any) => ({ id: r.source_partner_id, parent: r.parentUserId })));
    
    return result;
 };

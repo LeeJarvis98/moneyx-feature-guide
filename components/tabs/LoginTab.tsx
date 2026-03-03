@@ -61,7 +61,6 @@ export function LoginTab({ onLoginSuccess }: LoginTabProps) {
         // Store referral ID from the API response (user's referral_id from users table)
         if (data.referralId) {
           sessionStorage.setItem('referralId', data.referralId);
-          console.log('[LoginTab] Stored referral ID from users table:', data.referralId);
         }
         
         // Store partner platform data if available

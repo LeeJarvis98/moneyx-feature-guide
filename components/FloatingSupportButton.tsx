@@ -22,9 +22,8 @@ export default function FloatingSupportButton() {
           const data = JSON.parse(partnerPlatformData);
           const newSupportLink = data.supportLink || null;
           
-          // Only update and log if the support link has changed
+          // Only update if the support link has changed
           if (newSupportLink !== lastSupportLinkRef.current) {
-            console.log('[FloatingSupportButton] Partner support link changed:', newSupportLink);
             lastSupportLinkRef.current = newSupportLink;
             setPartnerSupportLink(newSupportLink);
           }

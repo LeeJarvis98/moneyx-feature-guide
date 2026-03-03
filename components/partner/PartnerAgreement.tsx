@@ -70,8 +70,6 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         throw new Error(data.error || 'Failed to register as partner');
       }
 
-      console.log('[PartnerAgreement] Registration successful:', data);
-      
       // Get rank from response or use default
       const newRank = data.rank || 'Đồng';
       
@@ -85,7 +83,6 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       
       // Store and dispatch referral ID if provided
       if (data.referralId) {
-        console.log('[PartnerAgreement] Setting referral ID:', data.referralId);
         // Store in both sessionStorage and localStorage for persistence
         sessionStorage.setItem('referralId', data.referralId);
         localStorage.setItem('referralId', data.referralId);
@@ -103,7 +100,6 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       }
 
       // Fallback: immediate success (should not happen with new flow)
-      console.log('[PartnerAgreement] Calling onRegistrationSuccess with rank:', newRank);
       onRegistrationSuccess(newRank);
     } catch (error) {
       console.error('[PartnerAgreement] Registration error:', error);
@@ -248,22 +244,27 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
             </button>
             
             <div className={styles.termsSection}>
-              <h3 className={styles.termsTitle}>Điều khoản hợp tác & bảo mật</h3>
+              <h3 className={styles.termsTitle}>Điều khoản chung</h3>
               
               <div className={styles.termsContent}>
-                <h4 className={styles.termsSectionTitle}>ĐỐI TÁC:</h4>
+                <h4 className={styles.termsSectionTitle}>ĐỐI TÁC GIỚI THIỆU TRADI:</h4>
                 <ol className={styles.termsList}>
-                  <li>Mọi thông tin liên quan đến khách hàng, tài khoản giao dịch đều được bảo mật tuyệt đối.</li>
-                  <li>Mọi hành vi vi phạm bảo mật gây thiệt hại sẽ hoàn toàn chịu trách nhiệm pháp lý.</li>
-                  <li>Bot VNCLC là Bot miễn phí, chỉ được chia sẻ Link Ref công đồng, không MUA - BÁN.</li>
-                  <li>Đối tác phải đạt cấp Bạc trở lên mới có thể sử dụng Partner System tìm nhanh dưới.</li>
-                  <li>Đối tác cung cấp Link Ref sàn và thông tin liên hệ để Tradi tạo hệ thống trên website.</li>
-                  <li>Cấp bậc được xác định dựa trên vị trí trong chuỗi giới thiệu và tổng khối lượng giao dịch.</li>
+                  <li>Đối tác giới thiệu là cá nhân/tổ chức sử dụng sản phẩm Bot Trade của Tradi để giới thiệu cho khách hàng khác.</li>
+                  <li>Đối tác được nhận hoa hồng do sàn Forex chi trả theo hoạt động giao dịch của khách hàng do mình giới thiệu.</li>
+                  <li>Đối tác đồng ý thanh toán cho Tradi khoản phí sử dụng công nghệ Bot Trade từ 5%-30% trên hoa hồng sàn nhận được.</li>
+                  <li>Việc thanh toán phí và nhận affiliate được thực hiện thông qua hệ thống website của Tradi.</li>
+                  <li>Tradi không cam kết lợi nhuận, không can thiệp và không chịu trách nhiệm kết quả giao dịch của khách hàng.</li>
+                  <li>Đối tác tự chịu trách nhiệm về nội dung giới thiệu, cam kết không quảng cáo sai sự thật hoặc gây hiểu nhầm.</li>
+                  <li> Mọi thông tin khách hàng, hoa hồng, dữ liệu hệ thống đều được bảo mật và không chia sẻ cho bên thứ ba.</li>
+                  <li>Đối tác không được sao chép, bán lại hoặc chuyển giao sản phẩm Bot Trade khi chưa có sự chấp thuận của Tradi.</li>
+                  <li>Tradi có quyền tạm ngưng hoặc chấm dứt hợp tác nếu đối tác vi phạm điều khoản.</li>
+                  <li> Việc tiếp tục sử dụng dịch vụ được xem là đối tác đã đồng ý toàn bộ điều khoản này.</li>
                 </ol>
 
                 <h4 className={styles.termsSectionTitle}>HỆ THỐNG HOA HỔNG:</h4>
                 <ol className={styles.termsList}>
                   <li>Đối tác bắt đầu từ cấp độ Đồng (70%), chia sẻ hoa hồng cho người giới thiệu.</li>
+                  <li>Cấp độ tăng dần theo tổng khối lượng giao dịch tích lũy của khách hàng giới thiệu, tối đa lên đến Kim Cương (90%).</li>
                   <li>Hoa hồng được tính và chi trả vào ngày 1 hàng tháng.</li>
                   <li>Công thức chia hoa hồng: 5% cho Tradi, 50% cho người giới thiệu trực tiếp, 50% còn lại chia đều cho upline gián tiếp.</li>
                   <li>Cấp bậc tăng dần dựa vào tổng khối lượng giao dịch tích lũy.</li>

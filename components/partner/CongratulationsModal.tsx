@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Diamond, Gem, Star, Award, Medal, Shield, X, Sparkles, ArrowRight, LogIn, Link as LinkIcon } from 'lucide-react';
+import { Diamond, Gem, Star, Award, Medal, Shield, X, Sparkles, ArrowRight, LogIn, Link as LinkIcon, Info } from 'lucide-react';
 import styles from './CongratulationsModal.module.css';
 
 interface CongratulationsModalProps {
@@ -41,13 +41,11 @@ export default function CongratulationsModal({ rank, isOpen, onClose, onNavigate
 
   useEffect(() => {
     if (isOpen) {
-      console.log('[CongratulationsModal] Modal opened with rank:', rank);
       // Reset to stage 1 when modal opens
       setStage(1);
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
     } else {
-      console.log('[CongratulationsModal] Modal closed');
       document.body.style.overflow = 'unset';
     }
     
@@ -117,15 +115,6 @@ export default function CongratulationsModal({ rank, isOpen, onClose, onNavigate
               </div>
             </div>
 
-            <div className={styles.infoBox}>
-              <p className={styles.infoText}>
-                ✨ Bạn bắt đầu với cấp độ <strong>{rank}</strong>
-              </p>
-              <p className={styles.infoText}>
-                📈 Hoàn thành giao dịch để tăng cấp và nhận hoa hồng cao hơn
-              </p>
-            </div>
-
             <button className={styles.continueButton} onClick={handleContinue}>
               Tiếp Tục
               <ArrowRight size={20} />
@@ -177,12 +166,6 @@ export default function CongratulationsModal({ rank, isOpen, onClose, onNavigate
                   </p>
                 </div>
               </div>
-            </div>
-
-            <div className={styles.infoBox}>
-              <p className={styles.infoText}>
-                💡 <strong>Lưu ý:</strong> Bạn cần hoàn thành cả 2 bước để có thể sử dụng hệ thống đối tác.
-              </p>
             </div>
 
             <button className={styles.continueButton} onClick={handleContinue}>

@@ -167,20 +167,17 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
               }
             });
             setPartnerPlatformUrls(urlMap);
-            console.log('[GetBotTab] Loaded partner platform URLs:', urlMap);
           }
           
           // Load selected platforms
           if (platformData.selectedPlatform && Array.isArray(platformData.selectedPlatform)) {
             const platforms = platformData.selectedPlatform.map((p: string) => p.toLowerCase());
             setSelectedPlatforms(platforms);
-            console.log('[GetBotTab] Loaded selected platforms:', platforms);
           }
           
           // Load support link
           if (platformData.supportLink && typeof platformData.supportLink === 'string') {
             setSupportLink(platformData.supportLink);
-            console.log('[GetBotTab] Loaded support link:', platformData.supportLink);
           }
         }
       } catch (error) {
@@ -257,8 +254,6 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
 
       // Get userId from storage to pass to API
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-
-      console.log('[CHECK-EMAIL] Sending OTP:', otp);
 
       // Call check-email API with OTP verification
       const response = await fetch('/api/check-email', {

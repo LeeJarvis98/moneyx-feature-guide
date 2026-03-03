@@ -48,11 +48,8 @@ async function countStandardPartnersAbove(
   const MAX_DEPTH = 100; // Safety limit to prevent infinite loops
   let depth = 0;
 
-  console.log('[countStandardPartnersAbove] Starting chain walk with referral code:', newUserReferralId);
-
   while (currentReferralCode && depth < MAX_DEPTH) {
     depth++;
-    console.log('[countStandardPartnersAbove] Depth:', depth, 'Current code:', currentReferralCode);
 
     // Find the user who OWNS this referral code
     const { data: owner, error: ownerError } = await supabase
@@ -68,13 +65,11 @@ async function countStandardPartnersAbove(
 
     if (!owner) {
       // Referral code doesn't exist or chain ends
-      console.log('[countStandardPartnersAbove] No owner found for code:', currentReferralCode);
       break;
     }
 
     // Check for circular reference
     if (visitedUsers.has(owner.id)) {
-      console.log('[countStandardPartnersAbove] Circular reference detected for user:', owner.id, '- stopping chain walk');
       break;
     }
     visitedUsers.add(owner.id);
@@ -92,25 +87,19 @@ async function countStandardPartnersAbove(
     }
 
     if (!ownerUser) {
-      console.log('[countStandardPartnersAbove] No user data found for:', owner.id);
       break;
     }
-
-    console.log('[countStandardPartnersAbove] Found user:', owner.id, 'Rank:', ownerUser.partner_rank);
 
     // Only count standard partners (exclude ADMIN, SALE, None)
     if (!SYSTEM_RANKS.has(ownerUser.partner_rank)) {
       count++;
-      console.log('[countStandardPartnersAbove] Counted standard partner. Total count:', count);
     } else {
-      console.log('[countStandardPartnersAbove] Skipping system rank:', ownerUser.partner_rank, '- stopping chain walk');
       // System ranks are at the top of the chain, no need to continue
       break;
     }
 
     // Check if user's referral_id is their own code (self-referencing)
     if (ownerUser.referral_id === currentReferralCode) {
-      console.log('[countStandardPartnersAbove] Self-referencing detected - user referral_id equals current code');
       break;
     }
 
@@ -122,7 +111,6 @@ async function countStandardPartnersAbove(
     console.warn('[countStandardPartnersAbove] Max depth reached. Possible infinite loop or very long chain.');
   }
 
-  console.log('[countStandardPartnersAbove] Final count:', count, 'Depth:', depth);
   return count;
 }
 
@@ -142,8 +130,6 @@ export async function assignInitialRank(
   newUserReferralId: string,
 ): Promise<{ rank: string; isAutoRanked: boolean }> {
   try {
-    console.log('[assignInitialRank] Starting for user:', userId, 'with referral code:', newUserReferralId);
-
     // Count standard partners in the chain above this user
     const standardAbove = await countStandardPartnersAbove(supabase, newUserReferralId);
 
@@ -153,14 +139,6 @@ export async function assignInitialRank(
     // Determine rank based on position
     const assignedRank = CHAIN_POSITION_RANK[chainPosition] ?? 'Đồng';
     const isAutoRanked = chainPosition <= 4;
-
-    console.log('[assignInitialRank] User:', userId, {
-      referralId: newUserReferralId,
-      standardPartnersAbove: standardAbove,
-      chainPosition,
-      assignedRank,
-      isAutoRanked,
-    });
 
     // Update user's partner_rank and is_auto_ranked
     const { error: updateError } = await supabase
@@ -176,7 +154,6 @@ export async function assignInitialRank(
       throw updateError;
     }
 
-    console.log('[assignInitialRank] Successfully updated user rank');
     return { rank: assignedRank, isAutoRanked };
   } catch (error) {
     console.error('[assignInitialRank] Unexpected error:', error);

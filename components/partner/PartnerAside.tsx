@@ -108,7 +108,6 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
         const data = await response.json();
         const platforms = data.selectedPlatforms || [];
 
-        console.log('[PartnerAside] Loaded selected platforms:', platforms);
         setSelectedPlatforms(platforms);
         setHasLoadedData(true);
       } catch (error) {

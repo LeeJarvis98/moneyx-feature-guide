@@ -66,7 +66,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
       const data = await response.json();
       const platforms = data.selectedPlatforms || [];
       
-      console.log('[PartnerNavBar] Loaded selected platforms:', platforms);
       setSelectedPlatforms(platforms);
       setHasLoadedData(true);
     } catch (error) {
@@ -198,8 +197,6 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
         throw new Error('Failed to update selected platforms');
       }
 
-      console.log('[PartnerNavBar] Successfully saved selected platforms:', selectedPlatforms);
-      
       // Reload platforms from database to ensure UI is in sync
       await loadPlatformsFromDatabase();
       

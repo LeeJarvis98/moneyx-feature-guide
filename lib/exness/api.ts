@@ -162,7 +162,6 @@ class ExnessApiClient {
     // Try POST method first (most RESTful APIs use POST for filtering)
     try {
       const endpoint = `/api/partner/affiliation/`;
-      console.log('[EXNESS API CLIENT] Requesting affiliation for email:', email);
       
       // Attempt POST with email in body
       const response = await fetch(`${API_BASE}/partner`, {
@@ -184,7 +183,6 @@ class ExnessApiClient {
 
       // If POST fails with 405, try GET with query parameter
       if (response.status === 405) {
-        console.log('[EXNESS API CLIENT] POST not allowed, trying GET with query parameter');
         const getEndpoint = `/api/partner/affiliation/?email=${encodeURIComponent(email)}`;
         return this.request(getEndpoint, { method: 'GET' });
       }
@@ -204,9 +202,6 @@ class ExnessApiClient {
     if (accountIds && accountIds.length > 0) {
       const accountsParam = accountIds.join(',');
       endpoint += `?client_account=${accountsParam}`;
-      console.log('[EXNESS API CLIENT] Requesting endpoint:', endpoint);
-      console.log('[EXNESS API CLIENT] Account IDs:', accountIds);
-      console.log('[EXNESS API CLIENT] Account IDs count:', accountIds.length);
     }
     
     return this.request(endpoint, { method: 'GET' });

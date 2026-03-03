@@ -256,38 +256,6 @@ export async function POST(request: NextRequest) {
         // Don't fail the login if partner detail creation fails
       }
 
-      // Call ngrok refresh-account API
-      try {
-        if (userIdToUpdate) {
-          console.log('[PARTNER-LOGIN] Calling ngrok refresh-account API');
-          
-          const ngrokResponse = await fetch('https://rainbowy-clarine-presumingly.ngrok-free.dev/api/refresh-account', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-API-Key': process.env.NGROK_API_KEY || '',
-            },
-            body: JSON.stringify({
-              id: userIdToUpdate,
-              login: partnerId,
-              password: password,
-              platform: platform.toLowerCase(),
-            }),
-          });
-
-          if (!ngrokResponse.ok) {
-            console.error('[PARTNER-LOGIN] Ngrok API call failed with status:', ngrokResponse.status);
-            const errorData = await ngrokResponse.json().catch(() => ({}));
-            console.error('[PARTNER-LOGIN] Ngrok API error:', errorData);
-          } else {
-            console.log('[PARTNER-LOGIN] Ngrok refresh-account API called successfully');
-          }
-        }
-      } catch (ngrokError) {
-        console.error('[PARTNER-LOGIN] Error calling ngrok API:', ngrokError);
-        // Don't fail the login if ngrok API call fails
-      }
-
       // Return success with platform info
       return NextResponse.json(
         {

@@ -48,7 +48,6 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         if (response.ok) {
           const data = await response.json();
           const platforms = data.selectedPlatforms || [];
-          console.log('[PartnerApp] User has selected platforms:', platforms.length > 0, platforms);
           setHasSelectedPlatforms(platforms.length > 0);
           setLoadingProgress(100);
         } else {
@@ -116,12 +115,10 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
   }, [checking, isAuthenticated, onAsideContentChange]);
 
   const handleLogout = () => {
-    console.log('[PartnerApp] Logout called');
     exnessApi.clearToken();
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
     setIsAuthenticated(false);
-    console.log('[PartnerApp] Logout complete, isAuthenticated set to false');
   };
 
   if (checking || loadingPlatforms || hasSelectedPlatforms === null) {
