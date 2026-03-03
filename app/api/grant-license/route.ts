@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
         .update({ 
           licensed_status: 'licensed',
           licensed_date: timestamp,
+          registered_at: timestamp,
           owner: userId // Update owner to current user
         })
         .in('account_id', accountIds)
