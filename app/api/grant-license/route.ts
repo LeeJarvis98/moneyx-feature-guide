@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
         .update({ 
           licensed_status: 'licensed',
           licensed_date: timestamp,
-          registered_at: timestamp,
           owner: userId // Update owner to current user
         })
         .in('account_id', accountIds)
@@ -102,6 +101,23 @@ export async function POST(request: NextRequest) {
         console.error('[GRANT] Error updating accounts status:', updateError);
         throw updateError;
       }
+
+      // === SET registered_at ONLY FOR FIRST-TIME LICENSING ===
+      // registered_at is a one-time value — once set it must never be overwritten.
+      // This update targets only rows where registered_at is still NULL.
+      const { error: registeredAtError } = await supabase
+        .from('licensed_accounts')
+        .update({ registered_at: timestamp })
+        .in('account_id', accountIds)
+        .eq('email', email)
+        .is('registered_at', null);
+
+      if (registeredAtError) {
+        console.error('[GRANT] Error setting registered_at for new accounts:', registeredAtError);
+        throw registeredAtError;
+      }
+
+      console.log('[GRANT] registered_at preserved for previously licensed accounts (set only where NULL)');
 
       const updatedCount = updatedAccounts?.length || 0;
       console.log('[GRANT] Successfully updated', updatedCount, 'accounts to licensed status');
