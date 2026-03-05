@@ -149,6 +149,8 @@ export type Database = {
         Row: {
           account_id: string
           email: string
+          entry_reward: number | null
+          entry_volume_lots: number | null
           id: string | null
           licensed_date: string
           licensed_status: string | null
@@ -162,6 +164,8 @@ export type Database = {
         Insert: {
           account_id: string
           email: string
+          entry_reward?: number | null
+          entry_volume_lots?: number | null
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
@@ -175,6 +179,8 @@ export type Database = {
         Update: {
           account_id?: string
           email?: string
+          entry_reward?: number | null
+          entry_volume_lots?: number | null
           id?: string | null
           licensed_date?: string
           licensed_status?: string | null
@@ -251,7 +257,6 @@ export type Database = {
           total_partner_lots: number
           total_partner_reward: number
           total_partners: number
-          total_reward_history: Json[]
           updated_at: string
           uuid: string
         }
@@ -270,7 +275,6 @@ export type Database = {
           total_partner_lots: number
           total_partner_reward: number
           total_partners?: number
-          total_reward_history?: Json[]
           updated_at?: string
           uuid?: string
         }
@@ -289,7 +293,6 @@ export type Database = {
           total_partner_lots?: number
           total_partner_reward?: number
           total_partners?: number
-          total_reward_history?: Json[]
           updated_at?: string
           uuid?: string
         }

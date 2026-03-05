@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
         accum_partner_reward,
         accum_time_remaining,
         claim_time_remaining,
-        total_reward_history,
         updated_at
       `)
       .eq('id', userId)

@@ -240,7 +240,6 @@ export async function POST(request: NextRequest) {
                 claim_time_remaining: 0,
                 last_month_client_reward: 0,
                 last_month_partner_reward: 0,
-                total_reward_history: [],
               });
 
             if (detailInsertError) {

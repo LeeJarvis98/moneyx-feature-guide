@@ -203,8 +203,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                         ? partnerData.user_rank.reward_percentage * 100
                         : undefined
                   }
-                  // userTotalReward={partnerData.accum_partner_reward ?? undefined}
-                  userTotalReward={0}
+                  userTotalReward={partnerData.accum_client_reward ?? undefined}
                />
 
                {/* Account Chain Flow */}
