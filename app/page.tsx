@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
@@ -32,6 +32,8 @@ export default function HomePage() {
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
   const [getBotAside, setGetBotAside] = useState<React.ReactNode>(null);
+  const [manageAccountsSection, setManageAccountsSection] = useState<'license' | 'get-bot'>('license');
+  const [manageAccountsAside, setManageAccountsAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
@@ -231,7 +233,7 @@ export default function HomePage() {
 
   // Determine if navbar should be shown
   const shouldShowNavbar = (
-    (navigationSection === 'library' && (activeTab === 'guides' || activeTab === 'strategies')) ||
+    (navigationSection === 'library' && (activeTab === 'guides' || activeTab === 'strategies' || activeTab === 'manage-accounts')) ||
     (navigationSection === 'features' && activeTab === 'partner')
   );
 
@@ -239,7 +241,8 @@ export default function HomePage() {
   const shouldShowAside = (
     (navigationSection === 'features' && activeTab === 'feature-guide' && featureGuideAside !== null) ||
     (navigationSection === 'features' && activeTab === 'partner' && partnerAside !== null) ||
-    (navigationSection === 'library' && activeTab === 'get-bot' && getBotAside !== null)
+    (navigationSection === 'library' && activeTab === 'get-bot' && getBotAside !== null) ||
+    (navigationSection === 'library' && activeTab === 'manage-accounts' && manageAccountsAside !== null)
   );
 
   // Handle loading completion
@@ -899,6 +902,28 @@ export default function HomePage() {
                 </Stack>
               </ScrollArea>
             )}
+            {navigationSection === 'library' && activeTab === 'manage-accounts' && (
+              <ScrollArea h="100%" type="auto" offsetScrollbars>
+                <Stack gap="xs">
+                  <NavLink
+                    label="Quản lý bản quyền"
+                    leftSection={<Shield size={16} color="#FFB81C" />}
+                    active={manageAccountsSection === 'license'}
+                    fw={manageAccountsSection === 'license' ? 700 : undefined}
+                    onClick={() => setManageAccountsSection('license')}
+                    color="yellow"
+                  />
+                  <NavLink
+                    label="Lấy bot"
+                    leftSection={<Download size={16} color="#FFB81C" />}
+                    active={manageAccountsSection === 'get-bot'}
+                    fw={manageAccountsSection === 'get-bot' ? 700 : undefined}
+                    onClick={() => setManageAccountsSection('get-bot')}
+                    color="teal"
+                  />
+                </Stack>
+              </ScrollArea>
+            )}
           </AppShell.Navbar>
 
           <AppShell.Main style={{
@@ -977,7 +1002,11 @@ export default function HomePage() {
                         <GetBotTab isActive={activeTab === 'get-bot'} onAsideContentChange={setGetBotAside} />
                       </Tabs.Panel>
                       <Tabs.Panel value="manage-accounts">
-                        <ManageAccountsTab isActive={activeTab === 'manage-accounts'} />
+                        <ManageAccountsTab
+                          isActive={activeTab === 'manage-accounts'}
+                          activeSection={manageAccountsSection}
+                          onAsideContentChange={setManageAccountsAside}
+                        />
                       </Tabs.Panel>
                     </>
                   )}
@@ -1035,6 +1064,9 @@ export default function HomePage() {
             )}
             {navigationSection === 'library' && activeTab === 'get-bot' && (
               getBotAside
+            )}
+            {navigationSection === 'library' && activeTab === 'manage-accounts' && (
+              manageAccountsAside
             )}
           </AppShell.Aside>
 

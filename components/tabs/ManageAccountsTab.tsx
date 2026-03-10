@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Box, Paper, Alert } from '@mantine/core';
-import { Mail, Save, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Box, Paper, Alert, Grid, CopyButton, Tooltip } from '@mantine/core';
+import { Mail, Save, CheckCircle, AlertCircle, RefreshCw, Download } from 'lucide-react';
 import Image from 'next/image';
 import { Turnstile, TurnstileHandle } from '@/components/Turnstile';
 import classes from './ManageAccountsTab.module.css';
@@ -29,9 +29,11 @@ interface AccountSummary {
 
 interface ManageAccountsTabProps {
   isActive?: boolean;
+  activeSection?: 'license' | 'get-bot';
+  onAsideContentChange?: (content: ReactNode | null) => void;
 }
 
-export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) {
+export function ManageAccountsTab({ isActive = false, activeSection = 'license', onAsideContentChange }: ManageAccountsTabProps) {
   const [loading, setLoading] = useState(true);
   const [emailGroups, setEmailGroups] = useState<EmailGroup[]>([]);
   const [error, setError] = useState<string>('');
@@ -62,6 +64,104 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  // Push / clear the config-links aside when entering / leaving 'get-bot' section
+  useEffect(() => {
+    if (!onAsideContentChange) return;
+
+    if (activeSection === 'get-bot') {
+      const configLinks = [
+        { label: 'Link gắn AI', url: 'https://openrouter.ai/' },
+        { label: 'Link xác nhận ID', url: 'https://yctqvpgofipnaziqdxsz.supabase.co/rest/v1/active_account_ids' },
+        { label: 'Link bản quyền', url: 'https://yctqvpgofipnaziqdxsz.supabase.co/rest/v1/bot_feature' },
+      ];
+
+      onAsideContentChange(
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ paddingBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+              Cấu hình Bot
+            </h3>
+          </div>
+          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem' }}>
+            {configLinks.map(({ label, url }) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+                  {label}
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input
+                    type="text"
+                    value={url}
+                    readOnly
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontFamily: 'monospace',
+                      cursor: 'default',
+                      minWidth: 0,
+                    }}
+                  />
+                  <CopyButton value={url} timeout={2000}>
+                    {({ copied, copy }) => (
+                      <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép'} withArrow position="left">
+                        <button
+                          onClick={copy}
+                          style={{
+                            flexShrink: 0,
+                            padding: '0.5rem 1rem',
+                            backgroundColor: copied ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 184, 28, 0.1)',
+                            border: `1px solid ${copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 184, 28, 0.3)'}`,
+                            borderRadius: '6px',
+                            color: copied ? '#22c55e' : '#ffb81c',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {copied ? 'Đã chép!' : 'Sao chép'}
+                        </button>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    } else {
+      onAsideContentChange(null);
+    }
+
+    return () => {
+      onAsideContentChange?.(null);
+    };
+  }, [activeSection, onAsideContentChange]);
+
+  const handleDownloadBot = async () => {
+    try {
+      const botUrl = '/api/download-bot';
+      const opened = window.open(botUrl, '_blank');
+      if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+        const link = document.createElement('a');
+        link.href = botUrl;
+        link.download = 'VNCLC [v1.3].ex5';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Error downloading bot:', error);
+    }
+  };
 
   const fetchAccountSummary = async () => {
     try {
@@ -336,6 +436,74 @@ export function ManageAccountsTab({ isActive = false }: ManageAccountsTabProps) 
       setUpdating(false);
     }
   };
+
+  if (activeSection === 'get-bot') {
+    return (
+      <Stack gap="xl" className={classes.container}>
+        <Paper shadow="sm" p="xl" radius="md">
+          <Grid gutter="xl">
+            <Grid.Col span={{ base: 12, md: 3 }}>
+              <Stack gap="xl">
+                <Box>
+                  <Badge size="xl" variant="gradient" gradient={{ from: 'teal', to: 'lime', deg: 105 }} mb="md">
+                    Hoàn tất
+                  </Badge>
+                  <Title order={3} mb="md">
+                    Tải Bot xuống
+                  </Title>
+                  <Text size="sm">
+                    <strong>Lưu ý:</strong> Sau khi tải xuống, vui lòng làm theo hướng dẫn bên phải.
+                  </Text>
+                </Box>
+                <Paper withBorder p="xl" radius="md">
+                  <Stack gap="md" align="center">
+                    <Box
+                      style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--mantine-color-teal-1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Download size={40} color="var(--mantine-color-teal-7)" />
+                    </Box>
+                    <Text size="lg" fw={500}>
+                      VNCLC Trading Bot v1.0
+                    </Text>
+                    <Button
+                      c="black"
+                      size="lg"
+                      leftSection={<Download size={20} />}
+                      onClick={handleDownloadBot}
+                      fullWidth
+                      mt="md"
+                      className={classes.glowButton}
+                    >
+                      Tải Bot
+                    </Button>
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 9 }}>
+              <Paper withBorder radius="md" className={classes.iframeWrapper}>
+                <iframe
+                  src="https://drive.google.com/file/d/1ekRrm-JRk-dmMsINBCp3ZiCWStsVxZpM/preview"
+                  className={classes.videoIframe}
+                  allow="autoplay"
+                  title="Video hướng dẫn tải Bot"
+                  aria-label="Tutorial video for downloading the bot"
+                />
+              </Paper>
+            </Grid.Col>
+          </Grid>
+        </Paper>
+      </Stack>
+    );
+  }
 
   if (loading) {
     return (
