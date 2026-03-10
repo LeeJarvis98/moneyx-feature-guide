@@ -31,6 +31,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<string | null>('guides');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
   const [partnerAside, setPartnerAside] = useState<React.ReactNode>(null);
+  const [getBotAside, setGetBotAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
@@ -237,7 +238,8 @@ export default function HomePage() {
   // Determine if aside should be shown
   const shouldShowAside = (
     (navigationSection === 'features' && activeTab === 'feature-guide' && featureGuideAside !== null) ||
-    (navigationSection === 'features' && activeTab === 'partner' && partnerAside !== null)
+    (navigationSection === 'features' && activeTab === 'partner' && partnerAside !== null) ||
+    (navigationSection === 'library' && activeTab === 'get-bot' && getBotAside !== null)
   );
 
   // Handle loading completion
@@ -972,7 +974,7 @@ export default function HomePage() {
                   {isUserLoggedIn && (
                     <>
                       <Tabs.Panel value="get-bot">
-                        <GetBotTab isActive={activeTab === 'get-bot'} />
+                        <GetBotTab isActive={activeTab === 'get-bot'} onAsideContentChange={setGetBotAside} />
                       </Tabs.Panel>
                       <Tabs.Panel value="manage-accounts">
                         <ManageAccountsTab isActive={activeTab === 'manage-accounts'} />
@@ -1030,6 +1032,9 @@ export default function HomePage() {
             )}
             {navigationSection === 'features' && activeTab === 'partner' && (
               partnerAside
+            )}
+            {navigationSection === 'library' && activeTab === 'get-bot' && (
+              getBotAside
             )}
           </AppShell.Aside>
 

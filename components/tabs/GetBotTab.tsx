@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   Box,
@@ -24,8 +24,10 @@ import {
   Table,
   Checkbox,
   Accordion,
+  CopyButton,
+  Tooltip,
 } from '@mantine/core';
-import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video, Copy, Check } from 'lucide-react';
 import { Turnstile, TurnstileHandle } from '../Turnstile';
 import classes from './GetBotTab.module.css';
 
@@ -38,9 +40,10 @@ interface AccountRow {
 
 interface GetBotTabProps {
   isActive?: boolean;
+  onAsideContentChange?: (content: ReactNode) => void;
 }
 
-export function GetBotTab({ isActive = false }: GetBotTabProps) {
+export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabProps) {
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)
   const partnerId = pathname.startsWith('/') && pathname !== '/' ? pathname.slice(1).split('/')[0] : null;
@@ -101,6 +104,96 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
       setActive(0);
     }
   }, [isActive]);
+
+  // Push / clear the config-links aside when entering / leaving step 3
+  useEffect(() => {
+    if (!onAsideContentChange) return;
+
+    if (active === 2) {
+      const configLinks = [
+        { label: 'Link gắn AI', url: 'https://openrouter.ai/' },
+        { label: 'Link xác nhận ID', url: 'https://yctqvpgofipnaziqdxsz.supabase.co/rest/v1/active_account_ids' },
+        { label: 'Link bản quyền', url: 'https://yctqvpgofipnaziqdxsz.supabase.co/rest/v1/bot_feature' },
+      ];
+
+      onAsideContentChange(
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Header */}
+          <div style={{ paddingBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+              Cấu hình Bot
+            </h3>
+          </div>
+
+          {/* Links */}
+          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem' }}>
+            {configLinks.map(({ label, url }) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+                  {label}
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input
+                    type="text"
+                    value={url}
+                    readOnly
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontFamily: 'monospace',
+                      cursor: 'default',
+                      minWidth: 0,
+                    }}
+                  />
+                  <CopyButton value={url} timeout={2000}>
+                    {({ copied, copy }) => (
+                      <Tooltip
+                        label={copied ? 'Đã sao chép!' : 'Sao chép'}
+                        withArrow
+                        position="left"
+                      >
+                        <button
+                          onClick={copy}
+                          style={{
+                            flexShrink: 0,
+                            padding: '0.5rem 1rem',
+                            backgroundColor: copied
+                              ? 'rgba(34, 197, 94, 0.1)'
+                              : 'rgba(255, 184, 28, 0.1)',
+                            border: `1px solid ${copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 184, 28, 0.3)'}`,
+                            borderRadius: '6px',
+                            color: copied ? '#22c55e' : '#ffb81c',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {copied ? 'Đã chép!' : 'Sao chép'}
+                        </button>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    } else {
+      onAsideContentChange(null);
+    }
+
+    return () => {
+      onAsideContentChange?.(null);
+    };
+  }, [active, onAsideContentChange]);
 
   // Function to refresh license statuses from database without re-fetching from external API
   const refreshLicenseStatuses = async () => {
@@ -1048,10 +1141,10 @@ export function GetBotTab({ isActive = false }: GetBotTabProps) {
                       <Button
                         c="black"
                         onClick={() => setActive(2)}
-                        disabled={
-                          accountStatus !== 'authorized' || 
-                          !accountRows.some(row => row.status === 'licensed')
-                        }
+                        // disabled={
+                        //   accountStatus !== 'authorized' || 
+                        //   !accountRows.some(row => row.status === 'licensed')
+                        // }
                         size="lg"
                         className={classes.glowButton}
                         leftSection={<Download size={20} />}
