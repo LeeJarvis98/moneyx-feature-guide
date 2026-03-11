@@ -1,9 +1,9 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Anchor, Menu, UnstyledButton, Avatar, CopyButton, Tooltip } from '@mantine/core';
+import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Drawer, Burger, Divider, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
@@ -27,6 +27,8 @@ export default function HomePage() {
   const [showHero, setShowHero] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileAsideOpened, { toggle: toggleMobileAside, close: closeMobileAside }] = useDisclosure(false);
+  const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
+  const [mobileNavbarOpened, { toggle: toggleMobileNavbar, close: closeMobileNavbar }] = useDisclosure(false);
   const [navigationSection, setNavigationSection] = useState<NavigationSection>('library');
   const [activeTab, setActiveTab] = useState<string | null>('guides');
   const [featureGuideAside, setFeatureGuideAside] = useState<React.ReactNode>(null);
@@ -217,12 +219,14 @@ export default function HomePage() {
     }
     // Close mobile menus when switching sections
     closeMobileAside();
+    closeMobileNavbar();
   };
 
   // Close mobile menus when changing tabs
   const handleTabChange = (value: string | null) => {
     setActiveTab(value);
     closeMobileAside();
+    closeMobileNavbar();
     // Set default article when switching to guides or strategies
     if (value === 'guides') {
       setSelectedArticle('guide-1');
@@ -316,12 +320,12 @@ export default function HomePage() {
         <AppShell
           transitionDuration={500}
           transitionTimingFunction="ease"
-          header={{ height: navigationSection === 'login' ? 65 : 100 }}
-          footer={{ height: 60 }}
+          header={{ height: navigationSection === 'login' ? 65 : { base: 65, sm: 100 } }}
+          footer={{ height: { base: 0, sm: 60 } }}
           navbar={{
             width: 300,
             breakpoint: 'sm',
-            collapsed: { mobile: !shouldShowNavbar, desktop: !shouldShowNavbar }
+            collapsed: { mobile: !mobileNavbarOpened, desktop: !shouldShowNavbar }
           }}
           aside={{
             width: 400,
@@ -339,7 +343,16 @@ export default function HomePage() {
             <Container size="100%" h="100%">
               <Stack gap="md" justify={navigationSection === 'login' ? 'center' : 'end'} h="100%">
                 <Group justify="space-between" align="center">
-                  <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick}>
+                  <Group gap="xs" align="center">
+                    <Burger
+                      hiddenFrom="sm"
+                      opened={drawerOpened}
+                      onClick={toggleDrawer}
+                      size="sm"
+                      color={theme.colors.accent[5]}
+                      aria-label="Mở menu điều hướng"
+                    />
+                    <Group gap="md" style={{ cursor: 'pointer' }} onClick={handleLogoClick} align="center">
                     <Image
                       src="/vnclc-logo.png"
                       alt="VNCLC Logo"
@@ -347,10 +360,10 @@ export default function HomePage() {
                       height={20}
                       priority
                     />
-                    <Title order={1} size="h2" c={theme.colors.accent[6]}>
+                    <Title order={1} size="h2" c={theme.colors.accent[6]} visibleFrom="sm">
                       Việt Nam Chất Lượng Cao
                     </Title>
-                    <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+                    <Group gap="xs" onClick={(e) => e.stopPropagation()} visibleFrom="sm">
                       {/* Show rank badge for active partners only */}
                       {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && partnerStatus !== 'inactive' && (() => {
                         const rankIcons: Record<string, typeof Diamond> = {
@@ -426,6 +439,7 @@ export default function HomePage() {
                               handleNavigationChange('features');
                             }
                           }}
+                          visibleFrom="sm"
                           style={{
                             padding: '6px 12px',
                             borderRadius: '8px',
@@ -462,29 +476,33 @@ export default function HomePage() {
                         </Group>
                       )}
                     </Group>
+                    </Group>
                   </Group>
                   <Group gap="md">
                     {isUserLoggedIn && (
-                      <button
-                        className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'features' ? classes.linkActive : ''}`}
-                        onClick={() => handleNavigationChange('features')}
-                      >
-                        Đối tác Tradi
-                      </button>
+                      <Box visibleFrom="sm">
+                        <button
+                          className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'features' ? classes.linkActive : ''}`}
+                          onClick={() => handleNavigationChange('features')}
+                        >
+                          Đối tác Tradi
+                        </button>
+                      </Box>
                     )}
-                    <button
-                      className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'library' ? classes.linkActive : ''}`}
-                      onClick={() => handleNavigationChange('library')}
-                    >
-                      Cá nhân
-                    </button>
+                    <Box visibleFrom="sm">
+                      <button
+                        className={`${classes.link} ${classes.buttonReset} ${navigationSection === 'library' ? classes.linkActive : ''}`}
+                        onClick={() => handleNavigationChange('library')}
+                      >
+                        Cá nhân
+                      </button>
+                    </Box>
                     {!isUserLoggedIn ? (
                       <Button
                         variant={navigationSection === 'login' ? 'light' : 'filled'}
                         c={navigationSection === 'login' ? undefined : 'black'}
                         leftSection={<LogIn size={18} />}
                         onClick={() => handleNavigationChange('login')}
-                        visibleFrom="sm"
                         className={classes.glowButton}
                       >
                         Đăng nhập
@@ -556,6 +574,7 @@ export default function HomePage() {
                   </Group>
                 </Group>
                 {navigationSection !== 'login' && (
+                  <Box visibleFrom="sm">
                   <Tabs value={activeTab} onChange={handleTabChange} radius="md">
                     <Tabs.List>
                       {navigationSection === 'features' && isUserLoggedIn && (
@@ -634,38 +653,8 @@ export default function HomePage() {
                       )}
                     </Tabs.List>
                   </Tabs>
+                  </Box>
                 )}
-                {/* Mobile navigation links */}
-                <Group gap="md" hiddenFrom="sm" justify="center">
-                  {isUserLoggedIn && (
-                    <Anchor
-                      size="sm"
-                      fw={navigationSection === 'features' ? 700 : 500}
-                      c={navigationSection === 'features' ? theme.colors.accent[6] : 'dimmed'}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavigationChange('features');
-                      }}
-                      href="#features"
-                      underline="always"
-                    >
-                      Đối tác
-                    </Anchor>
-                  )}
-                  <Anchor
-                    size="sm"
-                    fw={navigationSection === 'library' ? 700 : 500}
-                    c={navigationSection === 'library' ? theme.colors.accent[6] : 'dimmed'}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigationChange('library');
-                    }}
-                    href="#library"
-                    underline="always"
-                  >
-                    Thư viện
-                  </Anchor>
-                </Group>
               </Stack>
             </Container>
           </AppShell.Header>
@@ -919,7 +908,7 @@ export default function HomePage() {
                     active={manageAccountsSection === 'get-bot'}
                     fw={manageAccountsSection === 'get-bot' ? 700 : undefined}
                     onClick={() => setManageAccountsSection('get-bot')}
-                    color="teal"
+                    color="yellow"
                   />
                 </Stack>
               </ScrollArea>
@@ -1074,6 +1063,7 @@ export default function HomePage() {
             backgroundColor: 'color-mix(in srgb, var(--mantine-color-body), transparent 15%)',
             backdropFilter: 'blur(5px)',
           }}>
+            <Box visibleFrom="sm" h="100%">
             <Container size="100%" h="100%">
               <Group justify="space-between" align="center" h="100%">
                 <Group gap="xs" align="center">
@@ -1123,7 +1113,32 @@ export default function HomePage() {
               </Group> */}
               </Group>
             </Container>
+            </Box>
           </AppShell.Footer>
+
+          {/* Floating action button for Navbar panel */}
+          <Affix position={{ bottom: 80, left: 20 }} hiddenFrom="sm">
+            <Transition transition="slide-up" mounted={shouldShowNavbar}>
+              {(transitionStyles) => (
+                <ActionIcon
+                  size="xl"
+                  radius="xl"
+                  variant="filled"
+                  color={theme.colors.accent[6]}
+                  onClick={toggleMobileNavbar}
+                  style={{
+                    ...transitionStyles,
+                    boxShadow: theme.shadows.lg,
+                    width: 56,
+                    height: 56,
+                  }}
+                  aria-label="Toggle navigation sidebar"
+                >
+                  <PanelLeft size={24} />
+                </ActionIcon>
+              )}
+            </Transition>
+          </Affix>
 
           {/* Floating action button for Aside panel */}
           <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="md">
@@ -1149,6 +1164,195 @@ export default function HomePage() {
             </Transition>
           </Affix>
         </AppShell>
+
+        {/* Mobile Navigation Drawer */}
+        <Drawer
+          opened={drawerOpened}
+          onClose={closeDrawer}
+          size={300}
+          position="left"
+          title={
+            <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => { closeDrawer(); handleLogoClick(); }}>
+              <Image src="/vnclc-logo.png" alt="VNCLC Logo" width={72} height={16} priority />
+            </Group>
+          }
+          overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
+        >
+          <Stack style={{ height: 'calc(100dvh - 80px)', display: 'flex', flexDirection: 'column' }}>
+            {/* Rank badge + referral ID at top */}
+            {isUserLoggedIn && (
+              <Stack gap="sm" mb="md">
+                {partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && partnerStatus !== 'inactive' && (() => {
+                  const rankIcons: Record<string, typeof Diamond> = {
+                    'SALE': Zap, 'Kim Cương': Gem, 'Bạch Kim': Star, 'Vàng': Award, 'Bạc': Medal, 'Đồng': Shield,
+                  };
+                  const rankPercentages: Record<string, string> = {
+                    'SALE': '95%', 'Kim Cương': '90%', 'Bạch Kim': '85%', 'Vàng': '80%', 'Bạc': '75%', 'Đồng': '70%',
+                  };
+                  const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
+                    'SALE': { variant: 'gradient', gradient: { from: 'violet', to: 'pink', deg: 90 }, className: classes.rankBadgeSale },
+                    'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
+                    'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.6', deg: 90 }, className: classes.rankBadgeBachKim },
+                    'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
+                    'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
+                    'Đồng': { variant: 'filled', color: 'orange.9', className: classes.rankBadgeDong },
+                  };
+                  const RankIcon = rankIcons[partnerRank];
+                  const percentage = rankPercentages[partnerRank];
+                  const style = rankStyles[partnerRank];
+                  return (
+                    <Badge
+                      variant={style?.variant || 'gradient'}
+                      gradient={style?.gradient}
+                      color={style?.color}
+                      size="lg"
+                      className={`${classes.rankBadge} ${style?.className || ''}`}
+                    >
+                      <span className={classes.rankBadgeContent}>
+                        {RankIcon && <span className={classes.rankIcon}><RankIcon size={18} /></span>}
+                        <span>{partnerRank}{percentage && `: ${percentage}`}</span>
+                      </span>
+                    </Badge>
+                  );
+                })()}
+                {(partnerRank === 'None' || partnerStatus === 'inactive') && (
+                  <Badge
+                    variant="outline"
+                    color="gray"
+                    size="lg"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => { handleNavigationChange('features'); setActiveTab('agreement'); closeDrawer(); }}
+                  >
+                    Chưa là đối tác
+                  </Badge>
+                )}
+                <Group
+                  gap="xs"
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                    border: '1px solid rgba(255, 184, 28, 0.3)',
+                  }}
+                >
+                  <Text size="sm" fw={600} c="yellow">Mã giới thiệu:</Text>
+                  <Text size="sm" fw={600} c="white" style={{ fontFamily: 'monospace' }}>{referralId || 'N/A'}</Text>
+                  {referralId && (
+                    <CopyButton value={referralId} timeout={2000}>
+                      {({ copied, copy }) => (
+                        <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép'} withArrow position="right">
+                          <ActionIcon color={copied ? 'teal' : 'yellow'} variant="subtle" onClick={copy} size="sm">
+                            {copied ? <Check size={16} /> : <Copy size={16} />}
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
+                    </CopyButton>
+                  )}
+                </Group>
+              </Stack>
+            )}
+
+            {/* Scrollable navigation links */}
+            <ScrollArea style={{ flex: 1 }}>
+              <Stack gap={4}>
+                {/* Đối tác Tradi parent navlink */}
+                {isUserLoggedIn && (
+                  <NavLink
+                    label="Đối tác Tradi"
+                    leftSection={<Users size={16} />}
+                    defaultOpened={navigationSection === 'features'}
+                    active={navigationSection === 'features'}
+                    color="yellow"
+                  >
+                    <NavLink
+                      label="Điều lệ"
+                      leftSection={<Library size={16} />}
+                      active={navigationSection === 'features' && activeTab === 'agreement'}
+                      onClick={() => { handleNavigationChange('features'); setActiveTab('agreement'); closeDrawer(); }}
+                      color="yellow"
+                    />
+                    {isPartner && (
+                      <NavLink
+                        label="Đối tác"
+                        leftSection={<TrendingUp size={16} />}
+                        active={navigationSection === 'features' && activeTab === 'partner'}
+                        onClick={() => { handleNavigationChange('features'); closeDrawer(); }}
+                        color="yellow"
+                      />
+                    )}
+                  </NavLink>
+                )}
+
+                {/* Cá nhân parent navlink */}
+                <NavLink
+                  label="Cá nhân"
+                  leftSection={<User size={16} />}
+                  defaultOpened={navigationSection === 'library'}
+                  active={navigationSection === 'library'}
+                  color="blue"
+                >
+                  <NavLink
+                    label="Hướng dẫn"
+                    leftSection={<BookOpen size={16} />}
+                    active={navigationSection === 'library' && activeTab === 'guides'}
+                    onClick={() => { handleNavigationChange('library'); setActiveTab('guides'); setSelectedArticle('guide-1'); closeDrawer(); }}
+                    color="blue"
+                  />
+                  <NavLink
+                    label="Chiến lược"
+                    leftSection={<TrendingUp size={16} />}
+                    active={navigationSection === 'library' && activeTab === 'strategies'}
+                    onClick={() => { handleNavigationChange('library'); setActiveTab('strategies'); setSelectedArticle('strategy-1'); closeDrawer(); }}
+                    color="blue"
+                  />
+                  {isUserLoggedIn && (
+                    <>
+                      <NavLink
+                        label="Lấy Bot"
+                        leftSection={<Bot size={16} />}
+                        active={navigationSection === 'library' && activeTab === 'get-bot'}
+                        onClick={() => { handleNavigationChange('library'); setActiveTab('get-bot'); closeDrawer(); }}
+                        color="blue"
+                      />
+                      <NavLink
+                        label="Bản quyền"
+                        leftSection={<Shield size={16} />}
+                        active={navigationSection === 'library' && activeTab === 'manage-accounts'}
+                        onClick={() => { handleNavigationChange('library'); setActiveTab('manage-accounts'); closeDrawer(); }}
+                        color="blue"
+                      />
+                    </>
+                  )}
+                </NavLink>
+              </Stack>
+            </ScrollArea>
+
+            {/* Footer info at bottom of drawer */}
+            <Box mt="auto">
+              <Divider my="sm" />
+              <Stack gap="xs" pb="xs">
+                <Group gap="xs" align="center">
+                  <Image src="/tradi-logo.png" alt="Tradi Logo" width={24} height={24} style={{ objectFit: 'contain' }} />
+                  <Text size="xs" c="dimmed">© {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.</Text>
+                </Group>
+                {daysToMonthEnd !== null && (
+                  <Badge
+                    variant="light"
+                    color="gray"
+                    size="sm"
+                    style={{ maxWidth: '100%', textTransform: 'none', whiteSpace: 'normal', height: 'auto', padding: '6px 10px' }}
+                  >
+                    {daysToMonthEnd === 0 ? (
+                      <span><span style={{ color: '#FFB81C', fontWeight: 700 }}>Ngày mai</span>{' sẽ chốt hoa hồng'}</span>
+                    ) : (
+                      <span><span style={{ color: '#FFB81C', fontWeight: 700 }}>{daysToMonthEnd} ngày</span>{' nữa đến kỳ chốt hoa hồng'}</span>
+                    )}
+                  </Badge>
+                )}
+              </Stack>
+            </Box>
+          </Stack>
+        </Drawer>
 
         {/* Congratulations Modal */}
         <CongratulationsModal

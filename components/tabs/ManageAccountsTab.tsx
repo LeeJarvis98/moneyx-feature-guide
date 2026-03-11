@@ -445,9 +445,6 @@ export function ManageAccountsTab({ isActive = false, activeSection = 'license',
             <Grid.Col span={{ base: 12, md: 3 }}>
               <Stack gap="xl">
                 <Box>
-                  <Badge size="xl" variant="gradient" gradient={{ from: 'teal', to: 'lime', deg: 105 }} mb="md">
-                    Hoàn tất
-                  </Badge>
                   <Title order={3} mb="md">
                     Tải Bot xuống
                   </Title>
