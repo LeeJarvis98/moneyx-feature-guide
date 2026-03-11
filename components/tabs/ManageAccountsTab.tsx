@@ -488,7 +488,7 @@ export function ManageAccountsTab({ isActive = false, activeSection = 'license',
             <Grid.Col span={{ base: 12, md: 9 }}>
               <Paper withBorder radius="md" className={classes.iframeWrapper}>
                 <iframe
-                  src="https://drive.google.com/file/d/1ekRrm-JRk-dmMsINBCp3ZiCWStsVxZpM/preview"
+                  src="https://www.youtube.com/embed/o28ec4f4918?si=7_K-GUGyJ4FqdduU"
                   className={classes.videoIframe}
                   allow="autoplay"
                   title="Video hướng dẫn tải Bot"

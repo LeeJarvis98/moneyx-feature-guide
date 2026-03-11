@@ -291,6 +291,42 @@ export async function POST(request: NextRequest) {
       // Continue to account checking below
     }
 
+    // Handle owner-check action - user is checking their own login email, verify via userId header
+    if (action === 'owner-check') {
+      console.log('[CHECK-EMAIL] Owner-check action - verifying userId matches email');
+      const ownerUserId = request.headers.get('x-user-id');
+      if (!ownerUserId) {
+        return NextResponse.json(
+          { success: false, error: 'Authentication required for owner check.' },
+          { status: 401 }
+        );
+      }
+
+      const supabase = getSupabaseClient();
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('id', ownerUserId)
+        .maybeSingle();
+
+      if (ownerError || !ownerData) {
+        return NextResponse.json(
+          { success: false, error: 'User not found.' },
+          { status: 401 }
+        );
+      }
+
+      if (ownerData.email.toLowerCase() !== email.toLowerCase()) {
+        return NextResponse.json(
+          { success: false, error: 'Email does not match the authenticated user.' },
+          { status: 403 }
+        );
+      }
+
+      console.log('[CHECK-EMAIL] Owner-check verified: userId matches email');
+      // Continue to account checking below
+    }
+
     if (!platform) {
       return NextResponse.json(
         { success: false, error: 'Platform is required' },

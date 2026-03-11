@@ -80,6 +80,34 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpResendDelay, setOtpResendDelay] = useState(10);
   const [otpResendTimer, setOtpResendTimer] = useState(0);
+  const [loggedInUserEmail, setLoggedInUserEmail] = useState<string | null>(null);
+
+  // Derive whether the entered email is the logged-in user's own email
+  const isOwnerEmail = !!(loggedInUserEmail && email && email.toLowerCase() === loggedInUserEmail.toLowerCase());
+
+  // Fetch logged-in user's email on mount
+  useEffect(() => {
+    const fetchLoggedInEmail = async () => {
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (!userId) return;
+      try {
+        const response = await fetch('/api/get-user-info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.email) {
+            setLoggedInUserEmail(data.user.email);
+          }
+        }
+      } catch (error) {
+        console.error('[GetBotTab] Error fetching logged-in user email:', error);
+      }
+    };
+    fetchLoggedInEmail();
+  }, []);
 
   // Auto-verify OTP when 6 digits are entered
   useEffect(() => {
@@ -280,6 +308,79 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
 
     loadPartnerData();
   }, []);
+
+  // Direct check for the user's own login email — skips OTP entirely
+  const checkAsOwner = async () => {
+    setAccountStatus('checking');
+    setErrorMessage('');
+    setAccountData(null);
+    setAccountRows([]);
+    setSelectedAccounts([]);
+
+    try {
+      const referralId = sessionStorage.getItem('referralId');
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+      if (!referralId || !userId) {
+        setAccountStatus('unauthorized');
+        setErrorMessage('Referral ID not found. Please access through a valid partner link.');
+        return;
+      }
+
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify({
+          email,
+          platform: selectedPlatform,
+          referralId,
+          captchaToken,
+          action: 'owner-check',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const result = await response.json();
+
+      if (result.success && result.data.affiliation) {
+        setCaptchaToken(null);
+        turnstileRef.current?.reset();
+        setAccountData(result.data);
+        const rows: AccountRow[] = result.data.accountsWithStatus
+          ? result.data.accountsWithStatus
+          : result.data.accounts.map((accountId: string) => ({
+              id: accountId,
+              status: 'unlicensed' as const,
+            }));
+        setAccountRows(rows);
+        const licensedAccounts = rows
+          .filter((row) => row.status === 'licensed')
+          .map((row) => row.id);
+        setSelectedAccounts(licensedAccounts.slice(0, 3));
+        setAccountsMarkedForDeletion([]);
+        setAccountStatus('authorized');
+      } else {
+        setCaptchaToken(null);
+        turnstileRef.current?.reset();
+        setAccountStatus('unauthorized');
+        setErrorMessage(
+          'Tài khoản ' +
+            (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || '') +
+            ' này chưa tồn tại trong hệ thống. \nXin hãy liên hệ Hỗ trợ.'
+        );
+      }
+    } catch (error) {
+      setCaptchaToken(null);
+      turnstileRef.current?.reset();
+      setAccountStatus('unauthorized');
+      setErrorMessage('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      console.error('API Error:', error);
+    }
+  };
 
   // Function to send OTP
   const sendOtp = async () => {
@@ -830,9 +931,39 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         required
                         classNames={{ input: classes.glowInput }}
                         style={{ flex: 1 }}
-                        disabled={otpSent}
+                        disabled={otpSent || accountStatus === 'authorized'}
                       />
-                      {!otpSent ? (
+                      {accountStatus === 'authorized' ? (
+                        <Button
+                          variant="light"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtp('');
+                            setOtpVerified(false);
+                            setOtpError(null);
+                            setAccountStatus('idle');
+                            setAccountData(null);
+                            setAccountRows([]);
+                            setSelectedAccounts([]);
+                            setCaptchaToken(null);
+                            turnstileRef.current?.reset();
+                          }}
+                          size="md"
+                        >
+                          Đổi Email
+                        </Button>
+                      ) : isOwnerEmail ? (
+                        <Button
+                          c="black"
+                          onClick={checkAsOwner}
+                          loading={accountStatus === 'checking'}
+                          disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !captchaToken}
+                          size="md"
+                          className={classes.glowButton}
+                        >
+                          Kiểm tra
+                        </Button>
+                      ) : !otpSent ? (
                         <Button
                           c="black"
                           onClick={sendOtp}
@@ -865,7 +996,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       )}
                     </Group>
 
-                    {otpSent && !otpVerified && (
+                    {!isOwnerEmail && otpSent && !otpVerified && (
                       <Group align="flex-end" gap="md">
                         <TextInput
                           type="text"
@@ -901,7 +1032,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       </Group>
                     )}
 
-                    {otpSent && verifyingOtp && (
+                    {!isOwnerEmail && otpSent && verifyingOtp && (
                       <Alert
                         color="blue"
                         radius="md"
@@ -910,7 +1041,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       </Alert>
                     )}
 
-                    {otpSent && otpVerified && (
+                    {!isOwnerEmail && otpSent && otpVerified && (
                       <Alert
                         icon={<CheckCircle size={20} />}
                         color="green"
@@ -920,7 +1051,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       </Alert>
                     )}
 
-                    {otpSent && otpError && !verifyingOtp && (
+                    {!isOwnerEmail && otpSent && otpError && !verifyingOtp && (
                       <Alert
                         icon={<AlertCircle size={20} />}
                         color="red"
@@ -930,7 +1061,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       </Alert>
                     )}
 
-                    {otpSent && !otpVerified && !verifyingOtp && !otpError && otp.length === 0 && (
+                    {!isOwnerEmail && otpSent && !otpVerified && !verifyingOtp && !otpError && otp.length === 0 && (
                       <Alert
                         color="blue"
                         radius="md"
@@ -1141,10 +1272,10 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       <Button
                         c="black"
                         onClick={() => setActive(2)}
-                        // disabled={
-                        //   accountStatus !== 'authorized' || 
-                        //   !accountRows.some(row => row.status === 'licensed')
-                        // }
+                        disabled={
+                          accountStatus !== 'authorized' || 
+                          !accountRows.some(row => row.status === 'licensed')
+                        }
                         size="lg"
                         className={classes.glowButton}
                         leftSection={<Download size={20} />}
@@ -1220,7 +1351,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                 <Grid.Col span={{ base: 12, md: 9 }}>
                   <Paper withBorder radius="md" className={classes.iframeWrapper}>
                     <iframe
-                      src="https://drive.google.com/file/d/1ekRrm-JRk-dmMsINBCp3ZiCWStsVxZpM/preview"
+                      src="https://www.youtube.com/embed/o28ec4f4918?si=7_K-GUGyJ4FqdduU"
                       className={classes.videoIframe}
                       allow="autoplay"
                       title="Video hướng dẫn tải Bot"
