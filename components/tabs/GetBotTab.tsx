@@ -29,6 +29,7 @@ import {
 } from '@mantine/core';
 import { Download, CheckCircle, AlertCircle, Play, ExternalLink, Video, Copy, Check } from 'lucide-react';
 import { Turnstile, TurnstileHandle } from '../Turnstile';
+import { BOT_DISPLAY_NAME, BOT_VERSION } from '@/lib/bot-config';
 import classes from './GetBotTab.module.css';
 
 type AccountStatus = 'idle' | 'checking' | 'authorized' | 'unauthorized';
@@ -567,7 +568,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       // If popup was blocked or failed to open, fallback to download
       if (!opened || opened.closed || typeof opened.closed === 'undefined') {
         // Fallback: trigger download
-        link.download = 'VNCLC [v1.3].ex5';
+        link.download = BOT_DISPLAY_NAME;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1329,7 +1330,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         </Box>
 
                         <Text size="lg" fw={500}>
-                          VNCLC Trading Bot v1.0
+                          VNCLC Trading Bot {BOT_VERSION}
                         </Text>
 
                         <Button
