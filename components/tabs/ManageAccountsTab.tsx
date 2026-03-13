@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Stack, Card, Text, Group, Badge, Loader, Title, Divider, ThemeIcon, SimpleGrid, Modal, Button, Box, Paper, Alert, Grid, CopyButton, Tooltip } from '@mantine/core';
 import { Mail, Save, CheckCircle, AlertCircle, RefreshCw, Download } from 'lucide-react';
-import { BOT_DISPLAY_NAME } from '@/lib/bot-config';
+import { BOT_DISPLAY_NAME, BOT_VERSION } from '@/lib/bot-config';
 import Image from 'next/image';
 import { Turnstile, TurnstileHandle } from '@/components/Turnstile';
 import classes from './ManageAccountsTab.module.css';
@@ -469,7 +469,7 @@ export function ManageAccountsTab({ isActive = false, activeSection = 'license',
                       <Download size={40} color="var(--mantine-color-teal-7)" />
                     </Box>
                     <Text size="lg" fw={500}>
-                      VNCLC Trading Bot v1.0
+                      VNCLC Bot {BOT_VERSION}
                     </Text>
                     <Button
                       c="black"

@@ -10,7 +10,7 @@ export const BOT_BUCKET = 'VNCLC Storage';
 export const BOT_STORAGE_PATH = 'bots/VNCLC_v2.0_Client.ex5';
 
 /** Display filename shown to users when downloading */
-export const BOT_DISPLAY_NAME = 'VNCLC Bot';
+export const BOT_DISPLAY_NAME = 'VNCLC_v2.0_Client.ex5';
 
 /** Human-readable version label used in UI */
 export const BOT_VERSION = 'v2.0';

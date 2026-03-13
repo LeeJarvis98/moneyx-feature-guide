@@ -1330,7 +1330,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         </Box>
 
                         <Text size="lg" fw={500}>
-                          VNCLC Trading Bot {BOT_VERSION}
+                          VNCLC Bot {BOT_VERSION}
                         </Text>
 
                         <Button
