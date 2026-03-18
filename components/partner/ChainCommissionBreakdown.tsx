@@ -116,7 +116,7 @@ export default function ChainCommissionBreakdown({ nodes }: ChainCommissionBreak
     },
     {
       accessor: 'total_reward_usd',
-      title: 'Hoa hồng nhận được',
+      title: 'Hoa hồng',
       width: 160,
       resizable: true,
       render: (row) => (

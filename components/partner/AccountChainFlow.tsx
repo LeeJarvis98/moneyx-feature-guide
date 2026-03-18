@@ -141,7 +141,12 @@ function AccountChainFlowInner({ nodes: networkNodes }: AccountChainFlowProps) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    const newNodes: Node<ChainNodeData>[] = networkNodes.map((n) => {
+    const filteredNodes = networkNodes.filter((n) => {
+      const role = ROLE_MAP[n.role] ?? 'direct_partner';
+      return role !== 'upline' && role !== 'indirect_partner';
+    });
+
+    const newNodes: Node<ChainNodeData>[] = filteredNodes.map((n) => {
       const role = ROLE_MAP[n.role] ?? 'direct_partner';
       const metrics: { label: string; value: string }[] =
         role !== 'upline'
@@ -161,10 +166,10 @@ function AccountChainFlowInner({ nodes: networkNodes }: AccountChainFlowProps) {
 
     // Build a user_id → role map for edge colouring
     const roleByUserId: Record<string, string> = {};
-    networkNodes.forEach((n) => { roleByUserId[n.user_id] = ROLE_MAP[n.role] ?? 'direct_partner'; });
+    filteredNodes.forEach((n) => { roleByUserId[n.user_id] = ROLE_MAP[n.role] ?? 'direct_partner'; });
 
     const nodeIds = new Set(newNodes.map((n) => n.id));
-    const newEdges: Edge[] = networkNodes
+    const newEdges: Edge[] = filteredNodes
       .filter((n) => n.parent_user_id && nodeIds.has(n.parent_user_id) && nodeIds.has(n.user_id))
       .map((n) => {
         const sourceRole = roleByUserId[n.parent_user_id!] ?? 'direct_partner';
@@ -190,9 +195,11 @@ function AccountChainFlowInner({ nodes: networkNodes }: AccountChainFlowProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <Group gap="md">
-          {Object.entries(ROLE_STYLE).map(([key, s]) => (
-            <Badge key={key} variant="dot" color={s.miniColor}>{s.label}</Badge>
-          ))}
+          {Object.entries(ROLE_STYLE)
+            .filter(([key]) => key !== 'upline' && key !== 'indirect_partner')
+            .map(([key, s]) => (
+              <Badge key={key} variant="dot" color={s.miniColor}>{s.label}</Badge>
+            ))}
         </Group>
       </div>
 

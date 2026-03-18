@@ -325,8 +325,8 @@ export default function HomePage() {
                       Việt Nam Chất Lượng Cao
                     </Title>
                     <Group gap="xs" onClick={(e) => e.stopPropagation()} visibleFrom="sm">
-                      {/* Show "Chưa là đối tác" badge for non-partners and inactive (unconfirmed) partners */}
-                      {isUserLoggedIn && (!isActivePartner || partnerStatus === 'inactive') && (
+                      {/* Partner status badge */}
+                      {isUserLoggedIn && !isActivePartner && (
                         <Badge
                           variant="outline"
                           color="gray"
@@ -335,9 +335,23 @@ export default function HomePage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleNavigationChange('features');
+                            setActiveTab('agreement');
                           }}
                         >
                           Chưa là đối tác
+                        </Badge>
+                      )}
+                      {isUserLoggedIn && isActivePartner && (
+                        <Badge
+                          size="lg"
+                          className={classes.partnerBadge}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigationChange('features');
+                            setActiveTab('partner');
+                          }}
+                        >
+                          Đối tác Tradi
                         </Badge>
                       )}
                       
@@ -407,6 +421,14 @@ export default function HomePage() {
                         onClick={() => handleNavigationChange('library')}
                       >
                         Cá nhân
+                      </button>
+                    </Box>
+                    <Box visibleFrom="sm">
+                      <button
+                        className={`${classes.rewardButton} ${classes.buttonReset}`}
+                        onClick={() => {/* navigate to reward system page */}}
+                      >
+                        Hệ Thống Thưởng
                       </button>
                     </Box>
                     {!isUserLoggedIn ? (
@@ -1069,7 +1091,7 @@ export default function HomePage() {
             {/* Referral ID at top */}
             {isUserLoggedIn && (
               <Stack gap="sm" mb="md">
-                {(!isActivePartner || partnerStatus === 'inactive') && (
+                {!isActivePartner && (
                   <Badge
                     variant="outline"
                     color="gray"
@@ -1078,6 +1100,15 @@ export default function HomePage() {
                     onClick={() => { handleNavigationChange('features'); setActiveTab('agreement'); closeDrawer(); }}
                   >
                     Chưa là đối tác
+                  </Badge>
+                )}
+                {isActivePartner && (
+                  <Badge
+                    size="lg"
+                    className={classes.partnerBadge}
+                    onClick={() => { handleNavigationChange('features'); setActiveTab('partner'); closeDrawer(); }}
+                  >
+                    Đối tác Tradi
                   </Badge>
                 )}
                 <Group
