@@ -78,54 +78,32 @@ export function ManageAccountsTab({ isActive = false, activeSection = 'license',
       ];
 
       onAsideContentChange(
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ paddingBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+        <div className={classes.asideContainer}>
+          <div className={classes.asideHeader}>
+            <h3 className={classes.asideTitle}>
               Cấu hình Bot
             </h3>
           </div>
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem' }}>
+          <div className={classes.linksScrollContainer}>
             {configLinks.map(({ label, url }) => (
-              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+              <div key={label} className={classes.linkWrapper}>
+                <label className={classes.linkLabel}>
                   {label}
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className={classes.inputRow}>
                   <input
                     type="text"
                     value={url}
                     readOnly
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: '#ffffff',
-                      fontSize: '0.75rem',
-                      fontFamily: 'monospace',
-                      cursor: 'default',
-                      minWidth: 0,
-                    }}
+                    title={label}
+                    className={classes.linkInput}
                   />
                   <CopyButton value={url} timeout={2000}>
                     {({ copied, copy }) => (
                       <Tooltip label={copied ? 'Đã sao chép!' : 'Sao chép'} withArrow position="left">
                         <button
                           onClick={copy}
-                          style={{
-                            flexShrink: 0,
-                            padding: '0.5rem 1rem',
-                            backgroundColor: copied ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 184, 28, 0.1)',
-                            border: `1px solid ${copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 184, 28, 0.3)'}`,
-                            borderRadius: '6px',
-                            color: copied ? '#22c55e' : '#ffb81c',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.2s ease',
-                          }}
+                          className={`${classes.copyButton} ${copied ? classes.copyButtonCopied : ''}`}
                         >
                           {copied ? 'Đã chép!' : 'Sao chép'}
                         </button>

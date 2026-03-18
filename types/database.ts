@@ -27,12 +27,17 @@ export type Partner = Tables<'partners'>;
 export type PartnerInsert = TablesInsert<'partners'>;
 export type PartnerUpdate = TablesUpdate<'partners'>;
 
-// Partner Rank List types
-export type PartnerRank = Tables<'partner_rank_list'>;
-export type PartnerRankInsert = TablesInsert<'partner_rank_list'>;
-export type PartnerRankUpdate = TablesUpdate<'partner_rank_list'>;
-
 // Own Referral ID List types
 export type OwnReferralId = Tables<'own_referral_id_list'>;
 export type OwnReferralIdInsert = TablesInsert<'own_referral_id_list'>;
 export type OwnReferralIdUpdate = TablesUpdate<'own_referral_id_list'>;
+
+// Partner Reward Config types
+export type PartnerRewardConfig = Tables<'partner_reward_configs'>;
+export type PartnerRewardConfigInsert = TablesInsert<'partner_reward_configs'>;
+export type PartnerRewardConfigUpdate = TablesUpdate<'partner_reward_configs'>;
+
+// User Reward Tracking types
+export type UserRewardTracking = Tables<'user_reward_tracking'>;
+export type UserRewardTrackingInsert = TablesInsert<'user_reward_tracking'>;
+export type UserRewardTrackingUpdate = TablesUpdate<'user_reward_tracking'>;

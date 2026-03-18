@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Drawer, Burger, Divider, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Shield, Copy, Check, Wallet, Bot, Zap, Download, Gift } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
@@ -17,10 +17,11 @@ import { HeroSection } from '@/components/HeroSection';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { AccountInfoTab } from '@/components/account/AccountInfoTab';
 import { AccountSettingsTab } from '@/components/account/AccountSettingsTab';
+import { RewardSystemTab } from '@/components/tabs/RewardSystemTab';
 import { exnessApi } from '@/lib/exness/api';
 import classes from './page.module.css';
 
-type NavigationSection = 'features' | 'library' | 'login' | 'account';
+type NavigationSection = 'features' | 'library' | 'login' | 'account' | 'reward';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -177,6 +178,8 @@ export default function HomePage() {
       if (!activeTab || (!activeTab.startsWith('account'))) {
         setActiveTab('account-info');
       }
+    } else if (value === 'reward') {
+      setActiveTab('reward');
     }
     // Close mobile menus when switching sections
     closeMobileAside();
@@ -423,14 +426,16 @@ export default function HomePage() {
                         Cá nhân
                       </button>
                     </Box>
-                    <Box visibleFrom="sm">
-                      <button
-                        className={`${classes.rewardButton} ${classes.buttonReset}`}
-                        onClick={() => {/* navigate to reward system page */}}
-                      >
-                        Hệ Thống Thưởng
-                      </button>
-                    </Box>
+                    {isUserLoggedIn && (
+                      <Box visibleFrom="sm">
+                        <button
+                          className={`${classes.rewardButton} ${classes.buttonReset}`}
+                          onClick={() => handleNavigationChange('reward')}
+                        >
+                          Hệ Thống Thưởng
+                        </button>
+                      </Box>
+                    )}
                     {!isUserLoggedIn ? (
                       <Button
                         variant={navigationSection === 'login' ? 'light' : 'filled'}
@@ -938,22 +943,20 @@ export default function HomePage() {
               {/* Login Section */}
               {navigationSection === 'login' && (
                 <LoginTab
-                  onLoginSuccess={(userId, partnerRank, ownReferralId) => {
+                  onLoginSuccess={(userId, _partnerRank, ownReferralId) => {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
-                    // Set partner status from login response
-                    if (partnerRank && partnerRank !== 'None' && partnerRank !== '') {
-                      setIsActivePartner(true);
-                    } else {
-                      setIsActivePartner(false);
-                    }
+                    // The login API returns ownReferralId (not partnerRank) to indicate partner status
+                    setIsActivePartner(!!ownReferralId);
                     // Set referral ID if provided
                     if (ownReferralId) {
                       setReferralId(ownReferralId);
                       localStorage.setItem('referralId', ownReferralId);
                       sessionStorage.setItem('referralId', ownReferralId);
                     }
+                    // Fetch full partner status (including partnerStatus) from the server
+                    checkPartnerRank(userId);
                     // Redirect to documentation
                     handleNavigationChange('library');
                     setActiveTab('guides');
@@ -971,6 +974,13 @@ export default function HomePage() {
                     <AccountSettingsTab userId={loggedInUserId} />
                   </Tabs.Panel>
                 </>
+              )}
+
+              {/* Reward System Section */}
+              {navigationSection === 'reward' && isUserLoggedIn && (
+                <Tabs.Panel value="reward">
+                  <RewardSystemTab />
+                </Tabs.Panel>
               )}
             </Tabs>
           </AppShell.Main>
@@ -1210,6 +1220,17 @@ export default function HomePage() {
                   )}
                 </NavLink>
               </Stack>
+              {/* Reward System mobile nav */}
+              {isUserLoggedIn && (
+                <NavLink
+                  label="Hệ Thống Thưởng"
+                  leftSection={<Gift size={16} color="#c77dff" />}
+                  active={navigationSection === 'reward'}
+                  fw={navigationSection === 'reward' ? 700 : undefined}
+                  onClick={() => { handleNavigationChange('reward'); closeDrawer(); }}
+                  color="grape"
+                />
+              )}
             </ScrollArea>
 
             {/* Footer info at bottom of drawer */}

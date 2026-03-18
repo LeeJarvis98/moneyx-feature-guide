@@ -9,3 +9,4 @@ export { default as ClientReports } from './ClientReports';
 export { default as PartnerSystem } from './PartnerSystem';
 export { default as AccountChainFlow } from './AccountChainFlow';
 export { default as ChainCommissionBreakdown } from './ChainCommissionBreakdown';
+export { default as PartnerRewardConfig } from './PartnerRewardConfig';

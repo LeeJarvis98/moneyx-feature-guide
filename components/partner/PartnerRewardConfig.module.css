@@ -1,0 +1,58 @@
+﻿.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 0;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.saveButton {
+  background: linear-gradient(135deg, #a607f0 0%, #f369b5 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+
+.saveButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.platformSelect {
+  min-width: 160px;
+}
+
+.levelCard {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.levelCardFixed {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.levelCardActive {
+  background: rgba(174, 62, 201, 0.07) !important;
+  border-color: rgba(174, 62, 201, 0.35) !important;
+}
+
+.numberInput {
+  width: 120px;
+  min-width: 100px;
+}
+
+.textInput {
+  flex: 1;
+  min-width: 180px;
+}
+

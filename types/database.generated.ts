@@ -26,6 +26,98 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_reward_configs: {
+        Row: {
+          uuid: string
+          partner_id: string
+          platform: string
+          level: number
+          lot_volume: number
+          reward_usd: number
+          reward_text: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          uuid?: string
+          partner_id: string
+          platform?: string
+          level: number
+          lot_volume?: number
+          reward_usd?: number
+          reward_text?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          uuid?: string
+          partner_id?: string
+          platform?: string
+          level?: number
+          lot_volume?: number
+          reward_usd?: number
+          reward_text?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_reward_configs_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reward_tracking: {
+        Row: {
+          uuid: string
+          user_id: string
+          partner_id: string
+          current_level: number
+          current_lot_volume: number
+          eligible_for_prize: boolean
+          last_calculated: string
+        }
+        Insert: {
+          uuid?: string
+          user_id: string
+          partner_id: string
+          current_level?: number
+          current_lot_volume?: number
+          eligible_for_prize?: boolean
+          last_calculated?: string
+        }
+        Update: {
+          uuid?: string
+          user_id?: string
+          partner_id?: string
+          current_level?: number
+          current_lot_volume?: number
+          eligible_for_prize?: boolean
+          last_calculated?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reward_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reward_tracking_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_otps: {
         Row: {
           created_at: string | null
