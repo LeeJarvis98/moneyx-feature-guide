@@ -5,7 +5,6 @@ import { Stack, NavLink } from '@mantine/core';
 import { exnessApi } from '@/lib/exness/api';
 import ClientReports from './ClientReports';
 import PartnerSystem from './PartnerSystem';
-import AccumulationHistory from './AccumulationHistory';
 import styles from './PartnerDashboard.module.css';
 
 interface PartnerDashboardProps {
@@ -15,8 +14,7 @@ interface PartnerDashboardProps {
 
 type ActiveSection = 
   | 'reports' 
-  | 'partnerSystem' 
-  | 'accumulationHistory';
+  | 'partnerSystem';
 
 export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
   const [activeSection, setActiveSection] = useState<ActiveSection>('reports');
@@ -68,14 +66,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
               onClick={() => setActiveSection('partnerSystem')}
               color="#FFB81C"
             />
-            
-            <NavLink
-              label="Lịch sử tích lũy"
-              active={activeSection === 'accumulationHistory'}
-              fw={activeSection === 'accumulationHistory' ? 700 : undefined}
-              onClick={() => setActiveSection('accumulationHistory')}
-              color="#FFB81C"
-            />
           </Stack>
         </div>
         
@@ -95,7 +85,6 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
       <div className={styles.content}>
         {activeSection === 'reports' && <ClientReports autoFetch={true} />}
         {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} />}
-        {activeSection === 'accumulationHistory' && <AccumulationHistory autoFetch={true} />}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import styles from './PartnerAside.module.css';
 
 interface PlatformRefLinks {
   exness: string;
+  lirunex: string;
   binance: string;
   bingx: string;
   bitget: string;
@@ -25,6 +26,7 @@ interface PartnerAsideProps {
 
 const PLATFORMS = [
   { key: 'exness', label: 'Exness', logo: '/getbot_section/exness.png' },
+  { key: 'lirunex', label: 'Lirunex', logo: '/getbot_section/lirunex.png' },
   { key: 'binance', label: 'Binance', logo: '/getbot_section/binance.png' },
   { key: 'bingx', label: 'BingX', logo: '/getbot_section/bingx.png' },
   { key: 'bitget', label: 'BitGet', logo: '/getbot_section/bitget.png' },
@@ -41,6 +43,7 @@ const PLATFORMS = [
 export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsideProps) {
   const [refLinks, setRefLinks] = useState<PlatformRefLinks>({
     exness: '',
+    lirunex: '',
     binance: '',
     bingx: '',
     bitget: '',
@@ -66,6 +69,7 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [isSupportEditMode, setIsSupportEditMode] = useState(false);
   const [originalRefLinks, setOriginalRefLinks] = useState<PlatformRefLinks>({
     exness: '',
+    lirunex: '',
     binance: '',
     bingx: '',
     bitget: '',

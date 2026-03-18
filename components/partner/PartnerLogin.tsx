@@ -15,6 +15,7 @@ interface PartnerLoginProps {
 
 interface PlatformRefLinks {
   exness: string;
+  lirunex: string;
   binance: string;
   bingx: string;
   bitget: string;
@@ -40,6 +41,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
   const [checkingAccount, setCheckingAccount] = useState(false);
   const [platformRefLinks, setPlatformRefLinks] = useState<PlatformRefLinks>({
     exness: '',
+    lirunex: '',
     binance: '',
     bingx: '',
     bitget: '',
@@ -282,9 +284,9 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
               {typeof error === 'string' ? error : error.message}
               {/* Display stored account with highlighting */}
               {typeof error !== 'string' && error.storedAccount && (
-                <div style={{ marginTop: '8px' }}>
+                <div className={styles.errorAccountHint}>
                   Vui lòng sử dụng tài khoản{' '}
-                  <span style={{ fontWeight: 'bold', backgroundColor: '#FFB81C', padding: '2px 6px', borderRadius: '4px', color: '#000' }}>
+                  <span className={styles.errorAccountHighlight}>
                     {error.storedAccount}
                   </span>
                   {' '}để đăng nhập.

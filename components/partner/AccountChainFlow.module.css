@@ -23,11 +23,26 @@
 
 .chainNode {
   width: 220px;
-  border: 2px solid var(--node-border);
-  background-color: var(--node-bg);
+  border: 2px solid #4dabf7;
+  background-color: #1a1f2e;
   border-radius: 8px;
   padding: 12px;
   position: relative;
+}
+
+.chainNodeUpline {
+  border-color: #51cf66;
+  background-color: #1a2e1f;
+}
+
+.chainNodeDirect {
+  border-color: #fcc419;
+  background-color: #2e261a;
+}
+
+.chainNodeIndirect {
+  border-color: #cc5de8;
+  background-color: #2e1a2e;
 }
 
 .chainNodeMetrics {

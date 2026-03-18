@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ChainCommissionBreakdown from './ChainCommissionBreakdown';
 import AccountChainFlow from './AccountChainFlow';
+import type { NetworkSnapshotNode } from '@/types';
 import styles from './PartnerSystem.module.css';
 
 interface PartnerSystemProps {
@@ -15,63 +16,20 @@ const formatNumber = (value: any, decimals: number = 2): string => {
    return isNaN(num) ? '0.00' : num.toFixed(decimals);
 };
 
-// Helper function to build proper parent relationships from commission snapshot data
-const buildPartnerTree = async (commissionData: any[], currentUserId: string) => {
-   if (!Array.isArray(commissionData) || commissionData.length === 0) {
-      return [];
-   }
-
-   // Get all partner IDs
-   const partnerIds = commissionData.map(row => row.source_partner_id);
-   
-   // Fetch referral chains for all partners to determine parent relationships
-   const parentMap = new Map<string, string>(); // partnerId -> parentId
-   
-   for (const partnerId of partnerIds) {
-      try {
-         const response = await fetch(`/api/referral-chain?id=${partnerId}`);
-         if (response.ok) {
-            const data = await response.json();
-            // The direct parent is the one who referred this partner
-            if (data.directReferrerId) {
-               parentMap.set(partnerId, data.directReferrerId);
-            }
-         } else {
-            console.error(`[PartnerSystem] Failed to fetch chain for ${partnerId}, status:`, response.status);
-         }
-      } catch (error) {
-         console.error(`[PartnerSystem] Error fetching chain for ${partnerId}:`, error);
-      }
-   }
-
-   // Map commission data with proper parent relationships
-   const result = commissionData.map((row: any) => ({
-      ...row,
-      parentUserId: parentMap.get(row.source_partner_id) || currentUserId,
-   }));
-   
-   return result;
-};
-
 export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) {
    const [partnerData, setPartnerData] = useState<any>(null);
+   const [networkNodes, setNetworkNodes] = useState<NetworkSnapshotNode[]>([]);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
 
-   // Chain commission and referral chain data
-   const [chainCommissionRows, setChainCommissionRows] = useState<any[]>([]);
-   const [referralChain, setReferralChain] = useState<any>(null);
-   const [partnerTree, setPartnerTree] = useState<any[]>([]);
-
-   // Auto-fetch partner data on mount if enabled
+   // Auto-fetch on mount if enabled
    useEffect(() => {
       if (autoFetch && !partnerData && !loading) {
-         fetchPartnerData();
+         fetchData();
       }
    }, [autoFetch]);
 
-   // Fetch partner data
-   const fetchPartnerData = async () => {
+   const fetchData = async () => {
       setLoading(true);
       setError(null);
 
@@ -84,67 +42,31 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
             return;
          }
 
-         // Fetch partner data from Supabase
-         const response = await fetch('/api/get-partner-data', {
-            method: 'POST',
-            headers: {
-               'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId }),
-         });
+         // Fetch partner summary and network snapshot in parallel
+         const [partnerResponse, networkResponse] = await Promise.all([
+            fetch('/api/get-partner-data', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ userId }),
+            }),
+            fetch(`/api/network-snapshot?owner_id=${encodeURIComponent(userId)}&platform=exness`),
+         ]);
 
-         const data = await response.json();
-
-         if (!response.ok) {
-            throw new Error(data.error || 'Không thể tải dữ liệu đối tác');
+         const partnerJson = await partnerResponse.json();
+         if (!partnerResponse.ok) {
+            throw new Error(partnerJson.error || 'Không thể tải dữ liệu đối tác');
          }
+         setPartnerData(partnerJson.data);
 
-         setPartnerData(data.data);
-
-         // Fetch chain commission snapshot
-         let commissionData: any[] = [];
-         try {
-            const commissionResponse = await fetch(`/api/chain-commission-snapshot?id=${userId}`);
-            if (commissionResponse.ok) {
-               commissionData = await commissionResponse.json();
-               setChainCommissionRows(commissionData || []);
-            }
-         } catch (commissionError) {
-            console.error('[PartnerSystem] Error fetching chain commission:', commissionError);
-         }
-
-         // Fetch referral chain
-         try {
-            const chainResponse = await fetch(`/api/referral-chain?id=${userId}`);
-            if (chainResponse.ok) {
-               const chainData = await chainResponse.json();
-               setReferralChain(chainData || null);
-            }
-         } catch (chainError) {
-            console.error('[PartnerSystem] Error fetching referral chain:', chainError);
-         }
-
-         // Build partner tree from commission snapshot data (like PartnerDashboard does)
-         if (commissionData && commissionData.length > 0) {
-            const enhancedCommissionData = await buildPartnerTree(commissionData, userId);
-            // Map to PartnerTreeNode format for AccountChainFlow
-            const tree = enhancedCommissionData.map((row: any) => ({
-               id: row.source_partner_id,
-               email: row.source_email || '',
-               partner_rank: row.source_rank,
-               reward_percentage: row.source_total_reward > 0 
-                  ? ((row.source_total_reward - row.commission_pool) / row.source_total_reward) * 100
-                  : 0,
-               total_lots: row.source_total_reward,   // partner's own total reward
-               total_reward: row.your_cut,             // current user's commission from this partner
-               parentUserId: row.parentUserId || userId,
-               depth: row.depth || 1,
-            }));
-            setPartnerTree(tree);
+         if (networkResponse.ok) {
+            const networkJson: NetworkSnapshotNode[] = await networkResponse.json();
+            setNetworkNodes(networkJson);
+         } else {
+            console.warn('[PartnerSystem] Network snapshot not available');
          }
       } catch (err) {
-         const error = err as Error;
-         setError(error.message || 'Không thể tải dữ liệu đại lý');
+         const e = err as Error;
+         setError(e.message || 'Không thể tải dữ liệu đại lý');
       } finally {
          setLoading(false);
       }
@@ -171,10 +93,7 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
 
          {partnerData && (
             <>
-               <h3 className={styles.sectionHeading}>Tổng Commission & Tích lũy</h3>
-               <p className={styles.sectionSubheading}>
-                  Hiện đã tích lũy được <strong className={styles.highlightedStrong}>{formatNumber(partnerData.accum_time_remaining, 0)}</strong> ngày, ngày 1 hằng tháng sẽ được làm mới.
-               </p>
+               <h3 className={styles.sectionHeading}>Tổng Commission</h3>
                <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
                      <h4>Tổng Com Khách (sàn)</h4>
@@ -184,47 +103,18 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
                      <h4>Tổng Com Đại lý (Tradi)</h4>
                      <p className={styles.summaryValue}>${partnerData.total_partner_reward}</p>
                   </div>
-                  <div className={styles.summaryCard}>
-                     <h4>Com Khách tích lũy tháng này</h4>
-                     <p className={styles.summaryValue}>${partnerData.accum_client_reward}</p>
-                  </div>
-                  <div className={styles.summaryCard}>
-                     <h4>Com Đại lý tích lũy tháng này</h4>
-                     <p className={styles.summaryValue}>${partnerData.accum_partner_reward}</p>
-                  </div>
                </div>
 
-               {/* Chain Commission Breakdown */}
+                           {/* Chain Commission Breakdown */}
                <h3 className={styles.sectionListHeading}>Phân tích Commission Chi tiết</h3>
                <ChainCommissionBreakdown
-                  rows={chainCommissionRows}
-                  userRewardPercentage={
-                     partnerData.user_rank?.reward_percentage
-                        ? partnerData.user_rank.reward_percentage * 100
-                        : undefined
-                  }
-                  userTotalReward={partnerData.accum_client_reward ?? undefined}
+                  nodes={networkNodes}
                />
 
                {/* Account Chain Flow */}
                <h3 className={styles.sectionListHeadingSpaced}>Sơ đồ Đại lý</h3>
                <AccountChainFlow
-                  referralChain={referralChain}
-                  partnerTree={partnerTree}
-                  userId={localStorage.getItem('userId') || sessionStorage.getItem('userId') || ''}
-                  userRank={
-                     partnerData.user_rank
-                        ? {
-                           partner_rank: partnerData.user_rank.partner_rank,
-                           reward_percentage: partnerData.user_rank.reward_percentage * 100,
-                           lot_volume: partnerData.user_rank.lot_volume,
-                        }
-                        : null
-                  }
-                  exnessTotals={{
-                     volume_lots: partnerData.user_rank?.lot_volume || 0,
-                     reward_usd: partnerData.total_client_reward || 0,
-                  }}
+                  nodes={networkNodes}
                />
             </>
          )}

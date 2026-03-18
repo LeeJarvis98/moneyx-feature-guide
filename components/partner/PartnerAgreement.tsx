@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Gem, Diamond, Star, Award, Medal, Shield, Mail, CheckCircle, RefreshCw, Clock } from 'lucide-react';
+import { Mail, CheckCircle, RefreshCw, Clock } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
 
 interface PartnerAgreementProps {
@@ -14,14 +14,6 @@ interface PartnerAgreementProps {
   partnerStatus?: string;
   tokenExpiresAt?: string | null;
 }
-
-const partnerTiers = [
-  { name: 'Kim Cương', partner: '90%', tradi: '10%', condition: '2000 Lot', icon: Gem },
-  { name: 'Bạch Kim', partner: '85%', tradi: '15%', condition: '1000 Lot', icon: Diamond },
-  { name: 'Vàng', partner: '80%', tradi: '20%', condition: '500 Lot', icon: Star },
-  { name: 'Bạc', partner: '75%', tradi: '25%', condition: '100 Lot', icon: Award },
-  { name: 'Đồng', partner: '70%', tradi: '30%', condition: 'Hoàn thành', icon: Medal },
-];
 
 export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess, partnerStatus, tokenExpiresAt }: PartnerAgreementProps) {
   const [hasRead, setHasRead] = useState(false);
@@ -161,99 +153,57 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         <div className={styles.mainContent}>
           <h1 className={styles.title}>HOA HỒNG ĐỐI TÁC</h1>
 
-          <p className={styles.description}>
-            Đối tác được hưởng hoa hồng theo 5 cấp độ và chia sẻ phí dịch vụ Tradi khi giới thiệu thành công Bot VNCLC cho user mới.
-          </p>
-
-          <div className={styles.horizontalLayout}>
-            <div className={styles.leftSection}>
-              <div className={styles.tableContainer}>
-                {/* Table Header */}
-                <div className={styles.tableHeader}>
-                  <div className={styles.headerCell}>CẤP ĐỘ</div>
-                  <div className={styles.headerCell}>ĐỐI TÁC</div>
-                  <div className={styles.headerCell}>TRADI</div>
-                  <div className={styles.headerCell}>ĐIỀU KIỆN</div>
+          {/* Buttons */}
+          {!isPartner && (
+            <div className={styles.buttonContainer}>
+              {registrationError && (
+                <div className={styles.errorMessage}>
+                  {registrationError}
                 </div>
-
-                {/* Table Body */}
-                <div className={styles.tableBody}>
-                  {partnerTiers.map((tier, index) => {
-                    const IconComponent = tier.icon;
-                    return (
-                      <div key={index} className={styles.tableRow}>
-                        <div className={styles.tableCell}>
-                          <IconComponent size={18} className={styles.checkmark} />
-                          <span className={styles.tierName}>{tier.name}</span>
-                        </div>
-                        <div className={styles.tableCell}>
-                          <span className={styles.percentage}>{tier.partner}</span>
-                        </div>
-                        <div className={styles.tableCell}>
-                          <span className={styles.tradiPercentage}>{tier.tradi}</span>
-                        </div>
-                        <div className={styles.tableCell}>
-                          <span className={styles.conditionText}>{tier.condition}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+              )}
+              <div className={styles.buttonGrid}>
+                <button
+                  className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
+                  onClick={() => {
+                    setShowTermsModal(true);
+                    setHasClickedTerms(true);
+                  }}
+                >
+                  Điều khoản hợp tác & bảo mật
+                </button>
+                <button
+                  className={styles.partnerButton}
+                  onClick={handleRegisterAsPartner}
+                  disabled={!canProceed || isRegistering}
+                >
+                  {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
+                </button>
               </div>
-
-              {/* Buttons */}
-              {!isPartner && (
-                <div className={styles.buttonContainer}>
-                  {registrationError && (
-                    <div className={styles.errorMessage}>
-                      {registrationError}
-                    </div>
-                  )}
-                  <div className={styles.buttonGrid}>
-                    <button
-                      className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
-                      onClick={() => {
-                        setShowTermsModal(true);
-                        setHasClickedTerms(true);
-                      }}
-                    >
-                      Điều khoản hợp tác & bảo mật
-                    </button>
-                    <button
-                      className={styles.partnerButton}
-                      onClick={handleRegisterAsPartner}
-                      disabled={!canProceed || isRegistering}
-                    >
-                      {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
-                    </button>
-                  </div>
-                </div>
-              )}
-              {isPartner && (
-                <div className={styles.buttonContainer}>
-                  <button
-                    className={`${styles.termsButton} ${styles.termsButtonFilled}`}
-                    onClick={() => setShowTermsModal(true)}
-                  >
-                    Xem điều khoản hợp tác & bảo mật
-                  </button>
-                </div>
-              )}
-
-              {/* Inactive partner notice */}
-              {isPartner && partnerStatus === 'inactive' && (
-                <div className={styles.inactiveNotice}>
-                  <Mail size={20} className={styles.inactiveNoticeIcon} />
-                  <div>
-                    <p className={styles.inactiveNoticeTitle}>Tài khoản chờ xác nhận</p>
-                    <p className={styles.inactiveNoticeText}>
-                      Vui lòng kiểm tra email và nhấn nút &ldquo;Tôi đã đọc và xác nhận&rdquo; trong thư hợp đồng để kích hoạt tài khoản đối tác.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
+          )}
+          {isPartner && (
+            <div className={styles.buttonContainer}>
+              <button
+                className={`${styles.termsButton} ${styles.termsButtonFilled}`}
+                onClick={() => setShowTermsModal(true)}
+              >
+                Xem điều khoản hợp tác & bảo mật
+              </button>
+            </div>
+          )}
+
+          {/* Inactive partner notice */}
+          {isPartner && partnerStatus === 'inactive' && (
+            <div className={styles.inactiveNotice}>
+              <Mail size={20} className={styles.inactiveNoticeIcon} />
+              <div>
+                <p className={styles.inactiveNoticeTitle}>Tài khoản chờ xác nhận</p>
+                <p className={styles.inactiveNoticeText}>
+                  Vui lòng kiểm tra email và nhấn nút &ldquo;Tôi đã đọc và xác nhận&rdquo; trong thư hợp đồng để kích hoạt tài khoản đối tác.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -314,35 +264,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     <li>Cấp bậc đối tác tăng dần dựa vào tổng khối lượng giao dịch tích lũy của toàn mạng lưới bên dưới.</li>
                   </ol>
 
-                  {/* Rank table */}
-                  <div className={styles.termsRankTable}>
-                    <div className={styles.termsRankHeader}>
-                      <span>Cấp Độ</span>
-                      <span>Đối Tác</span>
-                      <span>Tradi</span>
-                      <span>Điều Kiện</span>
-                    </div>
-                    <div className={styles.termsRankRow}>
-                      <span className={styles.rankDiamond}>💎 Kim Cương</span>
-                      <span>90%</span><span className={styles.rankTradi}>10%</span><span>2.000 Lot</span>
-                    </div>
-                    <div className={`${styles.termsRankRow} ${styles.termsRankRowAlt}`}>
-                      <span className={styles.rankPlatinum}>⭐ Bạch Kim</span>
-                      <span>85%</span><span className={styles.rankTradi}>15%</span><span>1.000 Lot</span>
-                    </div>
-                    <div className={styles.termsRankRow}>
-                      <span className={styles.rankGold}>🏆 Vàng</span>
-                      <span>80%</span><span className={styles.rankTradi}>20%</span><span>500 Lot</span>
-                    </div>
-                    <div className={`${styles.termsRankRow} ${styles.termsRankRowAlt}`}>
-                      <span className={styles.rankSilver}>🥈 Bạc</span>
-                      <span>75%</span><span className={styles.rankTradi}>25%</span><span>100 Lot</span>
-                    </div>
-                    <div className={styles.termsRankRow}>
-                      <span className={styles.rankBronze}>🔰 Đồng</span>
-                      <span>70%</span><span className={styles.rankTradi}>30%</span><span>Hoàn thành đăng ký</span>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Section IV */}

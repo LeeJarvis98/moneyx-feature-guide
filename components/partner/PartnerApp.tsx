@@ -15,11 +15,10 @@ interface PartnerAppProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
-  partnerRank?: string;
   loadingPlatforms?: boolean;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, partnerRank, loadingPlatforms }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, loadingPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [hasSelectedPlatforms, setHasSelectedPlatforms] = useState<boolean | null>(null);

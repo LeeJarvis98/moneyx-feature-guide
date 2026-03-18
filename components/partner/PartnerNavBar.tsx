@@ -237,6 +237,12 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
       image: '/getbot_section/exness.png',
     },
     {
+      value: 'lirunex',
+      label: 'Lirunex',
+      disabled: false,
+      image: '/getbot_section/lirunex.png',
+    },
+    {
       value: 'binance',
       label: 'Binance',
       disabled: false,

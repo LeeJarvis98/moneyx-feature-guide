@@ -2,37 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Diamond, Gem, Star, Award, Medal, Shield, X, Sparkles, ArrowRight, LogIn, Link as LinkIcon, Info } from 'lucide-react';
+import { X, Sparkles, ArrowRight, LogIn, Link as LinkIcon } from 'lucide-react';
 import styles from './CongratulationsModal.module.css';
 
 interface CongratulationsModalProps {
-  rank: string;
   isOpen: boolean;
   onClose: () => void;
   onNavigateToLogin: () => void;
 }
 
-const rankIcons: Record<string, typeof Diamond> = {
-  'Kim Cương': Gem,
-  'Bạch Kim': Star,
-  'Vàng': Award,
-  'Bạc': Medal,
-  'Đồng': Shield,
-};
-
-const rankPercentages: Record<string, { partner: string; tradi: string }> = {
-  'Kim Cương': { partner: '90%', tradi: '10%' },
-  'Bạch Kim': { partner: '85%', tradi: '15%' },
-  'Vàng': { partner: '80%', tradi: '20%' },
-  'Bạc': { partner: '75%', tradi: '25%' },
-  'Đồng': { partner: '70%', tradi: '30%' },
-};
-
-export default function CongratulationsModal({ rank, isOpen, onClose, onNavigateToLogin }: CongratulationsModalProps) {
+export default function CongratulationsModal({ isOpen, onClose, onNavigateToLogin }: CongratulationsModalProps) {
   const [stage, setStage] = useState<1 | 2>(1);
   const [isBrowser, setIsBrowser] = useState(false);
-  const IconComponent = rankIcons[rank] || Shield;
-  const percentages = rankPercentages[rank] || { partner: '70%', tradi: '30%' };
 
   useEffect(() => {
     // Ensure we're in the browser
@@ -52,7 +33,7 @@ export default function CongratulationsModal({ rank, isOpen, onClose, onNavigate
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, rank]);
+  }, [isOpen]);
 
   const handleContinue = () => {
     if (stage === 1) {
@@ -96,24 +77,6 @@ export default function CongratulationsModal({ rank, isOpen, onClose, onNavigate
 
             <h2 className={styles.title}>Chúc Mừng!</h2>
             <p className={styles.subtitle}>Bạn đã đăng ký thành công Đại Lý Tradi</p>
-
-            <div className={styles.rankCard}>
-              <div className={styles.rankHeader}>
-                <IconComponent size={32} className={styles.rankIcon} />
-                <h3 className={styles.rankName}>{rank}</h3>
-              </div>
-              
-              <div className={styles.rewardInfo}>
-                <div className={styles.rewardItem}>
-                  <span className={styles.rewardLabel}>Hoa hồng đối tác:</span>
-                  <span className={styles.rewardValue}>{percentages.partner}</span>
-                </div>
-                <div className={styles.rewardItem}>
-                  <span className={styles.rewardLabel}>Hoa hồng Tradi:</span>
-                  <span className={styles.rewardValue}>{percentages.tradi}</span>
-                </div>
-              </div>
-            </div>
 
             <button className={styles.continueButton} onClick={handleContinue}>
               Tiếp Tục

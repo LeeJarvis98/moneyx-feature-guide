@@ -147,63 +147,6 @@
   letter-spacing: 1px;
 }
 
-.rankCard {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid rgba(255, 215, 0, 0.25);
-}
-
-.rankHeader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.rankIcon {
-  color: #ffd700;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
-}
-
-.rankName {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #fff;
-  margin: 0;
-  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-}
-
-.rewardInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.rewardItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border-left: 3px solid #ffd700;
-}
-
-.rewardLabel {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.95rem;
-}
-
-.rewardValue {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
 .infoText strong {
   color: #ffd700;
   font-weight: 600;

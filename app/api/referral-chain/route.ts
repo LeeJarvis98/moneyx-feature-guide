@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       const queryStart = Date.now();
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, email, partner_rank, referral_id')
+        .select('id, email, referral_id')
         .eq('id', currentUserId)
         .single();
       console.log(`[REFERRAL-CHAIN] User query for ${currentUserId} took ${Date.now() - queryStart}ms`);
@@ -81,13 +81,13 @@ export async function GET(request: NextRequest) {
         console.error('[REFERRAL-CHAIN] Error fetching user:', currentUserId, error);
         break;
       }
-      console.log('[REFERRAL-CHAIN] Found user:', user.id, user.email, user.partner_rank);
+      console.log('[REFERRAL-CHAIN] Found user:', user.id, user.email);
 
       // Add to chain (will reverse later to get top-down order)
       chain.unshift({
         userId: user.id,
         email: user.email,
-        partnerRank: user.partner_rank,
+        partnerRank: '',
       });
 
       // Find who referred this user

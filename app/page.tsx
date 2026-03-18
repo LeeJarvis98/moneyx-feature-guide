@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Drawer, Burger, Divider, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Diamond, Gem, Star, Award, Medal, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
+import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Shield, Copy, Check, Wallet, Bot, Zap, Download } from 'lucide-react';
 import Image from 'next/image';
 import { GetBotTab } from '@/components/tabs/GetBotTab';
 import { ManageAccountsTab } from '@/components/tabs/ManageAccountsTab';
@@ -41,50 +41,15 @@ export default function HomePage() {
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
-  const [partnerRank, setPartnerRank] = useState<string>('');
+  const [isActivePartner, setIsActivePartner] = useState(false);
   const [referralId, setReferralId] = useState<string>('');
-  const [daysToMonthEnd, setDaysToMonthEnd] = useState<number | null>(null);
   const [loadingPlatforms, setLoadingPlatforms] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
-  const [registeredRank, setRegisteredRank] = useState<string>('Đồng');
   const [partnerStatus, setPartnerStatus] = useState<string>('active');
   const [tokenExpiresAt, setTokenExpiresAt] = useState<string | null>(null);
   // Invocation counter: lets us discard results from stale in-flight checkPartnerRank calls
   const checkPartnerRankCallId = useRef(0);
   const theme = useMantineTheme();
-
-  // Fetch Internet time and calculate days to month end
-  useEffect(() => {
-    const fetchInternetTime = async () => {
-      try {
-        const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-        const data = await response.json();
-        const currentDate = new Date(data.datetime);
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-        const currentDay = currentDate.getDate();
-        const daysRemaining = lastDayOfMonth - currentDay;
-        setDaysToMonthEnd(daysRemaining);
-      } catch (error) {
-        console.error('[HomePage] Error fetching Internet time:', error);
-        // Fallback to local time if Internet time fetch fails
-        const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-        const currentDay = currentDate.getDate();
-        const daysRemaining = lastDayOfMonth - currentDay;
-        setDaysToMonthEnd(daysRemaining);
-      }
-    };
-
-    fetchInternetTime();
-    // Update every hour
-    const interval = setInterval(fetchInternetTime, 3600000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -155,9 +120,7 @@ export default function HomePage() {
         if (callId !== checkPartnerRankCallId.current) return;
 
         if (data.isPartner) {
-          if (data.rank) {
-            setPartnerRank(data.rank);
-          }
+          setIsActivePartner(true);
           // Track partner activation status
           const status = data.partnerStatus ?? 'active';
           setPartnerStatus(status);
@@ -165,8 +128,6 @@ export default function HomePage() {
 
           // Show congratulations modal when a newly confirmed partner visits for the first time
           if (status === 'active' && !data.congratsShown) {
-            const rank = data.rank || localStorage.getItem('partnerRank') || 'Đồng';
-            setRegisteredRank(rank);
             setShowCongratulations(true);
           }
 
@@ -176,7 +137,7 @@ export default function HomePage() {
             localStorage.setItem('referralId', data.referralId);
           }
         } else {
-          setPartnerRank('None');
+          setIsActivePartner(false);
           setReferralId('');
           sessionStorage.removeItem('referralId');
           localStorage.removeItem('referralId');
@@ -187,8 +148,8 @@ export default function HomePage() {
     }
   };
 
-  // Determine if user is an active partner (has partner rank that's not 'None' AND email confirmed)
-  const isPartner = partnerRank && partnerRank !== 'None' && partnerStatus !== 'inactive';
+  // Determine if user is an active partner (confirmed email)
+  const isPartner = isActivePartner && partnerStatus !== 'inactive';
 
   // Handle navigation section change
   const handleNavigationChange = (value: string) => {
@@ -294,7 +255,7 @@ export default function HomePage() {
     // Reset all user and partner states
     setIsUserLoggedIn(false);
     setLoggedInUserId(null);
-    setPartnerRank('');
+    setIsActivePartner(false);
     setReferralId('');
     setIsPartnerAuthenticated(false);
     setSelectedPlatform(null);
@@ -364,57 +325,8 @@ export default function HomePage() {
                       Việt Nam Chất Lượng Cao
                     </Title>
                     <Group gap="xs" onClick={(e) => e.stopPropagation()} visibleFrom="sm">
-                      {/* Show rank badge for active partners only */}
-                      {isUserLoggedIn && partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && partnerStatus !== 'inactive' && (() => {
-                        const rankIcons: Record<string, typeof Diamond> = {
-                          'SALE': Zap,
-                          'Kim Cương': Gem,
-                          'Bạch Kim': Star,
-                          'Vàng': Award,
-                          'Bạc': Medal,
-                          'Đồng': Shield,
-                        };
-                        const rankPercentages: Record<string, string> = {
-                          'SALE': '95%',
-                          'Kim Cương': '90%',
-                          'Bạch Kim': '85%',
-                          'Vàng': '80%',
-                          'Bạc': '75%',
-                          'Đồng': '70%',
-                        };
-                        const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
-                          'SALE': { variant: 'gradient', gradient: { from: 'violet', to: 'pink', deg: 90 }, className: classes.rankBadgeSale },
-                          'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
-                          'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.6', deg: 90 }, className: classes.rankBadgeBachKim },
-                          'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
-                          'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
-                          'Đồng': { variant: 'filled', color: 'orange.9', className: classes.rankBadgeDong },
-                        };
-                        const RankIcon = rankIcons[partnerRank];
-                        const percentage = rankPercentages[partnerRank];
-                        const style = rankStyles[partnerRank];
-                        return (
-                          <Badge
-                            variant={style?.variant || 'gradient'}
-                            gradient={style?.gradient}
-                            color={style?.color}
-                            size="lg"
-                            className={`${classes.rankBadge} ${style?.className || ''}`}
-                          >
-                            <span className={classes.rankBadgeContent}>
-                              {RankIcon && (
-                                <span className={classes.rankIcon}>
-                                  <RankIcon size={18} />
-                                </span>
-                              )}
-                              <span>{partnerRank}{percentage && `: ${percentage}`}</span>
-                            </span>
-                          </Badge>
-                        );
-                      })()}
-                      
                       {/* Show "Chưa là đối tác" badge for non-partners and inactive (unconfirmed) partners */}
-                      {isUserLoggedIn && (partnerRank === 'None' || partnerStatus === 'inactive') && (
+                      {isUserLoggedIn && (!isActivePartner || partnerStatus === 'inactive') && (
                         <Badge
                           variant="outline"
                           color="gray"
@@ -435,7 +347,7 @@ export default function HomePage() {
                           gap="xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (partnerRank === 'None' || partnerStatus === 'inactive') {
+                            if (!isActivePartner || partnerStatus === 'inactive') {
                               handleNavigationChange('features');
                             }
                           }}
@@ -445,7 +357,7 @@ export default function HomePage() {
                             borderRadius: '8px',
                             backgroundColor: 'rgba(255, 184, 28, 0.1)',
                             border: '1px solid rgba(255, 184, 28, 0.3)',
-                            cursor: (partnerRank === 'None' || partnerStatus === 'inactive') ? 'pointer' : 'default',
+                            cursor: (!isActivePartner || partnerStatus === 'inactive') ? 'pointer' : 'default',
                           }}
                         >
                           <Text size="sm" fw={600} c="yellow">
@@ -968,7 +880,6 @@ export default function HomePage() {
                         onPlatformSelect={setSelectedPlatform}
                         isAuthenticated={isPartnerAuthenticated}
                         setIsAuthenticated={setIsPartnerAuthenticated}
-                        partnerRank={partnerRank}
                         loadingPlatforms={loadingPlatforms}
                       />
                     )}
@@ -1009,13 +920,11 @@ export default function HomePage() {
                     // Update parent state
                     setIsUserLoggedIn(true);
                     setLoggedInUserId(userId);
-                    // Set partner rank from login response and save to localStorage
-                    if (partnerRank) {
-                      setPartnerRank(partnerRank);
-                      localStorage.setItem('partnerRank', partnerRank);
+                    // Set partner status from login response
+                    if (partnerRank && partnerRank !== 'None' && partnerRank !== '') {
+                      setIsActivePartner(true);
                     } else {
-                      setPartnerRank('');
-                      localStorage.removeItem('partnerRank');
+                      setIsActivePartner(false);
                     }
                     // Set referral ID if provided
                     if (ownReferralId) {
@@ -1077,28 +986,6 @@ export default function HomePage() {
                   <Text size="sm" c="dimmed">
                     © {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.
                   </Text>
-                  {daysToMonthEnd !== null && (
-                    <Badge
-                      variant="light"
-                      color="gray"
-                      size="lg"
-                      className={classes.countdownBanner}
-                    >
-                      <span className={classes.scrollingText}>
-                        {daysToMonthEnd === 0 ? (
-                          <>
-                            <span className={classes.highlightText}>Ngày mai</span>
-                            {' sẽ chốt hoa hồng'}
-                          </>
-                        ) : (
-                          <>
-                            <span className={classes.highlightText}>{daysToMonthEnd} ngày</span>
-                            {' nữa đến kỳ chốt hoa hồng'}
-                          </>
-                        )}
-                      </span>
-                    </Badge>
-                  )}
                 </Group>
                 {/* <Group gap="md">
                 <Text size="sm" c="dimmed" component="a" href="#" style={{ textDecoration: 'none' }}>
@@ -1179,43 +1066,10 @@ export default function HomePage() {
           overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
         >
           <Stack style={{ height: 'calc(100dvh - 80px)', display: 'flex', flexDirection: 'column' }}>
-            {/* Rank badge + referral ID at top */}
+            {/* Referral ID at top */}
             {isUserLoggedIn && (
               <Stack gap="sm" mb="md">
-                {partnerRank && partnerRank !== 'None' && partnerRank !== 'ADMIN' && partnerStatus !== 'inactive' && (() => {
-                  const rankIcons: Record<string, typeof Diamond> = {
-                    'SALE': Zap, 'Kim Cương': Gem, 'Bạch Kim': Star, 'Vàng': Award, 'Bạc': Medal, 'Đồng': Shield,
-                  };
-                  const rankPercentages: Record<string, string> = {
-                    'SALE': '95%', 'Kim Cương': '90%', 'Bạch Kim': '85%', 'Vàng': '80%', 'Bạc': '75%', 'Đồng': '70%',
-                  };
-                  const rankStyles: Record<string, { variant?: 'gradient' | 'filled', gradient?: { from: string; to: string; deg: number }, color?: string, className: string }> = {
-                    'SALE': { variant: 'gradient', gradient: { from: 'violet', to: 'pink', deg: 90 }, className: classes.rankBadgeSale },
-                    'Kim Cương': { variant: 'gradient', gradient: { from: 'cyan', to: 'white', deg: 90 }, className: classes.rankBadgeKimCuong },
-                    'Bạch Kim': { variant: 'gradient', gradient: { from: 'gray.1', to: 'gray.6', deg: 90 }, className: classes.rankBadgeBachKim },
-                    'Vàng': { variant: 'filled', color: 'yellow', className: classes.rankBadgeVang },
-                    'Bạc': { variant: 'filled', color: 'gray.7', className: classes.rankBadgeBac },
-                    'Đồng': { variant: 'filled', color: 'orange.9', className: classes.rankBadgeDong },
-                  };
-                  const RankIcon = rankIcons[partnerRank];
-                  const percentage = rankPercentages[partnerRank];
-                  const style = rankStyles[partnerRank];
-                  return (
-                    <Badge
-                      variant={style?.variant || 'gradient'}
-                      gradient={style?.gradient}
-                      color={style?.color}
-                      size="lg"
-                      className={`${classes.rankBadge} ${style?.className || ''}`}
-                    >
-                      <span className={classes.rankBadgeContent}>
-                        {RankIcon && <span className={classes.rankIcon}><RankIcon size={18} /></span>}
-                        <span>{partnerRank}{percentage && `: ${percentage}`}</span>
-                      </span>
-                    </Badge>
-                  );
-                })()}
-                {(partnerRank === 'None' || partnerStatus === 'inactive') && (
+                {(!isActivePartner || partnerStatus === 'inactive') && (
                   <Badge
                     variant="outline"
                     color="gray"
@@ -1335,20 +1189,6 @@ export default function HomePage() {
                   <Image src="/tradi-logo.png" alt="Tradi Logo" width={24} height={24} style={{ objectFit: 'contain' }} />
                   <Text size="xs" c="dimmed">© {new Date().getFullYear()} Tradi. Bảo lưu mọi quyền.</Text>
                 </Group>
-                {daysToMonthEnd !== null && (
-                  <Badge
-                    variant="light"
-                    color="gray"
-                    size="sm"
-                    style={{ maxWidth: '100%', textTransform: 'none', whiteSpace: 'normal', height: 'auto', padding: '6px 10px' }}
-                  >
-                    {daysToMonthEnd === 0 ? (
-                      <span><span style={{ color: '#FFB81C', fontWeight: 700 }}>Ngày mai</span>{' sẽ chốt hoa hồng'}</span>
-                    ) : (
-                      <span><span style={{ color: '#FFB81C', fontWeight: 700 }}>{daysToMonthEnd} ngày</span>{' nữa đến kỳ chốt hoa hồng'}</span>
-                    )}
-                  </Badge>
-                )}
               </Stack>
             </Box>
           </Stack>
@@ -1356,7 +1196,6 @@ export default function HomePage() {
 
         {/* Congratulations Modal */}
         <CongratulationsModal
-          rank={registeredRank}
           isOpen={showCongratulations}
           onClose={() => {
             setShowCongratulations(false);

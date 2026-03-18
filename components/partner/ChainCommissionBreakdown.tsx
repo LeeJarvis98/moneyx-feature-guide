@@ -1,236 +1,134 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Stack, SimpleGrid, Paper, Text, Badge, Select } from '@mantine/core';
+import { Stack, Paper, Text, Badge, Select } from '@mantine/core';
 import { DataTable, useDataTableColumns, type DataTableColumn } from 'mantine-datatable';
+import type { NetworkSnapshotNode } from '@/types';
 import styles from './ChainCommissionBreakdown.module.css';
 
 const PAGE_SIZES = [5, 10, 20, 50];
-const STORE_KEY = 'chain-commission-breakdown-v1';
+const STORE_KEY = 'chain-commission-breakdown-v2';
 
-// Display number as-is from DB, only strip JS float noise (e.g. 245.23600000000002 → 245.236)
+// Display number stripped of JS float noise (e.g. 245.23600000000002 → 245.236)
 const fmt = (n: number) => parseFloat(n.toPrecision(10)).toString();
 
-interface ChainCommissionRow {
-  recipient_id: string;
-  source_partner_id: string;
-  source_email: string | null;
-  source_rank: string;
-  depth: number;
-  chain_root_id: string | null;
-  source_total_reward: number;
-  commission_pool: number;
-  tradi_fee: number;
-  remaining_pool: number;
-  your_role: 'admin' | 'direct' | 'indirect';
-  your_cut: number;
-  total_upliner_count: number;
-  upliner_share: number;
-  own_keep: number;
-  total_chain_commission: number;
-  snapshot_at: string;
-}
-
 interface ChainCommissionBreakdownProps {
-  rows: ChainCommissionRow[];
-  userRewardPercentage?: number;
-  userTotalReward?: number;
+  nodes: NetworkSnapshotNode[];
 }
 
-export default function ChainCommissionBreakdown({
-  rows,
-  userRewardPercentage,
-  userTotalReward,
-}: ChainCommissionBreakdownProps) {
-  const [selectedChainRoot, setSelectedChainRoot] = useState<string | null>('all');
+// Collect all user_ids in the subtree rooted at rootUserId (inclusive)
+function collectSubtree(rootUserId: string, allNodes: NetworkSnapshotNode[]): Set<string> {
+  const result = new Set<string>([rootUserId]);
+  const queue = [rootUserId];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    allNodes.forEach((n) => {
+      if (n.parent_user_id === current && !result.has(n.user_id)) {
+        result.add(n.user_id);
+        queue.push(n.user_id);
+      }
+    });
+  }
+  return result;
+}
+
+export default function ChainCommissionBreakdown({ nodes }: ChainCommissionBreakdownProps) {
+  const [selectedDirectPartner, setSelectedDirectPartner] = useState<string | null>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
 
-  // Get unique chain roots for filter
-  const chainRoots = useMemo(() => {
-    const roots = new Set<string>();
-    rows.forEach((row) => {
-      if (row.depth === 1 && row.source_partner_id) {
-        roots.add(row.source_partner_id);
-      }
-    });
-    return Array.from(roots);
-  }, [rows]);
-
-  // Filter rows based on selected chain root — indirect partners included for calculations
-  const filteredRows = useMemo(() => {
-    if (selectedChainRoot === 'all') return rows;
-    return rows.filter(
-      (row) =>
-        row.source_partner_id === selectedChainRoot ||
-        row.chain_root_id === selectedChainRoot
-    );
-  }, [rows, selectedChainRoot]);
-
-  // Table-visible rows: indirect partners are hidden from display only
-  const visibleRows = useMemo(
-    () => filteredRows.filter((row) => row.your_role !== 'indirect'),
-    [filteredRows]
+  // All partner nodes (Direct + Indirect)
+  const partnerNodes = useMemo(
+    () => nodes.filter((n) => n.role === 'Direct Partner' || n.role === 'Indirect Partner'),
+    [nodes]
   );
 
-  // Reset to first page when filter changes
-  const handleChainRootChange = (value: string | null) => {
-    setSelectedChainRoot(value);
+  // Direct partners for the filter dropdown
+  const directPartners = useMemo(
+    () => nodes.filter((n) => n.role === 'Direct Partner'),
+    [nodes]
+  );
+
+  // Filtered partner nodes for current selection
+  const filteredPartners = useMemo(() => {
+    if (!selectedDirectPartner || selectedDirectPartner === 'all') return partnerNodes;
+    const subtree = collectSubtree(selectedDirectPartner, nodes);
+    return partnerNodes.filter((n) => subtree.has(n.user_id));
+  }, [selectedDirectPartner, partnerNodes, nodes]);
+
+  const handleFilterChange = (value: string | null) => {
+    setSelectedDirectPartner(value);
     setPage(1);
   };
 
-  // Paginated records — derived from visibleRows so indirect stay hidden in the table
   const paginatedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return visibleRows.slice(start, start + pageSize);
-  }, [visibleRows, page, pageSize]);
+    return filteredPartners.slice(start, start + pageSize);
+  }, [filteredPartners, page, pageSize]);
 
-  // Calculate summary values
-  const summary = useMemo(() => {
-    const ownKeep = filteredRows.length > 0 ? filteredRows[0].own_keep : 0;
-    const totalFromChain = filteredRows.reduce((sum, row) => sum + row.your_cut, 0);
-    const totalChainCommission = filteredRows.length > 0 ? filteredRows[0].total_chain_commission : 0;
-    const activePartners = new Set(filteredRows.map((row) => row.source_partner_id)).size;
-
-    return {
-      ownKeep,
-      totalFromChain,
-      totalChainCommission,
-      activePartners,
-    };
-  }, [filteredRows]);
-
-  // Get role badge color
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'direct':
-        return 'yellow';
-      case 'indirect':
-        return 'grape';
-      case 'admin':
-        return 'red';
-      default:
-        return 'gray';
+      case 'Direct Partner': return 'yellow';
+      case 'Indirect Partner': return 'grape';
+      default: return 'gray';
     }
   };
 
-  // Column definitions with resizable flag
-  const columnDefs: DataTableColumn<ChainCommissionRow>[] = useMemo(() => [
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'Direct Partner': return 'Đại lý trực tiếp';
+      case 'Indirect Partner': return 'Đại lý gián tiếp';
+      default: return role;
+    }
+  };
+
+  const columnDefs: DataTableColumn<NetworkSnapshotNode>[] = useMemo(() => [
     {
-      accessor: 'source_partner_id',
+      accessor: 'user_id',
       title: 'Đại lý',
       width: 200,
       resizable: true,
       render: (row) => (
         <Stack gap={2}>
-          <Text size="sm" fw={600} >
-            {row.source_partner_id}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {row.source_email || 'N/A'}
-          </Text>
+          <Text size="sm" fw={600}>{row.user_id}</Text>
+          <Text size="xs" c="dimmed">{row.email ?? 'N/A'}</Text>
         </Stack>
       ),
     },
     {
-      accessor: 'source_rank',
-      title: 'Hạng',
-      width: 90,
+      accessor: 'role',
+      title: 'Loại',
+      width: 160,
       resizable: true,
       render: (row) => (
-        <Badge variant="light" color="violet" size="sm">
-          {row.source_rank}
+        <Badge variant="dot" color={getRoleBadgeColor(row.role)} size="sm">
+          {getRoleLabel(row.role)}
         </Badge>
       ),
     },
-    // {
-    //   accessor: 'your_role',
-    //   title: 'Vai trò',
-    //   width: 100,
-    //   resizable: true,
-    //   render: (row) => (
-    //     <Badge variant="dot" color={getRoleBadgeColor(row.your_role)} size="sm">
-    //       {row.your_role}
-    //     </Badge>
-    //   ),
-    // },
     {
-      accessor: 'source_total_reward',
-      title: 'Com Đại lý',
-      width: 120,
-      resizable: true,
-      render: (row) => <Text size="sm">${fmt(row.source_total_reward)}</Text>,
-    },
-    {
-      accessor: 'commission_pool',
-      title: 'Quỹ Hoa hồng',
+      accessor: 'total_lots',
+      title: 'Khối lượng (lots)',
       width: 150,
       resizable: true,
-      render: (row) => (
-        <Stack gap={2}>
-          <Text size="sm">${fmt(row.commission_pool)}</Text>
-          <Text size="xs" c="dimmed">
-            {fmt((row.commission_pool / row.source_total_reward) * 100)}% chia upline
-          </Text>
-        </Stack>
-      ),
+      render: (row) => <Text size="sm">{row.total_lots.toLocaleString()}</Text>,
     },
     {
-      accessor: 'tradi_fee',
-      title: 'Phí Tradi (5%)',
-      width: 120,
-      resizable: true,
-      render: (row) => (
-        <Text size="sm" c="dimmed">
-          ${fmt(row.tradi_fee)}
-        </Text>
-      ),
-    },
-    // {
-    //   accessor: 'remaining_pool',
-    //   title: 'Quỹ còn lại',
-    //   width: 130,
-    //   resizable: true,
-    //   render: (row) => (
-    //     <Text size="sm" c="orange" fw={600}>
-    //       ${fmt(row.remaining_pool)}
-    //     </Text>
-    //   ),
-    // },
-    // {
-    //   accessor: 'total_upliner_count',
-    //   title: 'Tổng Đại lý upline',
-    //   width: 160,
-    //   resizable: true,
-    //   render: (row) => <Text size="sm">{row.total_upliner_count}</Text>,
-    // },
-    // {
-    //   accessor: 'upliner_share',
-    //   title: 'Upline 50% chia đều',
-    //   width: 120,
-    //   resizable: true,
-    //   render: (row) => (
-    //     <Text size="sm" c="teal">
-    //       {row.total_upliner_count === 0 ? '' : `$${fmt(row.upliner_share)}`}
-    //     </Text>
-    //   ),
-    // },
-    {
-      accessor: 'your_cut',
-      title: 'Hoa hồng của bạn',
-      width: 140,
+      accessor: 'total_reward_usd',
+      title: 'Hoa hồng nhận được',
+      width: 160,
       resizable: true,
       render: (row) => (
         <Text size="sm" fw={700} c="blue">
-          ${fmt(row.your_cut)}
+          ${fmt(row.total_reward_usd)}
         </Text>
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
-  const { effectiveColumns } = useDataTableColumns<ChainCommissionRow>({
+  const { effectiveColumns } = useDataTableColumns<NetworkSnapshotNode>({
     key: STORE_KEY,
     columns: columnDefs,
     scrollViewportRef,
@@ -239,64 +137,25 @@ export default function ChainCommissionBreakdown({
   return (
     <div className={styles.container}>
       <Stack gap="lg">
-        {/* Summary Cards */}
-        <SimpleGrid cols={3} spacing="md">
-          <Paper p="md" withBorder className={styles.summaryCard}>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                {`${userRewardPercentage}% của $${userTotalReward}`}
-              </Text>
-              <Text size="xl" fw={700} c="blue">
-                ${fmt(summary.ownKeep)}
-              </Text>
-            </Stack>
-          </Paper>
-
-          <Paper p="md" withBorder className={styles.summaryCard}>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                 Com từ các Đại lý
-              </Text>
-              <Text size="xl" fw={700} c="orange">
-                ${fmt(summary.totalFromChain)}
-              </Text>
-            </Stack>
-          </Paper>
-
-          <Paper p="md" withBorder className={styles.summaryCard}>
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Thưởng tháng này ({`${userRewardPercentage}% + Com từ các Đại lý`})
-              </Text>
-              <Text size="xl" fw={700} c="green">
-                ${fmt(summary.totalChainCommission)}
-              </Text>
-            </Stack>
-          </Paper>
-        </SimpleGrid>
-
-        {/* Filter */}
-        {chainRoots.length > 1 && (
+        {/* Filter by direct partner — only shown when there are multiple direct partners */}
+        {directPartners.length > 1 && (
           <Select
             label="Lọc theo Đại lý trực tiếp"
             placeholder="Chọn một đại lý trực tiếp"
             data={[
               { value: 'all', label: 'Tất cả đại lý' },
-              ...chainRoots.map((rootId) => {
-                const row = rows.find((r) => r.source_partner_id === rootId);
-                return {
-                  value: rootId,
-                  label: row?.source_email || rootId,
-                };
-              }),
+              ...directPartners.map((n) => ({
+                value: n.user_id,
+                label: n.email ?? n.user_id,
+              })),
             ]}
-            value={selectedChainRoot}
-            onChange={handleChainRootChange}
+            value={selectedDirectPartner}
+            onChange={handleFilterChange}
             clearable={false}
           />
         )}
 
-        {/* Commission Table — indirect partners are invisible here but counted in summary */}
+        {/* Partner table */}
         <Paper withBorder>
           <DataTable
             striped
@@ -305,15 +164,14 @@ export default function ChainCommissionBreakdown({
             storeColumnsKey={STORE_KEY}
             scrollViewportRef={scrollViewportRef}
             records={paginatedRows}
-            // Pagination counts only visible (non-indirect) rows
-            totalRecords={visibleRows.length}
+            totalRecords={filteredPartners.length}
             recordsPerPage={pageSize}
             page={page}
             onPageChange={setPage}
             recordsPerPageOptions={PAGE_SIZES}
             onRecordsPerPageChange={(size) => { setPageSize(size); setPage(1); }}
             columns={effectiveColumns}
-            noRecordsText="Không có dữ liệu hoa hồng"
+            noRecordsText="Không có dữ liệu mạng lưới"
           />
         </Paper>
       </Stack>

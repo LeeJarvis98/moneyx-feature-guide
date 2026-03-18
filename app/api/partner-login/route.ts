@@ -234,10 +234,6 @@ export async function POST(request: NextRequest) {
                 total_partners: 0,
                 total_partner_lots: 0,
                 total_partner_reward: 0,
-                accum_client_reward: 0,
-                accum_partner_reward: 0,
-                accum_time_remaining: 0,
-                claim_time_remaining: 0,
                 last_month_client_reward: 0,
                 last_month_partner_reward: 0,
               });

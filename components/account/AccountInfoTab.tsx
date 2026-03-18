@@ -142,20 +142,6 @@ export function AccountInfoTab({ userId }: AccountInfoTabProps) {
 
             <Group gap="md" align="flex-start">
               <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
-                <Award size={24} />
-              </ThemeIcon>
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">
-                  Cấp bậc đối tác
-                </Text>
-                <Text fw={600} size="lg">
-                  {userData.partner_rank === 'None' ? 'Chưa là đối tác' : userData.partner_rank}
-                </Text>
-              </Stack>
-            </Group>
-
-            <Group gap="md" align="flex-start">
-              <ThemeIcon size="xl" radius="md" variant="light" color="yellow">
                 <Calendar size={24} />
               </ThemeIcon>
               <Stack gap={4}>

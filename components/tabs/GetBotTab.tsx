@@ -48,7 +48,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
   const pathname = usePathname();
   // Extract partner ID from pathname (e.g., /mra -> mra)
   const partnerId = pathname.startsWith('/') && pathname !== '/' ? pathname.slice(1).split('/')[0] : null;
-  
+
   const [active, setActive] = useState(0);
   const [email, setEmail] = useState('');
   const [platform, setPlatform] = useState<string | null>(null);
@@ -146,38 +146,29 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       ];
 
       onAsideContentChange(
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className={classes.asideContainer}>
           {/* Header */}
-          <div style={{ paddingBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+          <div className={classes.asideHeader}>
+            <h3 className={classes.asideTitle}>
               Cấu hình Bot
             </h3>
           </div>
 
           {/* Links */}
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingRight: '0.5rem' }}>
+          <div className={classes.asideLinkList}>
             {configLinks.map(({ label, url }) => (
-              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)' }}>
+              <div key={label} className={classes.asideLinkItem}>
+                <label className={classes.asideLinkLabel} htmlFor={`config-link-${label}`}>
                   {label}
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className={classes.asideLinkRow}>
                   <input
+                    id={`config-link-${label}`}
                     type="text"
                     value={url}
                     readOnly
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: '#ffffff',
-                      fontSize: '0.75rem',
-                      fontFamily: 'monospace',
-                      cursor: 'default',
-                      minWidth: 0,
-                    }}
+                    aria-label={label}
+                    className={classes.asideLinkInput}
                   />
                   <CopyButton value={url} timeout={2000}>
                     {({ copied, copy }) => (
@@ -188,21 +179,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       >
                         <button
                           onClick={copy}
-                          style={{
-                            flexShrink: 0,
-                            padding: '0.5rem 1rem',
-                            backgroundColor: copied
-                              ? 'rgba(34, 197, 94, 0.1)'
-                              : 'rgba(255, 184, 28, 0.1)',
-                            border: `1px solid ${copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 184, 28, 0.3)'}`,
-                            borderRadius: '6px',
-                            color: copied ? '#22c55e' : '#ffb81c',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.2s ease',
-                          }}
+                          className={`${classes.asideCopyButton} ${copied ? classes.asideCopyButtonCopied : ''}`}
                         >
                           {copied ? 'Đã chép!' : 'Sao chép'}
                         </button>
@@ -233,20 +210,20 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       const response = await fetch('/api/get-licensed-ids', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           platform: selectedPlatform,
-          userId 
+          userId
         }),
       });
 
       if (!response.ok) return;
 
       const result = await response.json();
-      
+
       if (result.success && result.licensedIds) {
         const licensedSet = new Set(result.licensedIds);
-        
+
         // Update account rows with current license statuses
         setAccountRows((prev) =>
           prev.map((row) => ({
@@ -254,7 +231,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
             status: licensedSet.has(row.id) ? 'licensed' : 'unlicensed',
           }))
         );
-        
+
         // Update selected accounts to match current licensed accounts (up to 3)
         const currentLicensed = accountRows
           .filter((row) => licensedSet.has(row.id))
@@ -274,7 +251,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         const storedData = sessionStorage.getItem('partnerPlatformData');
         if (storedData) {
           const platformData = JSON.parse(storedData);
-          
+
           // Load platform URLs
           if (platformData.platformRefLinks && Array.isArray(platformData.platformRefLinks)) {
             const urlMap: Record<string, string> = {};
@@ -290,13 +267,13 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
             });
             setPartnerPlatformUrls(urlMap);
           }
-          
+
           // Load selected platforms
           if (platformData.selectedPlatform && Array.isArray(platformData.selectedPlatform)) {
             const platforms = platformData.selectedPlatform.map((p: string) => p.toLowerCase());
             setSelectedPlatforms(platforms);
           }
-          
+
           // Load support link
           if (platformData.supportLink && typeof platformData.supportLink === 'string') {
             setSupportLink(platformData.supportLink);
@@ -354,9 +331,9 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         const rows: AccountRow[] = result.data.accountsWithStatus
           ? result.data.accountsWithStatus
           : result.data.accounts.map((accountId: string) => ({
-              id: accountId,
-              status: 'unlicensed' as const,
-            }));
+            id: accountId,
+            status: 'unlicensed' as const,
+          }));
         setAccountRows(rows);
         const licensedAccounts = rows
           .filter((row) => row.status === 'licensed')
@@ -370,8 +347,8 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         setAccountStatus('unauthorized');
         setErrorMessage(
           'Tài khoản ' +
-            (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || '') +
-            ' này chưa tồn tại trong hệ thống. \nXin hãy liên hệ Hỗ trợ.'
+          (tradingPlatforms.find((p) => p.value === selectedPlatform)?.label || '') +
+          ' này chưa tồn tại trong hệ thống. \nXin hãy liên hệ Hỗ trợ.'
         );
       }
     } catch (error) {
@@ -394,7 +371,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           platform: selectedPlatform,
           captchaToken: captchaToken,
@@ -439,7 +416,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
     try {
       // Retrieve referral ID from sessionStorage
       const referralId = sessionStorage.getItem('referralId');
-      
+
       if (!referralId) {
         setAccountStatus('unauthorized');
         setErrorMessage('Referral ID not found. Please access through a valid partner link.');
@@ -457,7 +434,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
           'Content-Type': 'application/json',
           'x-user-id': userId || '', // Pass userId in header for database insert
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           platform: selectedPlatform,
           referralId: referralId,
@@ -479,23 +456,23 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         setOtpError(null);
         setAccountData(result.data);
         // Use accountsWithStatus if available (from database check), otherwise use default status
-        const rows: AccountRow[] = result.data.accountsWithStatus 
-          ? result.data.accountsWithStatus 
+        const rows: AccountRow[] = result.data.accountsWithStatus
+          ? result.data.accountsWithStatus
           : result.data.accounts.map((accountId: string) => ({
-              id: accountId,
-              status: 'unlicensed' as const,
-            }));
+            id: accountId,
+            status: 'unlicensed' as const,
+          }));
         setAccountRows(rows);
-        
+
         // Auto-select accounts that are already licensed (exist in database)
         const licensedAccounts = rows
           .filter((row) => row.status === 'licensed')
           .map((row) => row.id);
         setSelectedAccounts(licensedAccounts.slice(0, 3)); // Limit to max 3
-        
+
         // Reset marked for deletion when checking new email
         setAccountsMarkedForDeletion([]);
-        
+
         setAccountStatus('authorized');
       } else {
         setAccountStatus('unauthorized');
@@ -515,7 +492,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
 
   const toggleAccountSelection = (accountId: string) => {
     const row = accountRows.find((r) => r.id === accountId);
-    
+
     if (row?.status === 'licensed') {
       // Handle licensed accounts - toggle for deletion
       setAccountsMarkedForDeletion((prev) => {
@@ -556,15 +533,15 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
   const handleDownloadBot = async () => {
     try {
       const botUrl = '/api/download-bot';
-      
+
       // Try to open the file directly (will trigger MT5 if installed)
       const link = document.createElement('a');
       link.href = botUrl;
       link.target = '_blank';
-      
+
       // Try to open in new tab first
       const opened = window.open(botUrl, '_blank');
-      
+
       // If popup was blocked or failed to open, fallback to download
       if (!opened || opened.closed || typeof opened.closed === 'undefined') {
         // Fallback: trigger download
@@ -593,7 +570,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           accountIds: accountsMarkedForDeletion,
           email: email,
         }),
@@ -612,12 +589,12 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
             accountsMarkedForDeletion.includes(row.id) ? { ...row, status: 'unlicensed' } : row
           )
         );
-        
+
         // Remove from selectedAccounts if they were selected
-        setSelectedAccounts((prev) => 
+        setSelectedAccounts((prev) =>
           prev.filter((id) => !accountsMarkedForDeletion.includes(id))
         );
-        
+
         // Clear marked for deletion
         setAccountsMarkedForDeletion([]);
       }
@@ -648,7 +625,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       // Get userId and referralId from storage
       const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       const referralId = sessionStorage.getItem('referralId');
-      
+
       if (!userId) {
         console.error('[GRANT] User ID not found in storage');
         return;
@@ -664,7 +641,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           accountIds: unlicensedIds,
           email: email, // Send email along with account IDs
           clientUid: accountData?.client_uid, // Send client UID
@@ -687,7 +664,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
             unlicensedIds.includes(row.id) ? { ...row, status: 'licensed' } : row
           )
         );
-        
+
         // Proceed to next step
         setActive((current) => (current < 2 ? current + 1 : current));
       }
@@ -722,6 +699,15 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       tutorialVideo: 'https://youtu.be/uAdKY9uNtIo?si=RgHExJAThIP4g7d4',
       platformUrl: partnerPlatformUrls['exness'] || 'https://one.exnessonelink.com/a/ojl5148a7y',
       feature: 'Hoàn phí $10/lot'
+    },
+    {
+      value: 'lirunex',
+      label: 'Lirunex',
+      disabled: false,
+      image: '/getbot_section/lirunex.png',
+      tutorialVideo: 'https://youtu.be/WkYlawXn9HE?si=E7ej1Td9Q2IKql4l',
+      platformUrl: partnerPlatformUrls['lirunex'] || 'https://www.lirunex.com/',
+      feature: ''
     },
     {
       value: 'binance',
@@ -840,64 +826,64 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
 
                 <Grid gutter="md" justify="center">
                   {tradingPlatforms
-                    .filter((platformOption) => 
-                      selectedPlatforms.length === 0 || 
+                    .filter((platformOption) =>
+                      selectedPlatforms.length === 0 ||
                       selectedPlatforms.includes(platformOption.value.toLowerCase())
                     )
                     .map((platformOption) => (
-                    <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 2.4 }}>
-                      <Paper
-                        shadow="md"
-                        p="xl"
-                        radius="md"
-                        className={`${classes.platformCard} ${platformOption.disabled ? classes.cardDisabled : ''
-                          } ${selectedPlatform === platformOption.value ? classes.selectedCard : ''
-                          }`}
-                        style={{
-                          backgroundImage: `url(${platformOption.image})`,
-                          cursor: platformOption.disabled ? 'not-allowed' : 'pointer',
-                        }}
-                        onClick={() => {
-                          if (!platformOption.disabled) {
-                            setSelectedPlatform(platformOption.value);
-                            setPlatform(platformOption.value);
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (!platformOption.disabled && (e.key === 'Enter' || e.key === ' ')) {
-                            e.preventDefault();
-                            setSelectedPlatform(platformOption.value);
-                            setPlatform(platformOption.value);
-                          }
-                        }}
-                        onMouseEnter={() => !platformOption.disabled && setHoveredPlatform(platformOption.value)}
-                        onMouseLeave={() => setHoveredPlatform(null)}
-                        tabIndex={platformOption.disabled ? -1 : 0}
-                        role="button"
-                        aria-label={`Select ${platformOption.label} trading platform`}
-                        aria-disabled={platformOption.disabled}
-                      >
-                        <div className={`${classes.cardContent} ${classes.cardContentAdjusted}`}>
-                          <Title order={6} className={classes.platformTitle}>
-                            {platformOption.label}
-                          </Title>
-                          {platformOption.feature && (
-                            <Badge
-                              size="sm"
-                              variant="filled"
-                              color="#FFB81C"
-                              style={{
-                                marginTop: '4px',
-                                color: 'black',
-                              }}
-                            >
-                              {platformOption.feature}
-                            </Badge>
-                          )}
-                        </div>
-                      </Paper>
-                    </Grid.Col>
-                  ))}
+                      <Grid.Col key={platformOption.value} span={{ base: 12, sm: 6, md: 2.4 }}>
+                        <Paper
+                          shadow="md"
+                          p="xl"
+                          radius="md"
+                          className={`${classes.platformCard} ${platformOption.disabled ? classes.cardDisabled : ''
+                            } ${selectedPlatform === platformOption.value ? classes.selectedCard : ''
+                            }`}
+                          style={{
+                            backgroundImage: `url(${platformOption.image})`,
+                            cursor: platformOption.disabled ? 'not-allowed' : 'pointer',
+                          }}
+                          onClick={() => {
+                            if (!platformOption.disabled) {
+                              setSelectedPlatform(platformOption.value);
+                              setPlatform(platformOption.value);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (!platformOption.disabled && (e.key === 'Enter' || e.key === ' ')) {
+                              e.preventDefault();
+                              setSelectedPlatform(platformOption.value);
+                              setPlatform(platformOption.value);
+                            }
+                          }}
+                          onMouseEnter={() => !platformOption.disabled && setHoveredPlatform(platformOption.value)}
+                          onMouseLeave={() => setHoveredPlatform(null)}
+                          tabIndex={platformOption.disabled ? -1 : 0}
+                          role="button"
+                          aria-label={`Select ${platformOption.label} trading platform`}
+                          aria-disabled={platformOption.disabled}
+                        >
+                          <div className={`${classes.cardContent} ${classes.cardContentAdjusted}`}>
+                            <Title order={6} className={classes.platformTitle}>
+                              {platformOption.label}
+                            </Title>
+                            {platformOption.feature && (
+                              <Badge
+                                size="sm"
+                                variant="filled"
+                                color="#FFB81C"
+                                style={{
+                                  marginTop: '4px',
+                                  color: 'black',
+                                }}
+                              >
+                                {platformOption.feature}
+                              </Badge>
+                            )}
+                          </div>
+                        </Paper>
+                      </Grid.Col>
+                    ))}
                 </Grid>
               </Stack>
             </Paper>
@@ -1022,10 +1008,10 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                           disabled={accountStatus === 'checking' || otpResendTimer > 0 || !captchaToken}
                           size="md"
                         >
-                          {accountStatus === 'checking' 
-                            ? 'Đang gửi...' 
-                            : otpResendTimer > 0 
-                              ? `Gửi lại (${otpResendTimer}s)` 
+                          {accountStatus === 'checking'
+                            ? 'Đang gửi...'
+                            : otpResendTimer > 0
+                              ? `Gửi lại (${otpResendTimer}s)`
                               : !captchaToken
                                 ? 'Hoàn thành Captcha trước'
                                 : 'Gửi lại OTP'}
@@ -1069,7 +1055,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       >
                         Kiểm tra email của bạn để nhận mã OTP (có thể trong thư mục spam)
                       </Alert>
-                    )}                    
+                    )}
 
                     {accountStatus === 'unauthorized' && (
                       <Alert
@@ -1105,7 +1091,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                       <Text size="sm" fw={600} mb="xs">
                         Danh sách tài khoản cần cấp bản quyền Bot (nhấn để chọn):
                       </Text>
-                      
+
                       {/* Legend */}
                       <Group gap="xl" mb="sm">
                         <Group gap="xs">
@@ -1176,11 +1162,11 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                             const isLicensed = row.status === 'licensed';
                             const isSelected = selectedAccounts.includes(row.id);
                             const isMarkedForDeletion = accountsMarkedForDeletion.includes(row.id);
-                            
+
                             // Determine color and variant
                             let badgeColor = 'gray';
                             let badgeVariant: 'filled' | 'outline' = 'outline';
-                            
+
                             if (isMarkedForDeletion) {
                               badgeColor = 'red';
                               badgeVariant = 'filled';
@@ -1191,7 +1177,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                               badgeColor = '#FFB81C';
                               badgeVariant = 'filled';
                             }
-                            
+
                             return (
                               <Badge
                                 key={row.id}
@@ -1227,7 +1213,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                   <Group justify="right" mb="md">
                     <Turnstile ref={turnstileRef} onSuccess={setCaptchaToken} />
                   </Group>
-                  
+
                   <Group justify="space-between">
                     <Button variant="default" onClick={prevStep} size="lg" className={classes.glowButton}>
                       Quay lại
@@ -1244,7 +1230,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         onClick={deleteLicenses}
                         loading={deletingLicenses}
                         disabled={
-                          accountStatus !== 'authorized' || 
+                          accountStatus !== 'authorized' ||
                           accountsMarkedForDeletion.length === 0
                         }
                         size="lg"
@@ -1258,7 +1244,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         onClick={grantLicense}
                         loading={grantingLicense}
                         disabled={
-                          accountStatus !== 'authorized' || 
+                          accountStatus !== 'authorized' ||
                           selectedAccounts.filter(id => {
                             const row = accountRows.find(r => r.id === id);
                             return row && row.status === 'unlicensed';
@@ -1274,7 +1260,7 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
                         c="black"
                         onClick={() => setActive(2)}
                         disabled={
-                          accountStatus !== 'authorized' || 
+                          accountStatus !== 'authorized' ||
                           !accountRows.some(row => row.status === 'licensed')
                         }
                         size="lg"

@@ -26,101 +26,6 @@ export type Database = {
         }
         Relationships: []
       }
-      chain_commission_snapshots: {
-        Row: {
-          chain_root_id: string | null
-          commission_pool: number
-          depth: number
-          own_keep: number
-          recipient_id: string
-          remaining_pool: number
-          snapshot_at: string
-          source_email: string | null
-          source_partner_id: string
-          source_rank: string
-          source_total_reward: number
-          total_chain_commission: number
-          total_upliner_count: number
-          tradi_fee: number
-          updated_at: string
-          upliner_share: number
-          uuid: string
-          your_cut: number
-          your_role: string
-        }
-        Insert: {
-          chain_root_id?: string | null
-          commission_pool?: number
-          depth: number
-          own_keep?: number
-          recipient_id: string
-          remaining_pool?: number
-          snapshot_at?: string
-          source_email?: string | null
-          source_partner_id: string
-          source_rank: string
-          source_total_reward?: number
-          total_chain_commission?: number
-          total_upliner_count?: number
-          tradi_fee?: number
-          updated_at?: string
-          upliner_share?: number
-          uuid?: string
-          your_cut?: number
-          your_role: string
-        }
-        Update: {
-          chain_root_id?: string | null
-          commission_pool?: number
-          depth?: number
-          own_keep?: number
-          recipient_id?: string
-          remaining_pool?: number
-          snapshot_at?: string
-          source_email?: string | null
-          source_partner_id?: string
-          source_rank?: string
-          source_total_reward?: number
-          total_chain_commission?: number
-          total_upliner_count?: number
-          tradi_fee?: number
-          updated_at?: string
-          upliner_share?: number
-          uuid?: string
-          your_cut?: number
-          your_role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chain_commission_snapshots_chain_root_id_fkey"
-            columns: ["chain_root_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chain_commission_snapshots_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chain_commission_snapshots_source_partner_id_fkey"
-            columns: ["source_partner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chain_commission_snapshots_source_rank_fkey"
-            columns: ["source_rank"]
-            isOneToOne: false
-            referencedRelation: "partner_rank_list"
-            referencedColumns: ["partner_rank"]
-          },
-        ]
-      }
       email_otps: {
         Row: {
           created_at: string | null
@@ -208,6 +113,65 @@ export type Database = {
           },
         ]
       }
+      network_snapshots: {
+        Row: {
+          depth: number
+          email: string | null
+          id: string
+          node_key: string
+          owner_id: string
+          parent_user_id: string | null
+          platform: string
+          role: string
+          role_color: string
+          snapshot_id: string
+          snapshotted_at: string
+          total_lots: number
+          total_reward_usd: number
+          user_id: string
+        }
+        Insert: {
+          depth?: number
+          email?: string | null
+          id?: string
+          node_key: string
+          owner_id: string
+          parent_user_id?: string | null
+          platform?: string
+          role: string
+          role_color?: string
+          snapshot_id: string
+          snapshotted_at?: string
+          total_lots?: number
+          total_reward_usd?: number
+          user_id: string
+        }
+        Update: {
+          depth?: number
+          email?: string | null
+          id?: string
+          node_key?: string
+          owner_id?: string
+          parent_user_id?: string | null
+          platform?: string
+          role?: string
+          role_color?: string
+          snapshot_id?: string
+          snapshotted_at?: string
+          total_lots?: number
+          total_reward_usd?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_snapshots_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       own_referral_id_list: {
         Row: {
           created_at: string
@@ -243,13 +207,7 @@ export type Database = {
       }
       partner_detail: {
         Row: {
-          accum_client_reward: number
-          accum_partner_reward: number
-          accum_time_remaining: number
-          claim_time_remaining: number
           id: string
-          last_month_client_reward: number
-          last_month_partner_reward: number
           platform: string | null
           total_client_lots: number
           total_client_reward: number
@@ -261,13 +219,7 @@ export type Database = {
           uuid: string
         }
         Insert: {
-          accum_client_reward: number
-          accum_partner_reward: number
-          accum_time_remaining?: number
-          claim_time_remaining?: number
           id: string
-          last_month_client_reward?: number
-          last_month_partner_reward?: number
           platform?: string | null
           total_client_lots: number
           total_client_reward: number
@@ -279,13 +231,7 @@ export type Database = {
           uuid?: string
         }
         Update: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          accum_time_remaining?: number
-          claim_time_remaining?: number
           id?: string
-          last_month_client_reward?: number
-          last_month_partner_reward?: number
           platform?: string | null
           total_client_lots?: number
           total_client_reward?: number
@@ -309,83 +255,6 @@ export type Database = {
             columns: ["id"]
             isOneToOne: false
             referencedRelation: "partners"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      partner_rank_list: {
-        Row: {
-          lot_volume: number
-          partner_rank: string
-          reward_percentage: number
-          upline_share_percentage: number | null
-        }
-        Insert: {
-          lot_volume?: number
-          partner_rank: string
-          reward_percentage: number
-          upline_share_percentage?: number | null
-        }
-        Update: {
-          lot_volume?: number
-          partner_rank?: string
-          reward_percentage?: number
-          upline_share_percentage?: number | null
-        }
-        Relationships: []
-      }
-      partner_reward_history: {
-        Row: {
-          accum_client_reward: number
-          accum_partner_reward: number
-          created_at: string
-          partner_id: string
-          period_month: string
-          recorded_at: string
-          total_client_lots: number
-          total_client_reward: number
-          total_clients: number
-          total_partner_lots: number
-          total_partner_reward: number
-          total_partners: number
-          uuid: string
-        }
-        Insert: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          created_at?: string
-          partner_id: string
-          period_month: string
-          recorded_at?: string
-          total_client_lots?: number
-          total_client_reward?: number
-          total_clients?: number
-          total_partner_lots?: number
-          total_partner_reward?: number
-          total_partners?: number
-          uuid?: string
-        }
-        Update: {
-          accum_client_reward?: number
-          accum_partner_reward?: number
-          created_at?: string
-          partner_id?: string
-          period_month?: string
-          recorded_at?: string
-          total_client_lots?: number
-          total_client_reward?: number
-          total_clients?: number
-          total_partner_lots?: number
-          total_partner_reward?: number
-          total_partners?: number
-          uuid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "partner_reward_history_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -442,8 +311,6 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          is_auto_ranked: boolean
-          partner_rank: string
           password: string
           referral_id: string
           status: string
@@ -453,8 +320,6 @@ export type Database = {
           created_at?: string
           email: string
           id: string
-          is_auto_ranked?: boolean
-          partner_rank?: string
           password: string
           referral_id: string
           status?: string
@@ -464,22 +329,12 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          is_auto_ranked?: boolean
-          partner_rank?: string
           password?: string
           referral_id?: string
           status?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "users_partner_rank_fkey"
-            columns: ["partner_rank"]
-            isOneToOne: false
-            referencedRelation: "partner_rank_list"
-            referencedColumns: ["partner_rank"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {

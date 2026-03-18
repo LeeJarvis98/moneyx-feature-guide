@@ -276,8 +276,6 @@ export async function POST(request: NextRequest) {
       email: data.email,
       password: data.password,
       status: 'active' as const,
-      partner_rank: 'None',
-      is_auto_ranked: false, // Default to false for new users (not yet a partner)
       created_at: data.created_at,
     };
     

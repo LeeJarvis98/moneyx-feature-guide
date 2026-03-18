@@ -42,10 +42,6 @@ export async function POST(request: NextRequest) {
         total_partners,
         total_partner_lots,
         total_partner_reward,
-        accum_client_reward,
-        accum_partner_reward,
-        accum_time_remaining,
-        claim_time_remaining,
         updated_at
       `)
       .eq('id', userId)
@@ -55,45 +51,11 @@ export async function POST(request: NextRequest) {
       console.error('Error fetching partner detail data:', detailError);
     }
 
-    // Fetch user rank information from users table joined with partner_rank_list
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        partner_rank,
-        partner_rank_list (
-          partner_rank,
-          reward_percentage,
-          lot_volume,
-          upline_share_percentage
-        )
-      `)
-      .eq('id', userId)
-      .single();
-
-    if (userError) {
-      console.error('Error fetching user rank data:', userError);
-    }
-
-    // Build user_rank object
-    let userRank = null;
-    if (userData && userData.partner_rank_list && !Array.isArray(userData.partner_rank_list)) {
-      const rankData = userData.partner_rank_list as any;
-      userRank = {
-        partner_rank: userData.partner_rank,
-        reward_percentage: rankData.reward_percentage,
-        lot_volume: rankData.lot_volume,
-        upline_share_percentage: rankData.upline_share_percentage,
-      };
-    }
-
     // Merge all data sets
     const combinedData = Object.assign(
       {},
       partnerData,
-      partnerDetailData || {},
-      { user_rank: userRank }
+      partnerDetailData || {}
     );
 
     return NextResponse.json({

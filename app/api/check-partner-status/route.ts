@@ -89,17 +89,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get partner rank from users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('partner_rank')
-      .eq('id', partnerId)
-      .maybeSingle();
-
-    if (userError) {
-      console.error('[check-partner-status] Error fetching user data:', userError);
-    }
-
     // Get referral ID
     const { data: referralData, error: referralError } = await supabase
       .from('own_referral_id_list')
@@ -113,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       isPartner: true,
-      rank: userData?.partner_rank || null,
+      rank: null,
       referralId: referralData?.own_referral_id || null,
       partnerStatus: partner?.status ?? 'active',
       congratsShown: partner?.congrats_shown ?? false,

@@ -240,3 +240,15 @@
   color: #ffc94d;
   text-decoration: underline;
 }
+
+.errorAccountHint {
+  margin-top: 8px;
+}
+
+.errorAccountHighlight {
+  font-weight: bold;
+  background-color: #FFB81C;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #000;
+}

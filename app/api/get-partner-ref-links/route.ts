@@ -4,6 +4,7 @@ import type { PlatformRefLinks } from '@/types';
 
 interface PlatformRefLinksWithDefaults {
   exness: string;
+  lirunex: string;
   binance: string;
   bingx: string;
   bitget: string;
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
     // Initialize empty refLinks object
     const refLinks: PlatformRefLinksWithDefaults = {
       exness: '',
+      lirunex: '',
       binance: '',
       bingx: '',
       bitget: '',

@@ -101,25 +101,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Login successful - check referral ID first
-    const isPartner = foundUser.partner_rank !== '';
-    
-    // Get user's own referral ID if they are a partner
-    let ownReferralId = null;
-    if (isPartner) {
-      const { data: ownReferralData, error: ownReferralError } = await supabase
-        .from('own_referral_id_list')
-        .select('own_referral_id')
-        .eq('id', foundUser.id)
-        .maybeSingle();
+    // Login successful - determine if user is a partner by checking own_referral_id_list
+    const { data: ownReferralData } = await supabase
+      .from('own_referral_id_list')
+      .select('own_referral_id')
+      .eq('id', foundUser.id)
+      .maybeSingle();
 
-      if (!ownReferralError && ownReferralData) {
-        ownReferralId = ownReferralData.own_referral_id;
-      } else {
-        // Log if partner doesn't have a referral ID
-        console.warn(`[USER-LOGIN] Partner ${foundUser.id} does not have a referral ID in own_referral_id_list`);
-      }
-    }
+    const ownReferralId = ownReferralData?.own_referral_id ?? null;
+    const isPartner = ownReferralId !== null;
     
     // Check if user's referral_id matches any own_referral_id in own_referral_id_list
     let partnerPlatformData = null;
@@ -158,7 +148,6 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         userId: foundUser.id,
-        partnerRank: foundUser.partner_rank,
         referralId: foundUser.referral_id,
         isPartner: isPartner,
         ownReferralId: ownReferralId,

@@ -193,13 +193,13 @@ export async function GET(request: NextRequest) {
     try {
       const { data: userInfo } = await supabase
         .from('users')
-        .select('email, referral_id, partner_rank')
+        .select('email, referral_id')
         .eq('id', partner.id)
         .maybeSingle();
 
       if (userInfo) {
         // Assign partner_rank now that the agreement has been confirmed
-        let assignedRank = userInfo.partner_rank;
+        let assignedRank = '';
         try {
           const { rank } = await assignInitialRank(supabase, partner.id, userInfo.referral_id);
           assignedRank = rank;
