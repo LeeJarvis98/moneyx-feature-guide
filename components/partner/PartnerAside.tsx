@@ -22,6 +22,7 @@ interface PlatformRefLinks {
 interface PartnerAsideProps {
   partnerId: string;
   onRefLinksChange?: (refLinks: PlatformRefLinks) => void;
+  selectedPlatforms?: string[];
 }
 
 const PLATFORMS = [
@@ -40,7 +41,7 @@ const PLATFORMS = [
   { key: 'upbit', label: 'Upbit', logo: null },
 ] as const;
 
-export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsideProps) {
+export default function PartnerAside({ partnerId, onRefLinksChange, selectedPlatforms: initialSelectedPlatforms }: PartnerAsideProps) {
   const [refLinks, setRefLinks] = useState<PlatformRefLinks>({
     exness: '',
     lirunex: '',
@@ -62,9 +63,9 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
   const [success, setSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [loadingPlatforms, setLoadingPlatforms] = useState(true);
-  const [hasLoadedData, setHasLoadedData] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(initialSelectedPlatforms || []);
+  const [loadingPlatforms, setLoadingPlatforms] = useState(initialSelectedPlatforms === undefined);
+  const [hasLoadedData, setHasLoadedData] = useState(initialSelectedPlatforms !== undefined);
   const [supportLink, setSupportLink] = useState('');
   const [isSupportEditMode, setIsSupportEditMode] = useState(false);
   const [originalRefLinks, setOriginalRefLinks] = useState<PlatformRefLinks>({
@@ -89,43 +90,14 @@ export default function PartnerAside({ partnerId, onRefLinksChange }: PartnerAsi
     setIsMounted(true);
   }, []);
 
-  // Load selected platforms to filter which ref links to show
+  // Sync selected platforms from parent prop
   useEffect(() => {
-    if (!isMounted || !partnerId) {
+    if (initialSelectedPlatforms !== undefined) {
+      setSelectedPlatforms(initialSelectedPlatforms);
       setLoadingPlatforms(false);
-      return;
+      setHasLoadedData(true);
     }
-
-    const loadSelectedPlatforms = async () => {
-      try {
-        setLoadingPlatforms(true);
-        const response = await fetch('/api/get-selected-platforms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partnerId }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch selected platforms');
-        }
-
-        const data = await response.json();
-        const platforms = data.selectedPlatforms || [];
-
-        setSelectedPlatforms(platforms);
-        setHasLoadedData(true);
-      } catch (error) {
-        console.error('[PartnerAside] Error loading selected platforms:', error);
-        // On error, show all platforms
-        setSelectedPlatforms([]);
-        setHasLoadedData(false);
-      } finally {
-        setLoadingPlatforms(false);
-      }
-    };
-
-    loadSelectedPlatforms();
-  }, [partnerId, isMounted]);
+  }, [initialSelectedPlatforms]);
 
   // Load existing ref links on mount
   useEffect(() => {

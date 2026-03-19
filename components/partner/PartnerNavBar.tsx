@@ -16,23 +16,24 @@ interface PartnerNavBarProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
-  onLoadingChange?: (loading: boolean) => void;
+  initialPlatforms?: string[] | null;
+  onPlatformsUpdate?: () => void;
 }
 
-export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAuthenticated, onLogout, onLoadingChange }: PartnerNavBarProps) {
+export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAuthenticated, onLogout, initialPlatforms, onPlatformsUpdate }: PartnerNavBarProps) {
   const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState<string | null>(null);
   const [showAddPlatformModal, setShowAddPlatformModal] = useState(false);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(initialPlatforms || []);
   const [savingPlatforms, setSavingPlatforms] = useState(false);
   const [partnerId, setPartnerId] = useState<string | null>(null);
-  const [loadingPlatforms, setLoadingPlatforms] = useState(true);
-  const [hasLoadedData, setHasLoadedData] = useState(false);
+  const loadingPlatforms = initialPlatforms == null;
+  const hasLoadedData = initialPlatforms != null;
   const [platformDetails, setPlatformDetails] = useState<Record<string, { total_client_lots: number }>>({});
   const [loadingPlatformDetails, setLoadingPlatformDetails] = useState(false);
 
-  // Get partnerId from storage
+  // Get partnerId from storage (still needed for save operations)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -40,49 +41,12 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
     }
   }, []);
 
-  // Function to load platforms from database (reusable)
-  const loadPlatformsFromDatabase = async () => {
-    if (!partnerId) {
-      setLoadingPlatforms(false);
-      setSelectedPlatforms([]);
-      setHasLoadedData(false);
-      onLoadingChange?.(false);
-      return;
-    }
-
-    try {
-      setLoadingPlatforms(true);
-      onLoadingChange?.(true);
-      const response = await fetch('/api/get-selected-platforms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch selected platforms');
-      }
-
-      const data = await response.json();
-      const platforms = data.selectedPlatforms || [];
-      
-      setSelectedPlatforms(platforms);
-      setHasLoadedData(true);
-    } catch (error) {
-      console.error('[PartnerNavBar] Error loading selected platforms:', error);
-      // On error, show empty array and mark as not loaded
-      setSelectedPlatforms([]);
-      setHasLoadedData(false);
-    } finally {
-      setLoadingPlatforms(false);
-      onLoadingChange?.(false);
-    }
-  };
-
-  // Load selected platforms from database when partnerId is available
+  // Sync local selection when parent provides an updated platforms list
   useEffect(() => {
-    loadPlatformsFromDatabase();
-  }, [partnerId]);
+    if (initialPlatforms != null) {
+      setSelectedPlatforms(initialPlatforms);
+    }
+  }, [initialPlatforms]);
 
   // Load platform details (total_client_lots, etc.) when partnerId is available
   useEffect(() => {
@@ -197,10 +161,9 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
         throw new Error('Failed to update selected platforms');
       }
 
-      // Reload platforms from database to ensure UI is in sync
-      await loadPlatformsFromDatabase();
-      
+      // Notify parent to refresh the platforms list
       setShowAddPlatformModal(false);
+      onPlatformsUpdate?.();
     } catch (error) {
       console.error('[PartnerNavBar] Error saving platforms:', error);
       alert('Không thể lưu sàn đã chọn. Vui lòng thử lại.');
@@ -209,24 +172,10 @@ export default function PartnerNavBar({ selectedPlatform, onPlatformSelect, isAu
     }
   };
 
-  const handleCancelAddPlatform = async () => {
+  const handleCancelAddPlatform = () => {
     setShowAddPlatformModal(false);
-    // Reload the original selection from database
-    if (partnerId) {
-      try {
-        const response = await fetch('/api/get-selected-platforms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partnerId }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSelectedPlatforms(data.selectedPlatforms || []);
-        }
-      } catch (error) {
-        console.error('[PartnerNavBar] Error reloading platforms:', error);
-      }
-    }
+    // Reset to the parent-provided list without a network request
+    setSelectedPlatforms(initialPlatforms || []);
   };
 
   const tradingPlatforms: Platform[] = [

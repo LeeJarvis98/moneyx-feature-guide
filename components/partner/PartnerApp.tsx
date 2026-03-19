@@ -15,59 +15,14 @@ interface PartnerAppProps {
   onPlatformSelect: (platform: string) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
-  loadingPlatforms?: boolean;
+  selectedPlatforms?: string[] | null;
 }
 
-export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, loadingPlatforms }: PartnerAppProps) {
+export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, selectedPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [hasSelectedPlatforms, setHasSelectedPlatforms] = useState<boolean | null>(null);
-
-  // Check if user has selected platforms in database
-  useEffect(() => {
-    const checkSelectedPlatforms = async () => {
-      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      if (!userId) {
-        setHasSelectedPlatforms(null);
-        return;
-      }
-
-      // Simulate progress for better UX
-      setLoadingProgress(30);
-
-      try {
-        const response = await fetch('/api/get-selected-platforms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partnerId: userId }),
-        });
-
-        setLoadingProgress(60);
-
-        if (response.ok) {
-          const data = await response.json();
-          const platforms = data.selectedPlatforms || [];
-          setHasSelectedPlatforms(platforms.length > 0);
-          setLoadingProgress(100);
-        } else {
-          setHasSelectedPlatforms(null);
-          setLoadingProgress(100);
-        }
-      } catch (error) {
-        console.error('[PartnerApp] Error checking selected platforms:', error);
-        setHasSelectedPlatforms(null);
-        setLoadingProgress(100);
-      }
-    };
-
-    // Only check when platform loading completes
-    if (!loadingPlatforms) {
-      checkSelectedPlatforms();
-    } else {
-      // Simulate initial loading progress
-      setLoadingProgress(10);
-    }
-  }, [loadingPlatforms]);
+  // null = still loading from parent, true/false = loaded
+  const hasSelectedPlatforms = selectedPlatforms == null ? null : selectedPlatforms.length > 0;
 
   // Check if user is already authenticated on mount
   useEffect(() => {
@@ -120,7 +75,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     setIsAuthenticated(false);
   };
 
-  if (checking || loadingPlatforms || hasSelectedPlatforms === null) {
+  if (checking || hasSelectedPlatforms === null) {
     return (
       <div className={styles.loadingScreen}>
         <div className={styles.loadingContent}>
@@ -134,9 +89,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           />
           
           <div className={styles.loadingText}>
-            {loadingPlatforms ? 'Đang tải thông tin sàn...' : 
-             hasSelectedPlatforms === null ? 'Đang kiểm tra tài khoản...' : 
-             'Đang xác thực...'}
+            {hasSelectedPlatforms === null ? 'Đang tải thông tin sàn...' : 'Đang xác thực...'}
           </div>
           
           <div className={styles.progressContainer}>
@@ -168,6 +121,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onLoginSuccess={() => setIsAuthenticated(true)} 
           selectedPlatform={selectedPlatform}
           onAsideContentChange={onAsideContentChange}
+          selectedPlatforms={selectedPlatforms || []}
         />
       ) : (
         <div className={styles.noPlatformMessage}>

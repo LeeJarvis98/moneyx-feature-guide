@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import {
   Timeline,
   Text,
@@ -14,6 +14,7 @@ import {
   Title,
   ThemeIcon,
   Center,
+  ScrollArea,
 } from '@mantine/core';
 import { Gift, CheckCircle2, Lock, AlertCircle, Trophy } from 'lucide-react';
 import styles from './RewardSystemTab.module.css';
@@ -40,7 +41,11 @@ const PLATFORM_LABEL: Record<string, string> = {
   exness: 'Exness',
 };
 
-export function RewardSystemTab() {
+interface RewardSystemTabProps {
+  onNavbarContentChange?: (content: ReactNode) => void;
+}
+
+export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<RewardProgress | null>(null);
   const [softError, setSoftError] = useState<string | null>(null);
@@ -49,6 +54,77 @@ export function RewardSystemTab() {
   useEffect(() => {
     fetchProgress();
   }, []);
+
+  // Sync the reward timeline into the AppShell navbar
+  useEffect(() => {
+    if (!onNavbarContentChange) return;
+
+    if (!data) {
+      onNavbarContentChange(null);
+      return;
+    }
+
+    const { levels, currentLots, currentLevel } = data;
+
+    const displayLevels = levels
+      .filter((l) => l.level === 0 || l.is_active)
+      .sort((a, b) => a.level - b.level);
+
+    const activeIndex = displayLevels.findIndex((l) => l.level === currentLevel);
+    const fmt = (n: number) => (n >= 1000 ? n.toLocaleString('vi-VN') : n.toString());
+
+    onNavbarContentChange(
+      <ScrollArea h="100%" type="auto" offsetScrollbars>
+        <Stack gap="md">
+          <Text fw={700} size="md" c="dimmed" tt="uppercase">Lộ trình thưởng</Text>
+          <Timeline active={activeIndex} bulletSize={36} lineWidth={3} color="grape">
+            {displayLevels.map((lvl) => {
+              const isCompleted = lvl.level <= currentLevel;
+              const isCurrent = lvl.level === currentLevel;
+              return (
+                <Timeline.Item
+                  key={lvl.level}
+                  bullet={isCompleted ? <CheckCircle2 size={18} /> : <Lock size={18} />}
+                  color={isCompleted ? 'grape' : 'gray'}
+                  title={
+                    <Group gap="sm" align="center">
+                      <Text fw={700} size="md" c={isCurrent ? 'grape.4' : isCompleted ? 'white' : 'dimmed'}>
+                        Level {lvl.level}
+                        {lvl.level === 0 && (
+                          <Text span c="dimmed" fw={400} size="sm"> (Cơ bản)</Text>
+                        )}
+                      </Text>
+                      {isCurrent && (
+                        <Badge size="sm" color="grape" variant="filled">Hiện tại</Badge>
+                      )}
+                    </Group>
+                  }
+                >
+                  <Stack gap={4} mt={4}>
+                    <Text size="md" c={isCompleted ? 'white' : 'dimmed'}>
+                      {fmt(lvl.lot_volume)} lots →{' '}
+                      <Text span fw={700} c={isCompleted ? 'grape.4' : 'dimmed'}>
+                        ${fmt(lvl.reward_usd)}
+                      </Text>
+                    </Text>
+                    {lvl.reward_text && (
+                      <Text size="sm" c="yellow.5" fs="italic">
+                        {lvl.reward_text}
+                      </Text>
+                    )}
+                  </Stack>
+                </Timeline.Item>
+              );
+            })}
+          </Timeline>
+        </Stack>
+      </ScrollArea>
+    );
+
+    return () => {
+      onNavbarContentChange?.(null);
+    };
+  }, [data, onNavbarContentChange]);
 
   const fetchProgress = async () => {
     setLoading(true);
@@ -208,64 +284,6 @@ export function RewardSystemTab() {
         )}
       </Paper>
 
-      {/* Reward timeline */}
-      <Timeline
-        active={activeIndex}
-        bulletSize={28}
-        lineWidth={2}
-        color="grape"
-        className={styles.timeline}
-      >
-        {displayLevels.map((lvl) => {
-          const isCompleted = lvl.level <= currentLevel;
-          const isCurrent = lvl.level === currentLevel;
-
-          return (
-            <Timeline.Item
-              key={lvl.level}
-              bullet={
-                isCompleted ? (
-                  <CheckCircle2 size={14} />
-                ) : (
-                  <Lock size={14} />
-                )
-              }
-              color={isCompleted ? 'grape' : 'gray'}
-              title={
-                <Group gap="sm" align="center">
-                  <Text
-                    fw={700}
-                    size="sm"
-                    c={isCurrent ? 'grape.4' : isCompleted ? 'white' : 'dimmed'}
-                  >
-                    Level {lvl.level}
-                    {lvl.level === 0 && (
-                      <Text span c="dimmed" fw={400} size="xs"> (Cơ bản)</Text>
-                    )}
-                  </Text>
-                  {isCurrent && (
-                    <Badge size="xs" color="grape" variant="filled">Hiện tại</Badge>
-                  )}
-                </Group>
-              }
-            >
-              <Stack gap={2} mt={2}>
-                <Text size="sm" c={isCompleted ? 'white' : 'dimmed'}>
-                  {formatNumber(lvl.lot_volume)} lots →{' '}
-                  <Text span fw={700} c={isCompleted ? 'grape.4' : 'dimmed'}>
-                    ${formatNumber(lvl.reward_usd)}
-                  </Text>
-                </Text>
-                {lvl.reward_text && (
-                  <Text size="sm" c="yellow.5" fs="italic">
-                    {lvl.reward_text}
-                  </Text>
-                )}
-              </Stack>
-            </Timeline.Item>
-          );
-        })}
-      </Timeline>
     </div>
   );
 }

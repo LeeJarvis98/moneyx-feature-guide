@@ -11,6 +11,7 @@ interface PartnerLoginProps {
   onLoginSuccess: () => void;
   selectedPlatform: string | null;
   onAsideContentChange?: (content: React.ReactNode) => void;
+  selectedPlatforms?: string[];
 }
 
 interface PlatformRefLinks {
@@ -29,7 +30,7 @@ interface PlatformRefLinks {
   upbit: string;
 }
 
-export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAsideContentChange }: PartnerLoginProps) {
+export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAsideContentChange, selectedPlatforms }: PartnerLoginProps) {
   const [partnerId, setPartnerId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -120,6 +121,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
         <PartnerAside
           partnerId={userId}
           onRefLinksChange={handleRefLinksChange}
+          selectedPlatforms={selectedPlatforms}
         />
       );
     }
@@ -130,7 +132,7 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
         onAsideContentChange(null);
       }
     };
-  }, [userId, onAsideContentChange, handleRefLinksChange]);
+  }, [userId, onAsideContentChange, handleRefLinksChange, selectedPlatforms]);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {

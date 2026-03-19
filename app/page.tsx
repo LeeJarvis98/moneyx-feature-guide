@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Title, Text, AppShell, useMantineTheme, Tabs, Group, Stack, Button, NavLink, ScrollArea, ActionIcon, Affix, Transition, Badge, Menu, UnstyledButton, Avatar, CopyButton, Tooltip, Drawer, Burger, Divider, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Users, Library, LogIn, TrendingUp, PanelRight, PanelLeft, BookOpen, User, ChevronDown, Settings, LogOut, Shield, Copy, Check, Wallet, Bot, Zap, Download, Gift } from 'lucide-react';
@@ -37,6 +37,7 @@ export default function HomePage() {
   const [getBotAside, setGetBotAside] = useState<React.ReactNode>(null);
   const [manageAccountsSection, setManageAccountsSection] = useState<'license' | 'get-bot'>('license');
   const [manageAccountsAside, setManageAccountsAside] = useState<React.ReactNode>(null);
+  const [rewardNavbar, setRewardNavbar] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
@@ -44,7 +45,7 @@ export default function HomePage() {
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [isActivePartner, setIsActivePartner] = useState(false);
   const [referralId, setReferralId] = useState<string>('');
-  const [loadingPlatforms, setLoadingPlatforms] = useState(false);
+  const [selectedPlatformsList, setSelectedPlatformsList] = useState<string[] | null>(null);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [partnerStatus, setPartnerStatus] = useState<string>('active');
   const [tokenExpiresAt, setTokenExpiresAt] = useState<string | null>(null);
@@ -149,6 +150,30 @@ export default function HomePage() {
     }
   };
 
+  const fetchSelectedPlatforms = useCallback(async (userId: string) => {
+    try {
+      const response = await fetch('/api/get-selected-platforms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId: userId }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedPlatformsList(data.selectedPlatforms || []);
+      } else {
+        setSelectedPlatformsList([]);
+      }
+    } catch {
+      setSelectedPlatformsList([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loggedInUserId) {
+      fetchSelectedPlatforms(loggedInUserId);
+    }
+  }, [loggedInUserId, fetchSelectedPlatforms]);
+
   // Determine if user is an active partner (confirmed email)
   const isPartner = isActivePartner && partnerStatus !== 'inactive';
 
@@ -202,7 +227,8 @@ export default function HomePage() {
   // Determine if navbar should be shown
   const shouldShowNavbar = (
     (navigationSection === 'library' && (activeTab === 'guides' || activeTab === 'strategies' || activeTab === 'manage-accounts')) ||
-    (navigationSection === 'features' && activeTab === 'partner')
+    (navigationSection === 'features' && activeTab === 'partner') ||
+    (navigationSection === 'reward' && rewardNavbar !== null)
   );
 
   // Determine if aside should be shown
@@ -284,10 +310,10 @@ export default function HomePage() {
         <AppShell
           transitionDuration={500}
           transitionTimingFunction="ease"
-          header={{ height: navigationSection === 'login' ? 65 : { base: 65, sm: 100 } }}
+          header={{ height: navigationSection === 'login' || navigationSection === 'reward' ? 65 : { base: 65, sm: 100 } }}
           footer={{ height: { base: 0, sm: 60 } }}
           navbar={{
-            width: 300,
+            width: navigationSection === 'reward' ? 350 : 300,
             breakpoint: 'sm',
             collapsed: { mobile: !mobileNavbarOpened, desktop: !shouldShowNavbar }
           }}
@@ -305,7 +331,7 @@ export default function HomePage() {
             }}
           >
             <Container size="100%" h="100%">
-              <Stack gap="md" justify={navigationSection === 'login' ? 'center' : 'end'} h="100%">
+              <Stack gap="md" justify={navigationSection === 'login' || navigationSection === 'reward' ? 'center' : 'end'} h="100%">
                 <Group justify="space-between" align="center">
                   <Group gap="xs" align="center">
                     <Burger
@@ -605,7 +631,8 @@ export default function HomePage() {
                 onPlatformSelect={setSelectedPlatform}
                 isAuthenticated={isPartnerAuthenticated}
                 onLogout={() => setIsPartnerAuthenticated(false)}
-                onLoadingChange={setLoadingPlatforms}
+                initialPlatforms={selectedPlatformsList}
+                onPlatformsUpdate={() => loggedInUserId && fetchSelectedPlatforms(loggedInUserId)}
               />
             )}
             {navigationSection === 'library' && activeTab === 'guides' && (
@@ -830,6 +857,7 @@ export default function HomePage() {
                 </Stack>
               </ScrollArea>
             )}
+            {navigationSection === 'reward' && rewardNavbar}
             {navigationSection === 'library' && activeTab === 'manage-accounts' && (
               <ScrollArea h="100%" type="auto" offsetScrollbars>
                 <Stack gap="xs">
@@ -907,7 +935,7 @@ export default function HomePage() {
                         onPlatformSelect={setSelectedPlatform}
                         isAuthenticated={isPartnerAuthenticated}
                         setIsAuthenticated={setIsPartnerAuthenticated}
-                        loadingPlatforms={loadingPlatforms}
+                        selectedPlatforms={selectedPlatformsList}
                       />
                     )}
                   </Tabs.Panel>
@@ -979,7 +1007,7 @@ export default function HomePage() {
               {/* Reward System Section */}
               {navigationSection === 'reward' && isUserLoggedIn && (
                 <Tabs.Panel value="reward">
-                  <RewardSystemTab />
+                  <RewardSystemTab onNavbarContentChange={setRewardNavbar} />
                 </Tabs.Panel>
               )}
             </Tabs>
