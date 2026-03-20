@@ -319,7 +319,7 @@ export default function HomePage() {
           }}
           aside={{
             width: 400,
-            breakpoint: 'md',
+            breakpoint: 'sm',
             collapsed: { mobile: !mobileAsideOpened, desktop: !shouldShowAside }
           }}
           padding="md"
@@ -1088,7 +1088,7 @@ export default function HomePage() {
           </Affix>
 
           {/* Floating action button for Aside panel */}
-          <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="md">
+          <Affix position={{ bottom: 80, right: 20 }} hiddenFrom="sm">
             <Transition transition="slide-up" mounted={shouldShowAside}>
               {(transitionStyles) => (
                 <ActionIcon

@@ -35,6 +35,13 @@ const accentColor: MantineColorsTuple = [
 ];
 
 const theme = createTheme({
+  breakpoints: {
+    xs: '36em',
+    sm: '85.5em',  // 1368px — mobile mode below this width
+    md: '62em',
+    lg: '75em',
+    xl: '88em',
+  },
   colors: {
     accent: accentColor,
   },
