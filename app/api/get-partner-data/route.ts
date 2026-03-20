@@ -3,7 +3,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json();
+    const { userId, platform } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch partner detail data from partner_detail table
-    const { data: partnerDetailData, error: detailError } = await supabase
+    let detailQuery = supabase
       .from('partner_detail')
       .select(`
         id,
@@ -44,8 +44,13 @@ export async function POST(request: NextRequest) {
         total_partner_reward,
         updated_at
       `)
-      .eq('id', userId)
-      .maybeSingle();
+      .eq('id', userId);
+
+    if (platform) {
+      detailQuery = detailQuery.eq('platform', platform.toLowerCase());
+    }
+
+    const { data: partnerDetailData, error: detailError } = await detailQuery.maybeSingle();
 
     if (detailError) {
       console.error('Error fetching partner detail data:', detailError);

@@ -21,6 +21,7 @@ interface PartnerAppProps {
 export default function PartnerApp({ onAsideContentChange, selectedPlatform, onPlatformSelect, isAuthenticated, setIsAuthenticated, selectedPlatforms }: PartnerAppProps) {
   const [checking, setChecking] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [currentPlatform, setCurrentPlatform] = useState<string | null>(null);
   // null = still loading from parent, true/false = loaded
   const hasSelectedPlatforms = selectedPlatforms == null ? null : selectedPlatforms.length > 0;
 
@@ -38,6 +39,8 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           // Verify token is valid by making a test request
           await exnessApi.getTokenInfo();
           setIsAuthenticated(true);
+          const storedPlatform = sessionStorage.getItem('partnerPlatform');
+          if (storedPlatform) setCurrentPlatform(storedPlatform);
           setLoadingProgress(100);
         } catch (error) {
           // Token is invalid, clear it
@@ -72,6 +75,8 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
     exnessApi.clearToken();
     sessionStorage.removeItem('partnerId');
     sessionStorage.removeItem('platformToken');
+    sessionStorage.removeItem('partnerPlatform');
+    setCurrentPlatform(null);
     setIsAuthenticated(false);
   };
 
@@ -113,6 +118,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
         <PartnerDashboard 
           onLogout={handleLogout} 
           onAsideContentChange={onAsideContentChange}
+          platform={currentPlatform || selectedPlatform || 'exness'}
         />
       ) : !hasSelectedPlatforms ? (
         <WelcomeScreen />

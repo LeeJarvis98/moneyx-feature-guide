@@ -96,7 +96,49 @@ export async function POST(request: NextRequest) {
 
         platformData = await apiResponse.json();
         console.log('[PARTNER-LOGIN] Successfully logged into Exness');
-        
+
+      } else if (platform.toLowerCase() === 'lirunex') {
+        console.log('[PARTNER-LOGIN] Attempting Lirunex login');
+
+        apiResponse = await fetch(`${request.nextUrl.origin}/api/lirunex/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: partnerId,
+            password: password,
+          }),
+        });
+
+        console.log('[PARTNER-LOGIN] Lirunex API response status:', apiResponse.status);
+
+        if (!apiResponse.ok) {
+          const errorData = await apiResponse.json().catch(() => ({}));
+          console.error('[PARTNER-LOGIN] Lirunex API error response:', errorData);
+
+          let errorMessage = 'Unable to login to Lirunex.';
+
+          if (apiResponse.status === 403 || apiResponse.status === 401) {
+            errorMessage = 'Invalid Lirunex credentials. Please check your username and password.';
+          } else if (apiResponse.status === 429) {
+            errorMessage = 'Too many login attempts. Please try again later.';
+          } else if (apiResponse.status === 400) {
+            errorMessage = `Authentication error: ${errorData.message || 'Invalid credentials'}`;
+          }
+
+          return NextResponse.json(
+            {
+              error: errorMessage,
+              details: errorData.message || `Status: ${apiResponse.status}`,
+            },
+            { status: 401 }
+          );
+        }
+
+        platformData = await apiResponse.json();
+        // Normalise: expose access_token at top-level for consistent handling
+        platformData.token = platformData.token?.access_token ?? null;
+        console.log('[PARTNER-LOGIN] Successfully logged into Lirunex');
+
       } else if (platform.toLowerCase() === 'binance') {
         // TODO: Add Binance authentication here when implemented
         console.log('[PARTNER-LOGIN] Binance authentication not yet implemented');
@@ -234,8 +276,6 @@ export async function POST(request: NextRequest) {
                 total_partners: 0,
                 total_partner_lots: 0,
                 total_partner_reward: 0,
-                last_month_client_reward: 0,
-                last_month_partner_reward: 0,
               });
 
             if (detailInsertError) {

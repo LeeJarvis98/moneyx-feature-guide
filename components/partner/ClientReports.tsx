@@ -38,6 +38,7 @@ const formatNumber = (value: number, decimals = 2): string =>
 
 interface ClientReportsProps {
   autoFetch?: boolean;
+  platform?: string;
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -56,7 +57,7 @@ const PLATFORM_COLOR: Record<string, string> = {
   exness: 'blue',
 };
 
-export default function ClientReports({ autoFetch = true }: ClientReportsProps) {
+export default function ClientReports({ autoFetch = true, platform }: ClientReportsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<RegisteredAccount[]>([]);
@@ -90,7 +91,8 @@ export default function ClientReports({ autoFetch = true }: ClientReportsProps) 
         return;
       }
 
-      const res = await fetch(`/api/get-registered-accounts?partnerId=${encodeURIComponent(partnerId)}`);
+      const platformParam = platform ? `&platform=${encodeURIComponent(platform)}` : '';
+      const res = await fetch(`/api/get-registered-accounts?partnerId=${encodeURIComponent(partnerId)}${platformParam}`);
       const json = await res.json();
 
       if (!json.success) {

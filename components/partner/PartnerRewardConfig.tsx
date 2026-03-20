@@ -31,7 +31,10 @@ interface LevelState {
   is_active: boolean;
 }
 
-const SUPPORTED_PLATFORMS = [{ value: 'exness', label: 'Exness' }];
+const SUPPORTED_PLATFORMS = [
+  { value: 'exness', label: 'Exness' },
+  { value: 'lirunex', label: 'Lirunex' },
+];
 
 const DEFAULT_LEVELS: LevelState[] = [
   { level: 0, lot_volume: 0, reward_usd: 0, reward_text: '', is_active: true },
@@ -47,8 +50,12 @@ const DEFAULT_LEVELS: LevelState[] = [
   { level: 10, lot_volume: 3000, reward_usd: 20000, reward_text: '', is_active: false },
 ];
 
-export default function PartnerRewardConfig() {
-  const [platform, setPlatform] = useState<string>('exness');
+interface PartnerRewardConfigProps {
+  platform?: string;
+}
+
+export default function PartnerRewardConfig({ platform: initialPlatform = 'exness' }: PartnerRewardConfigProps) {
+  const [platform, setPlatform] = useState<string>(initialPlatform);
   const [levels, setLevels] = useState<LevelState[]>(DEFAULT_LEVELS.map((l) => ({ ...l })));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

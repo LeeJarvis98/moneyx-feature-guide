@@ -8,6 +8,7 @@ import styles from './PartnerSystem.module.css';
 
 interface PartnerSystemProps {
    autoFetch?: boolean;
+   platform?: string;
 }
 
 // Helper function to safely format numbers
@@ -16,7 +17,7 @@ const formatNumber = (value: any, decimals: number = 2): string => {
    return isNaN(num) ? '0.00' : num.toFixed(decimals);
 };
 
-export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) {
+export default function PartnerSystem({ autoFetch = true, platform = 'exness' }: PartnerSystemProps) {
    const [partnerData, setPartnerData] = useState<any>(null);
    const [networkNodes, setNetworkNodes] = useState<NetworkSnapshotNode[]>([]);
    const [loading, setLoading] = useState(false);
@@ -47,9 +48,9 @@ export default function PartnerSystem({ autoFetch = true }: PartnerSystemProps) 
             fetch('/api/get-partner-data', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ userId }),
+               body: JSON.stringify({ userId, platform }),
             }),
-            fetch(`/api/network-snapshot?owner_id=${encodeURIComponent(userId)}&platform=exness`),
+            fetch(`/api/network-snapshot?owner_id=${encodeURIComponent(userId)}&platform=${encodeURIComponent(platform)}`),
          ]);
 
          const partnerJson = await partnerResponse.json();

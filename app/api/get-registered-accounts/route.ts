@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const partnerId = searchParams.get('partnerId');
+    const platform = searchParams.get('platform');
 
     if (!partnerId) {
       return NextResponse.json(
@@ -28,12 +29,17 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('licensed_accounts')
       .select('id, account_id, email, platform, licensed_date, licensed_status, registered_at, lot_volume, reward')
       .eq('id', partnerId)
-      .not('registered_at', 'is', null)
-      .order('registered_at', { ascending: false });
+      .not('registered_at', 'is', null);
+
+    if (platform) {
+      query = query.eq('platform', platform.toLowerCase());
+    }
+
+    const { data, error } = await query.order('registered_at', { ascending: false });
 
     if (error) {
       console.error('[GET-REGISTERED-ACCOUNTS] Database error:', error);

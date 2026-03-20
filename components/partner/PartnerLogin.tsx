@@ -200,6 +200,9 @@ export default function PartnerLogin({ onLoginSuccess, selectedPlatform, onAside
       if (data.partnerId) {
         sessionStorage.setItem('partnerId', data.partnerId);
       }
+      if (selectedPlatform) {
+        sessionStorage.setItem('partnerPlatform', selectedPlatform);
+      }
       if (data.platformToken) {
         exnessApi.setToken(data.platformToken);
       }

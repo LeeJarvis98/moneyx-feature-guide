@@ -11,6 +11,7 @@ import styles from './PartnerDashboard.module.css';
 interface PartnerDashboardProps {
   onLogout?: () => void;
   onAsideContentChange?: (content: React.ReactNode) => void;
+  platform: string;
 }
 
 type ActiveSection = 
@@ -18,7 +19,7 @@ type ActiveSection =
   | 'partnerSystem'
   | 'rewardConfig';
 
-export default function PartnerDashboard({ onLogout, onAsideContentChange }: PartnerDashboardProps) {
+export default function PartnerDashboard({ onLogout, onAsideContentChange, platform }: PartnerDashboardProps) {
   const [activeSection, setActiveSection] = useState<ActiveSection>('reports');
 
   // Update aside content when active section changes
@@ -93,9 +94,9 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange }: Par
     <div className={styles.container}>
       {/* Main Content Area */}
       <div className={styles.content}>
-        {activeSection === 'reports' && <ClientReports autoFetch={true} />}
-        {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} />}
-        {activeSection === 'rewardConfig' && <PartnerRewardConfig />}
+        {activeSection === 'reports' && <ClientReports autoFetch={true} platform={platform} />}
+        {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} platform={platform} />}
+        {activeSection === 'rewardConfig' && <PartnerRewardConfig platform={platform} />}
       </div>
     </div>
   );
