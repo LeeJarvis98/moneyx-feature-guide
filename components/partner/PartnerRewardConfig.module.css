@@ -14,7 +14,7 @@
 }
 
 .saveButton {
-  background: linear-gradient(135deg, #a607f0 0%, #f369b5 100%) !important;
+  background: #f08c00 100% !important;
   border: none !important;
   color: #fff !important;
   font-weight: 700 !important;
@@ -22,6 +22,45 @@
 
 .saveButton:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.toggleAllButtonOn {
+  border-color: rgba(255, 184, 28, 0.5) !important;
+  color: #FFB81C !important;
+  background: rgba(255, 184, 28, 0.1) !important;
+}
+
+.toggleAllButtonOn:hover {
+  background: rgba(255, 184, 28, 0.2) !important;
+}
+
+.toggleAllButtonOff {
+  border-color: rgba(180, 180, 180, 0.3) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.toggleAllButtonOff:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.applyButton {
+  background: rgba(255, 184, 28, 0.12) !important;
+  border: 1px solid rgba(255, 184, 28, 0.45) !important;
+  color: #FFB81C !important;
+  font-weight: 700 !important;
+}
+
+.applyButton:hover:not(:disabled) {
+  background: rgba(255, 184, 28, 0.22) !important;
+}
+
+.applyButtonActive {
+  background: rgba(64, 192, 87, 0.15) !important;
+  border: 1px solid rgba(64, 192, 87, 0.5) !important;
+  color: #40c057 !important;
+  font-weight: 700 !important;
+  cursor: default !important;
 }
 
 .platformSelect {
@@ -42,8 +81,19 @@
 }
 
 .levelCardActive {
-  background: rgba(174, 62, 201, 0.07) !important;
-  border-color: rgba(174, 62, 201, 0.35) !important;
+  background: rgba(255, 184, 28, 0.07) !important;
+  border-color: rgba(255, 184, 28, 0.4) !important;
+}
+
+.levelCardLocked {
+  opacity: 0.45;
+}
+
+.lockIcon {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: default;
 }
 
 .numberInput {

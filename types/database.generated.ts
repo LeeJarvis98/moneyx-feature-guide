@@ -36,6 +36,7 @@ export type Database = {
           reward_usd: number
           reward_text: string | null
           is_active: boolean
+          is_applied: boolean
           created_at: string
           updated_at: string
         }
@@ -48,6 +49,7 @@ export type Database = {
           reward_usd?: number
           reward_text?: string | null
           is_active?: boolean
+          is_applied?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -60,6 +62,7 @@ export type Database = {
           reward_usd?: number
           reward_text?: string | null
           is_active?: boolean
+          is_applied?: boolean
           created_at?: string
           updated_at?: string
         }

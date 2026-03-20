@@ -69,17 +69,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Group by platform — take the first platform that has active levels
-    const platformsWithConfig = [...new Set(configs.map((c) => c.platform))];
-    let selectedPlatform = platformsWithConfig[0];
+    // Pick the platform that the partner has explicitly applied (is_applied = true)
+    const appliedRow = configs.find((c) => c.is_applied);
 
-    for (const plat of platformsWithConfig) {
-      const hasActive = configs.some((c) => c.platform === plat && c.is_active);
-      if (hasActive) {
-        selectedPlatform = plat;
-        break;
-      }
+    if (!appliedRow) {
+      return NextResponse.json(
+        { error: 'NO_PARTNER_CONFIG', message: 'Đối tác của bạn chưa kích hoạt hệ thống thưởng cho bất kỳ sàn nào.' },
+        { status: 200 },
+      );
     }
+
+    const selectedPlatform = appliedRow.platform;
 
     const platformConfigs = configs.filter((c) => c.platform === selectedPlatform);
 

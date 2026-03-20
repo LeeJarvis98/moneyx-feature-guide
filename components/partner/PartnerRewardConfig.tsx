@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Stack,
   Group,
@@ -20,7 +20,7 @@ import {
   Tooltip,
   Center,
 } from '@mantine/core';
-import { Save, Info, RotateCcw, CheckCircle } from 'lucide-react';
+import { Save, Info, RotateCcw, CheckCircle, Lock, Zap } from 'lucide-react';
 import styles from './PartnerRewardConfig.module.css';
 
 interface LevelState {
@@ -52,15 +52,34 @@ const DEFAULT_LEVELS: LevelState[] = [
 
 interface PartnerRewardConfigProps {
   platform?: string;
+  selectedPlatforms?: string[];
 }
 
-export default function PartnerRewardConfig({ platform: initialPlatform = 'exness' }: PartnerRewardConfigProps) {
+export default function PartnerRewardConfig({ platform: initialPlatform = 'exness', selectedPlatforms }: PartnerRewardConfigProps) {
+  const availablePlatforms = useMemo(() => {
+    if (!selectedPlatforms || selectedPlatforms.length === 0) {
+      return SUPPORTED_PLATFORMS;
+    }
+    const filtered = SUPPORTED_PLATFORMS.filter((p) => selectedPlatforms.includes(p.value));
+    return filtered.length > 0 ? filtered : SUPPORTED_PLATFORMS;
+  }, [selectedPlatforms]);
+
   const [platform, setPlatform] = useState<string>(initialPlatform);
   const [levels, setLevels] = useState<LevelState[]>(DEFAULT_LEVELS.map((l) => ({ ...l })));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [appliedPlatform, setAppliedPlatform] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [applySuccess, setApplySuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync platform state when available platforms list changes
+  useEffect(() => {
+    if (!availablePlatforms.find((p) => p.value === platform)) {
+      setPlatform(availablePlatforms[0]?.value || 'exness');
+    }
+  }, [availablePlatforms]);
 
   useEffect(() => {
     loadConfig(platform);
@@ -97,9 +116,15 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
         reward_usd: number;
         reward_text: string | null;
         is_active: boolean;
+        is_applied: boolean;
       }> = (json.configs ?? []).filter(
         (c: { platform: string }) => c.platform === plat,
       );
+
+      // Detect which platform is currently applied from ALL configs
+      const allConfigs: Array<{ platform: string; is_applied: boolean }> = json.configs ?? [];
+      const alreadyApplied = allConfigs.find((c) => c.is_applied);
+      setAppliedPlatform(alreadyApplied?.platform ?? null);
 
       if (existingConfigs.length === 0) {
         // No config yet — use defaults
@@ -127,17 +152,32 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
     }
   };
 
+  const isLevelToggleable = (idx: number): boolean => {
+    if (idx <= 1) return true;
+    return levels[idx - 1].is_active;
+  };
+
   const handleLevelChange = (
     levelIndex: number,
     field: keyof LevelState,
     value: string | number | boolean,
   ) => {
-    setLevels((prev) =>
-      prev.map((l, i) => {
-        if (i !== levelIndex) return l;
-        return { ...l, [field]: value };
-      }),
-    );
+    if (field === 'is_active' && value === false) {
+      // When disabling a level, cascade-disable all subsequent levels
+      setLevels((prev) =>
+        prev.map((l, i) => {
+          if (i < levelIndex) return l;
+          return { ...l, is_active: false };
+        }),
+      );
+    } else {
+      setLevels((prev) =>
+        prev.map((l, i) => {
+          if (i !== levelIndex) return l;
+          return { ...l, [field]: value };
+        }),
+      );
+    }
     setSaveSuccess(false);
   };
 
@@ -191,7 +231,50 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
     setError(null);
   };
 
+  const handleToggleAll = () => {
+    const anyInactive = levels.slice(1).some((l) => !l.is_active);
+    setLevels((prev) => prev.map((l, i) => (i === 0 ? l : { ...l, is_active: anyInactive })));
+    setSaveSuccess(false);
+  };
+
+  const handleApply = async () => {
+    const partnerId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    if (!partnerId) {
+      setError('Không tìm thấy ID người dùng.');
+      return;
+    }
+
+    setApplying(true);
+    setError(null);
+    setApplySuccess(false);
+
+    try {
+      const res = await fetch('/api/apply-reward-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId, platform }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error ?? 'Không thể áp dụng thiết lập.');
+        return;
+      }
+
+      setAppliedPlatform(platform);
+      setApplySuccess(true);
+      setTimeout(() => setApplySuccess(false), 3000);
+    } catch {
+      setError('Không thể kết nối tới máy chủ.');
+    } finally {
+      setApplying(false);
+    }
+  };
+
   const activeCount = levels.filter((l) => l.level > 0 && l.is_active).length;
+  const allLevelsActive = levels.slice(1).every((l) => l.is_active);
+  const isCurrentPlatformApplied = appliedPlatform === platform;
 
   return (
     <div className={styles.container}>
@@ -203,11 +286,31 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
           </Text>
         </div>
         <Group gap="sm">
+          <Tooltip label={allLevelsActive ? 'Tắt tất cả cấp độ' : 'Bật tất cả cấp độ'}>
+            <Button
+              variant="light"
+              size="sm"
+              onClick={handleToggleAll}
+              disabled={loading}
+              className={allLevelsActive ? styles.toggleAllButtonOff : styles.toggleAllButtonOn}
+            >
+              {allLevelsActive ? 'Tắt tất cả' : 'Bật tất cả'}
+            </Button>
+          </Tooltip>
           <Tooltip label="Đặt lại về mặc định">
             <ActionIcon variant="subtle" color="gray" size="lg" onClick={handleReset}>
               <RotateCcw size={16} />
             </ActionIcon>
           </Tooltip>
+          <Button
+            leftSection={<Zap size={16} />}
+            onClick={handleApply}
+            loading={applying}
+            disabled={loading || saving}
+            className={isCurrentPlatformApplied ? styles.applyButtonActive : styles.applyButton}
+          >
+            {isCurrentPlatformApplied ? 'Đang áp dụng' : 'Áp dụng thiết lập'}
+          </Button>
           <Button
             leftSection={<Save size={16} />}
             onClick={handleSave}
@@ -232,22 +335,44 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
         </Alert>
       )}
 
+      {applySuccess && (
+        <Alert color="yellow" icon={<Zap size={16} />}>
+          Đã áp dụng thiết lập thưởng cho sàn <strong>{availablePlatforms.find((p) => p.value === platform)?.label ?? platform}</strong>. Các sàn khác đã được tắt.
+        </Alert>
+      )}
+
       <Group gap="md" align="flex-end">
-        <Select
-          label="Sàn giao dịch"
-          data={SUPPORTED_PLATFORMS}
-          value={platform}
-          onChange={(v) => v && setPlatform(v)}
-          className={styles.platformSelect}
-        />
-        <Badge color="grape" size="lg" variant="light">
+        {availablePlatforms.length > 1 ? (
+          <Select
+            label="Sàn giao dịch"
+            data={availablePlatforms}
+            value={platform}
+            onChange={(v) => v && setPlatform(v)}
+            className={styles.platformSelect}
+          />
+        ) : (
+          <div>
+            <Text size="xs" c="dimmed" mb={4}>Sàn giao dịch</Text>
+            <Badge color="yellow" size="lg" variant="light">
+              {availablePlatforms[0]?.label ?? platform}
+            </Badge>
+          </div>
+        )}
+        <Badge color="yellow" size="lg" variant="light">
           {activeCount} cấp độ đang hoạt động
         </Badge>
+        {appliedPlatform && (
+          <Badge color={isCurrentPlatformApplied ? 'green' : 'gray'} size="lg" variant="light">
+            {isCurrentPlatformApplied
+              ? '✓ Đang áp dụng'
+              : `Đang áp dụng: ${availablePlatforms.find((p) => p.value === appliedPlatform)?.label ?? appliedPlatform}`}
+          </Badge>
+        )}
       </Group>
 
       {loading ? (
         <Center py="xl">
-          <Loader color="grape" />
+          <Loader color="yellow" />
         </Center>
       ) : (
         <Stack gap="sm">
@@ -258,37 +383,47 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
                 <Badge size="sm" color="gray" variant="outline">Level 0</Badge>
                 <Text size="sm" c="dimmed">Cơ bản (cố định)</Text>
               </Group>
-              <Text size="sm" c="dimmed">0 lots → $0</Text>
+              <Text size="sm" c="dimmed">0 lots thưởng $0</Text>
             </Group>
           </Paper>
 
           <Divider label="Các mốc thưởng (Level 1 – 10)" labelPosition="left" color="gray.7" />
 
           {levels.slice(1).map((lvl, idx) => {
-            const realIndex = idx + 1; // index in the full array
+            const realIndex = idx + 1;
+            const canToggle = isLevelToggleable(realIndex);
+            const isLocked = !canToggle;
             return (
               <Paper
                 key={lvl.level}
-                className={`${styles.levelCard} ${lvl.is_active ? styles.levelCardActive : ''}`}
+                className={`${styles.levelCard} ${lvl.is_active ? styles.levelCardActive : ''} ${isLocked ? styles.levelCardLocked : ''}`}
               >
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
-                  <Group gap="sm" align="center" style={{ minWidth: 90 }}>
+                  <Group gap="sm" align="center" style={{ minWidth: 110 }}>
                     <Badge
                       size="sm"
-                      color={lvl.is_active ? 'grape' : 'gray'}
+                      color={lvl.is_active ? 'yellow' : 'gray'}
                       variant={lvl.is_active ? 'filled' : 'outline'}
                     >
                       Level {lvl.level}
                     </Badge>
-                    <Switch
-                      checked={lvl.is_active}
-                      onChange={(e) =>
-                        handleLevelChange(realIndex, 'is_active', e.currentTarget.checked)
-                      }
-                      color="grape"
-                      size="sm"
-                      aria-label={`Kích hoạt level ${lvl.level}`}
-                    />
+                    {isLocked ? (
+                      <Tooltip label={`Kích hoạt Level ${lvl.level - 1} trước`}>
+                        <span className={styles.lockIcon}>
+                          <Lock size={14} />
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      <Switch
+                        checked={lvl.is_active}
+                        onChange={(e) =>
+                          handleLevelChange(realIndex, 'is_active', e.currentTarget.checked)
+                        }
+                        color="yellow"
+                        size="sm"
+                        aria-label={`Kích hoạt level ${lvl.level}`}
+                      />
+                    )}
                   </Group>
 
                   <Group gap="sm" style={{ flex: 1 }} wrap="wrap">
@@ -319,7 +454,7 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
                     />
                     <TextInput
                       label="Thưởng phụ (tuỳ chọn)"
-                      placeholder="VD: hoặc Smartphone cao cấp"
+                      placeholder="VD: Smartphone cao cấp"
                       value={lvl.reward_text}
                       onChange={(e) =>
                         handleLevelChange(realIndex, 'reward_text', e.currentTarget.value)

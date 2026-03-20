@@ -102,16 +102,14 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
                 >
                   <Stack gap={4} mt={4}>
                     <Text size="md" c={isCompleted ? 'white' : 'dimmed'}>
-                      {fmt(lvl.lot_volume)} lots →{' '}
+                      {fmt(lvl.lot_volume)} lots thưởng{' '}
                       <Text span fw={700} c={isCompleted ? 'grape.4' : 'dimmed'}>
                         ${fmt(lvl.reward_usd)}
                       </Text>
+                      {lvl.reward_text && (
+                        <Text span c="yellow.5" fs="italic"> hoặc {lvl.reward_text}</Text>
+                      )}
                     </Text>
-                    {lvl.reward_text && (
-                      <Text size="sm" c="yellow.5" fs="italic">
-                        {lvl.reward_text}
-                      </Text>
-                    )}
                   </Stack>
                 </Timeline.Item>
               );

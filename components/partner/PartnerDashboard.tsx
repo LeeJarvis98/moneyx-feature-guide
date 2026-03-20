@@ -12,6 +12,7 @@ interface PartnerDashboardProps {
   onLogout?: () => void;
   onAsideContentChange?: (content: React.ReactNode) => void;
   platform: string;
+  selectedPlatforms?: string[];
 }
 
 type ActiveSection = 
@@ -19,7 +20,7 @@ type ActiveSection =
   | 'partnerSystem'
   | 'rewardConfig';
 
-export default function PartnerDashboard({ onLogout, onAsideContentChange, platform }: PartnerDashboardProps) {
+export default function PartnerDashboard({ onLogout, onAsideContentChange, platform, selectedPlatforms }: PartnerDashboardProps) {
   const [activeSection, setActiveSection] = useState<ActiveSection>('reports');
 
   // Update aside content when active section changes
@@ -75,7 +76,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange, platf
               active={activeSection === 'rewardConfig'}
               fw={activeSection === 'rewardConfig' ? 700 : undefined}
               onClick={() => setActiveSection('rewardConfig')}
-              color="grape"
+              color="#FFB81C"
             />
           </Stack>
         </div>
@@ -96,7 +97,7 @@ export default function PartnerDashboard({ onLogout, onAsideContentChange, platf
       <div className={styles.content}>
         {activeSection === 'reports' && <ClientReports autoFetch={true} platform={platform} />}
         {activeSection === 'partnerSystem' && <PartnerSystem autoFetch={true} platform={platform} />}
-        {activeSection === 'rewardConfig' && <PartnerRewardConfig platform={platform} />}
+        {activeSection === 'rewardConfig' && <PartnerRewardConfig platform={platform} selectedPlatforms={selectedPlatforms} />}
       </div>
     </div>
   );

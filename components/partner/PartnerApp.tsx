@@ -119,6 +119,7 @@ export default function PartnerApp({ onAsideContentChange, selectedPlatform, onP
           onLogout={handleLogout} 
           onAsideContentChange={onAsideContentChange}
           platform={currentPlatform || selectedPlatform || 'exness'}
+          selectedPlatforms={selectedPlatforms ?? undefined}
         />
       ) : !hasSelectedPlatforms ? (
         <WelcomeScreen />
