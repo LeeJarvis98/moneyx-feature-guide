@@ -22,6 +22,7 @@ function generateOTP(): string {
 }
 
 const EXNESS_API_BASE = 'https://my.exnessaffiliates.com';
+const LIRUNEX_API_BASE = process.env.LIRUNEX_API_BASE ?? '';
 
 // Helper function to extract platform credentials from database structure
 function extractPlatformCredentials(platformAccounts: any, platform: string): any {
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       if (TEST_MODE) {
         console.log('[CHECK-EMAIL] TEST_MODE: Skipping OTP send, returning instant success');
         return NextResponse.json(
-          { success: true, message: 'OTP đã được gửi đến email của bạn', otpSent: true },
+          { success: true, message: 'OTP đã được gửi đến email của bạn', otpSent: true, skipOtp: true },
           { status: 200 }
         );
       }
@@ -207,17 +208,18 @@ export async function POST(request: NextRequest) {
 
     // Handle OTP verification
     if (action === 'verify-otp') {
-      if (!otp) {
-        return NextResponse.json(
-          { success: false, error: 'OTP is required' },
-          { status: 400 }
-        );
-      }
-
       console.log('[CHECK-EMAIL] Verifying OTP for:', email);
 
       // TEST_MODE: Accept any OTP without database verification
       if (!TEST_MODE) {
+        if (!otp) {
+          return NextResponse.json(
+            { success: false, error: 'OTP is required' },
+            { status: 400 }
+          );
+        }
+
+
         // Normal OTP verification flow
         const supabase = getSupabaseClient();
 
@@ -488,6 +490,30 @@ export async function POST(request: NextRequest) {
               { status: 401 }
             );
           }
+        } else if (platform.toLowerCase() === 'lirunex') {
+          const authResponse = await fetch(`${request.nextUrl.origin}/api/lirunex/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: platformCredentials.username || platformCredentials.email,
+              password: platformCredentials.password,
+            }),
+          });
+
+          if (authResponse.ok) {
+            const authData = await authResponse.json();
+            platformToken = authData.token?.access_token;
+            console.log('[CHECK-EMAIL] Lirunex platform authentication successful');
+          } else {
+            console.error('[CHECK-EMAIL] Lirunex platform authentication failed:', authResponse.status);
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Failed to authenticate with platform. Please check your platform credentials are up to date.',
+              },
+              { status: 401 }
+            );
+          }
         } else {
           return NextResponse.json(
             { success: false, error: `Platform ${platform} authentication is not yet supported` },
@@ -516,53 +542,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Fetch client affiliation from Exness API using the platform token and email
-    console.log('[CHECK-EMAIL] Step 1: Fetching client affiliation from Exness API');
+    // Step 1: Fetch client data from platform API using the platform token and email
+    console.log('[CHECK-EMAIL] Step 1: Fetching client data from platform API');
+    console.log('[CHECK-EMAIL] Platform:', platform);
     console.log('[CHECK-EMAIL] Email:', email);
     console.log('[CHECK-EMAIL] Token present:', !!platformToken);
-    
-    try {
-      // Try POST method first (as affiliation endpoint might require POST)
-      let exnessResponse = await fetch(
-        `${EXNESS_API_BASE}/api/partner/affiliation/`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `JWT ${platformToken}`,
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
 
-      // If POST returns 405, try GET with query parameter
-      if (exnessResponse.status === 405) {
-        console.log('[CHECK-EMAIL] POST not allowed, trying GET...');
-        exnessResponse = await fetch(
-          `${EXNESS_API_BASE}/api/partner/affiliation/?email=${encodeURIComponent(email)}`,
+    try {
+      // Normalised shape used by all downstream logic
+      let clientData: { affiliation: boolean; accounts: string[]; client_uid: string | null };
+
+      if (platform.toLowerCase() === 'lirunex') {
+        // ── Lirunex: GET /api/Rebate/GetRebateEarned?email=… ──────────────────
+        console.log('[CHECK-EMAIL] Calling Lirunex GetRebateEarned for:', email);
+        const lirunexResponse = await fetch(
+          `${LIRUNEX_API_BASE}/api/Rebate/GetRebateEarned?email=${encodeURIComponent(email)}`,
           {
             method: 'GET',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Authorization': `Bearer ${platformToken}`,
+            },
+          }
+        );
+        console.log('[CHECK-EMAIL] Lirunex API response status:', lirunexResponse.status);
+
+        if (!lirunexResponse.ok) {
+          const errorText = await lirunexResponse.text();
+          console.error('[CHECK-EMAIL] Lirunex API error:', lirunexResponse.status, errorText);
+          throw new Error('Failed to fetch client rebate data from Lirunex');
+        }
+
+        const lirunexData = await lirunexResponse.json();
+        console.log('[CHECK-EMAIL] Lirunex API response received, success:', lirunexData);
+        console.log('[CHECK-EMAIL] Lirunex API response received, success:', lirunexData.success);
+
+        const rebateRows: { clientMt4Id: number; clientEmail: string }[] =
+          Array.isArray(lirunexData.data) ? lirunexData.data : [];
+
+        clientData = {
+          affiliation: rebateRows.length > 0,
+          accounts: rebateRows.map((row) => String(row.clientMt4Id)),
+          client_uid: email.toLowerCase(), // Lirunex has no UID field
+        };
+      } else {
+        // ── Exness: POST /api/partner/affiliation/ ─────────────────────────────
+        let exnessResponse = await fetch(
+          `${EXNESS_API_BASE}/api/partner/affiliation/`,
+          {
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `JWT ${platformToken}`,
             },
+            body: JSON.stringify({ email }),
           }
         );
+
+        // If POST returns 405, fall back to GET with query parameter
+        if (exnessResponse.status === 405) {
+          console.log('[CHECK-EMAIL] POST not allowed, trying GET...');
+          exnessResponse = await fetch(
+            `${EXNESS_API_BASE}/api/partner/affiliation/?email=${encodeURIComponent(email)}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `JWT ${platformToken}`,
+              },
+            }
+          );
+        }
+
+        console.log('[CHECK-EMAIL] Exness API response status:', exnessResponse.status);
+
+        if (!exnessResponse.ok) {
+          const errorText = await exnessResponse.text();
+          console.error('[CHECK-EMAIL] Exness API error:', exnessResponse.status, errorText);
+          throw new Error('Failed to fetch client affiliation from platform');
+        }
+
+        clientData = await exnessResponse.json();
+        console.log('[CHECK-EMAIL] Exness API response received');
+        console.log('[CHECK-EMAIL] Affiliation:', clientData.affiliation);
+        console.log('[CHECK-EMAIL] Client UID:', clientData.client_uid);
+        console.log('[CHECK-EMAIL] Accounts:', clientData.accounts);
       }
-
-      console.log('[CHECK-EMAIL] Exness API response status:', exnessResponse.status);
-
-      if (!exnessResponse.ok) {
-        const errorText = await exnessResponse.text();
-        console.error('[CHECK-EMAIL] Exness API error:', exnessResponse.status, errorText);
-        throw new Error('Failed to fetch client affiliation from platform');
-      }
-
-      const clientData = await exnessResponse.json();
-      console.log('[CHECK-EMAIL] Exness API response received');
-      console.log('[CHECK-EMAIL] Affiliation:', clientData.affiliation);
-      console.log('[CHECK-EMAIL] Client UID:', clientData.client_uid);
-      console.log('[CHECK-EMAIL] Accounts:', clientData.accounts);
 
       // Check if client has affiliation
       if (!clientData.affiliation) {
@@ -653,7 +718,7 @@ export async function POST(request: NextRequest) {
                 return {
                   id: partnerId,
                   email: email.toLowerCase(),
-                  uid: clientData.client_uid,
+                  uid: clientData.client_uid ?? '',
                   account_id: accountId,
                   licensed_date: timestamp,
                   platform: platform.toLowerCase(),

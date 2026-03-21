@@ -382,6 +382,13 @@ export function GetBotTab({ isActive = false, onAsideContentChange }: GetBotTabP
       const result = await response.json();
 
       if (result.success && result.otpSent) {
+        if (result.skipOtp) {
+          // TEST_MODE: bypass OTP UI and verify directly with empty OTP (server accepts any)
+          setCaptchaToken(null);
+          turnstileRef.current?.reset();
+          await checkAccountStatus();
+          return;
+        }
         setOtpSent(true);
         setAccountStatus('idle');
         // Start the resend timer
