@@ -55,12 +55,14 @@ export default function HomePage() {
 
   // Check if user is logged in on mount
   useEffect(() => {
+    const controller = new AbortController();
+
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     if (userId) {
       setIsUserLoggedIn(true);
       setLoggedInUserId(userId);
       // Check partner rank
-      checkPartnerRank(userId);
+      checkPartnerRank(userId, controller.signal);
     }
 
     // Listen for referral ID update
@@ -95,13 +97,14 @@ export default function HomePage() {
     }
 
     return () => {
+      controller.abort();
       window.removeEventListener('referralIdUpdated', handleReferralIdUpdate as EventListener);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
   // Function to check partner rank and partner type
-  const checkPartnerRank = async (userId: string) => {
+  const checkPartnerRank = async (userId: string, signal?: AbortSignal) => {
     // Stamp this invocation. If a newer call starts before this one resolves,
     // the result of this call will be silently discarded to prevent stale writes.
     const callId = ++checkPartnerRankCallId.current;
@@ -110,6 +113,7 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partnerId: userId }),
+        signal,
       });
 
       // Discard if a newer invocation has already started
@@ -146,16 +150,18 @@ export default function HomePage() {
         }
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('[HomePage] Error checking partner rank:', error);
     }
   };
 
-  const fetchSelectedPlatforms = useCallback(async (userId: string) => {
+  const fetchSelectedPlatforms = useCallback(async (userId: string, signal?: AbortSignal) => {
     try {
       const response = await fetch('/api/get-selected-platforms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partnerId: userId }),
+        signal,
       });
       if (response.ok) {
         const data = await response.json();
@@ -163,15 +169,17 @@ export default function HomePage() {
       } else {
         setSelectedPlatformsList([]);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       setSelectedPlatformsList([]);
     }
   }, []);
 
   useEffect(() => {
-    if (loggedInUserId) {
-      fetchSelectedPlatforms(loggedInUserId);
-    }
+    if (!loggedInUserId) return;
+    const controller = new AbortController();
+    fetchSelectedPlatforms(loggedInUserId, controller.signal);
+    return () => controller.abort();
   }, [loggedInUserId, fetchSelectedPlatforms]);
 
   // Determine if user is an active partner (confirmed email)
@@ -313,7 +321,7 @@ export default function HomePage() {
           header={{ height: navigationSection === 'login' || navigationSection === 'reward' ? 65 : { base: 65, sm: 100 } }}
           footer={{ height: { base: 0, sm: 60 } }}
           navbar={{
-            width: navigationSection === 'reward' ? 350 : 300,
+            width: navigationSection === 'reward' ? 420 : 300,
             breakpoint: 'sm',
             collapsed: { mobile: !mobileNavbarOpened, desktop: !shouldShowNavbar }
           }}

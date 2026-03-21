@@ -19,8 +19,10 @@ import {
   ActionIcon,
   Tooltip,
   Center,
+  Popover,
+  UnstyledButton,
 } from '@mantine/core';
-import { Save, Info, RotateCcw, CheckCircle, Lock, Zap } from 'lucide-react';
+import { Save, Info, RotateCcw, CheckCircle, Lock, Zap, X, ImagePlus } from 'lucide-react';
 import styles from './PartnerRewardConfig.module.css';
 
 interface LevelState {
@@ -29,6 +31,7 @@ interface LevelState {
   reward_usd: number;
   reward_text: string;
   is_active: boolean;
+  avatar_url: string | null;
 }
 
 const SUPPORTED_PLATFORMS = [
@@ -37,17 +40,17 @@ const SUPPORTED_PLATFORMS = [
 ];
 
 const DEFAULT_LEVELS: LevelState[] = [
-  { level: 0, lot_volume: 0, reward_usd: 0, reward_text: '', is_active: true },
-  { level: 1, lot_volume: 10, reward_usd: 200, reward_text: '', is_active: false },
-  { level: 2, lot_volume: 20, reward_usd: 400, reward_text: '', is_active: false },
-  { level: 3, lot_volume: 40, reward_usd: 600, reward_text: '', is_active: false },
-  { level: 4, lot_volume: 80, reward_usd: 1000, reward_text: '', is_active: false },
-  { level: 5, lot_volume: 200, reward_usd: 1400, reward_text: '', is_active: false },
-  { level: 6, lot_volume: 500, reward_usd: 2000, reward_text: '', is_active: false },
-  { level: 7, lot_volume: 1000, reward_usd: 6000, reward_text: '', is_active: false },
-  { level: 8, lot_volume: 1500, reward_usd: 10000, reward_text: '', is_active: false },
-  { level: 9, lot_volume: 2000, reward_usd: 16000, reward_text: '', is_active: false },
-  { level: 10, lot_volume: 3000, reward_usd: 20000, reward_text: '', is_active: false },
+  { level: 0, lot_volume: 0, reward_usd: 0, reward_text: '', is_active: true, avatar_url: null },
+  { level: 1, lot_volume: 10, reward_usd: 200, reward_text: '', is_active: false, avatar_url: null },
+  { level: 2, lot_volume: 20, reward_usd: 400, reward_text: '', is_active: false, avatar_url: null },
+  { level: 3, lot_volume: 40, reward_usd: 600, reward_text: '', is_active: false, avatar_url: null },
+  { level: 4, lot_volume: 80, reward_usd: 1000, reward_text: '', is_active: false, avatar_url: null },
+  { level: 5, lot_volume: 200, reward_usd: 1400, reward_text: '', is_active: false, avatar_url: null },
+  { level: 6, lot_volume: 500, reward_usd: 2000, reward_text: '', is_active: false, avatar_url: null },
+  { level: 7, lot_volume: 1000, reward_usd: 6000, reward_text: '', is_active: false, avatar_url: null },
+  { level: 8, lot_volume: 1500, reward_usd: 10000, reward_text: '', is_active: false, avatar_url: null },
+  { level: 9, lot_volume: 2000, reward_usd: 16000, reward_text: '', is_active: false, avatar_url: null },
+  { level: 10, lot_volume: 3000, reward_usd: 20000, reward_text: '', is_active: false, avatar_url: null },
 ];
 
 interface PartnerRewardConfigProps {
@@ -73,6 +76,18 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableAvatars, setAvailableAvatars] = useState<{ name: string; url: string }[]>([]);
+  const [openedAvatarPicker, setOpenedAvatarPicker] = useState<number | null>(null);
+
+  // Load available avatars from Supabase Storage
+  useEffect(() => {
+    fetch('/api/get-reward-avatars')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.avatars)) setAvailableAvatars(data.avatars);
+      })
+      .catch(() => {});
+  }, []);
 
   // Sync platform state when available platforms list changes
   useEffect(() => {
@@ -115,6 +130,7 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
         lot_volume: number;
         reward_usd: number;
         reward_text: string | null;
+        avatar_url: string | null;
         is_active: boolean;
         is_applied: boolean;
       }> = (json.configs ?? []).filter(
@@ -139,6 +155,7 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
               reward_usd: Number(saved.reward_usd),
               reward_text: saved.reward_text ?? '',
               is_active: saved.level === 0 ? true : saved.is_active,
+              avatar_url: saved.avatar_url ?? null,
             };
           }
           return { ...def };
@@ -160,7 +177,7 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
   const handleLevelChange = (
     levelIndex: number,
     field: keyof LevelState,
-    value: string | number | boolean,
+    value: string | number | boolean | null,
   ) => {
     if (field === 'is_active' && value === false) {
       // When disabling a level, cascade-disable all subsequent levels
@@ -204,6 +221,7 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
             lot_volume: l.lot_volume,
             reward_usd: l.reward_usd,
             reward_text: l.reward_text.trim() || null,
+            avatar_url: l.avatar_url ?? null,
             is_active: l.level === 0 ? true : l.is_active,
           })),
         }),
@@ -427,6 +445,85 @@ export default function PartnerRewardConfig({ platform: initialPlatform = 'exnes
                   </Group>
 
                   <Group gap="sm" style={{ flex: 1 }} wrap="wrap">
+                    {/* Avatar picker */}
+                    <div>
+                      <Text size="xs" c="dimmed" mb={6} fw={500}>Ảnh</Text>
+                      <Popover
+                        opened={openedAvatarPicker === realIndex}
+                        onChange={(o) => setOpenedAvatarPicker(o ? realIndex : null)}
+                        width={296}
+                        withArrow
+                        shadow="xl"
+                        position="bottom-start"
+                        withinPortal
+                      >
+                        <Popover.Target>
+                          <UnstyledButton
+                            disabled={!lvl.is_active}
+                            onClick={() =>
+                              setOpenedAvatarPicker(
+                                openedAvatarPicker === realIndex ? null : realIndex,
+                              )
+                            }
+                            className={`${styles.avatarPickerButton} ${!lvl.is_active ? styles.avatarPickerDisabled : ''}`}
+                            title="Chọn ảnh minh họa"
+                          >
+                            {lvl.avatar_url ? (
+                              <img
+                                src={lvl.avatar_url}
+                                alt="Reward avatar"
+                                className={styles.avatarThumbnail}
+                              />
+                            ) : (
+                              <div className={styles.avatarPlaceholder}>
+                                <ImagePlus size={20} />
+                              </div>
+                            )}
+                          </UnstyledButton>
+                        </Popover.Target>
+                        <Popover.Dropdown className={styles.avatarDropdown}>
+                          <Text size="xs" c="dimmed" mb="xs" fw={600} tt="uppercase">
+                            Chọn ảnh minh họa
+                          </Text>
+                          <div className={styles.avatarGrid}>
+                            <Tooltip label="Xóa ảnh" withArrow>
+                              <UnstyledButton
+                                className={`${styles.avatarGridItem} ${!lvl.avatar_url ? styles.avatarGridItemSelected : ''}`}
+                                onClick={() => {
+                                  handleLevelChange(realIndex, 'avatar_url', null);
+                                  setOpenedAvatarPicker(null);
+                                }}
+                              >
+                                <div className={styles.avatarGridClear}>
+                                  <X size={14} />
+                                </div>
+                              </UnstyledButton>
+                            </Tooltip>
+                            {availableAvatars.map((av) => (
+                              <Tooltip
+                                key={av.name}
+                                label={av.name.replace(/\.[^.]+$/, '')}
+                                withArrow
+                              >
+                                <UnstyledButton
+                                  className={`${styles.avatarGridItem} ${lvl.avatar_url === av.url ? styles.avatarGridItemSelected : ''}`}
+                                  onClick={() => {
+                                    handleLevelChange(realIndex, 'avatar_url', av.url);
+                                    setOpenedAvatarPicker(null);
+                                  }}
+                                >
+                                  <img
+                                    src={av.url}
+                                    alt={av.name}
+                                    className={styles.avatarGridThumb}
+                                  />
+                                </UnstyledButton>
+                              </Tooltip>
+                            ))}
+                          </div>
+                        </Popover.Dropdown>
+                      </Popover>
+                    </div>
                     <NumberInput
                       label="Lots"
                       value={lvl.lot_volume}

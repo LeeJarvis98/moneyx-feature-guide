@@ -24,6 +24,7 @@ interface RewardLevel {
   lot_volume: number;
   reward_usd: number;
   reward_text: string | null;
+  avatar_url: string | null;
   is_active: boolean;
 }
 
@@ -77,40 +78,57 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
       <ScrollArea h="100%" type="auto" offsetScrollbars>
         <Stack gap="md">
           <Text fw={700} size="md" c="dimmed" tt="uppercase">Lộ trình thưởng</Text>
-          <Timeline active={activeIndex} bulletSize={36} lineWidth={3} color="grape">
+          <Timeline active={activeIndex} bulletSize={28} lineWidth={3} color="grape">
             {displayLevels.map((lvl) => {
               const isCompleted = lvl.level <= currentLevel;
               const isCurrent = lvl.level === currentLevel;
               return (
                 <Timeline.Item
                   key={lvl.level}
-                  bullet={isCompleted ? <CheckCircle2 size={18} /> : <Lock size={18} />}
+                  bullet={isCompleted ? <CheckCircle2 size={14} /> : <Lock size={14} />}
                   color={isCompleted ? 'grape' : 'gray'}
                   title={
-                    <Group gap="sm" align="center">
-                      <Text fw={700} size="md" c={isCurrent ? 'grape.4' : isCompleted ? 'white' : 'dimmed'}>
-                        Level {lvl.level}
-                        {lvl.level === 0 && (
-                          <Text span c="dimmed" fw={400} size="sm"> (Cơ bản)</Text>
-                        )}
-                      </Text>
-                      {isCurrent && (
-                        <Badge size="sm" color="grape" variant="filled">Hiện tại</Badge>
+                    <Group gap="sm" align="center" wrap="nowrap">
+                      {/* Avatar group */}
+                      {lvl.avatar_url && (
+                        <div className={styles.timelineAvatar}>
+                          <img
+                            src={lvl.avatar_url}
+                            alt={`Level ${lvl.level}`}
+                            className={styles.timelineAvatarImg}
+                          />
+                        </div>
                       )}
+                      {/* Text group */}
+                      <Stack gap={2}>
+                        <Group gap="sm" align="center">
+                          <Text fw={700} size="md" c={isCurrent ? 'grape.4' : isCompleted ? 'white' : 'dimmed'}>
+                            Level {lvl.level}
+                            {lvl.level === 0 && (
+                              <Text span c="dimmed" fw={400} size="md"> (Cơ bản)</Text>
+                            )}
+                          </Text>
+                          {isCurrent && (
+                            <Badge size="md" color="grape" variant="filled">Hiện tại</Badge>
+                          )}
+                        </Group>
+                        <Text size="sm" c={isCompleted ? 'white' : 'dimmed'}>
+                          {fmt(lvl.lot_volume)} lots thưởng{' '}
+                          <Text span fw={700} c={isCompleted ? 'grape.4' : 'yellow.5'} fs="italic">
+                            ${fmt(lvl.reward_usd)}
+                          </Text>
+                          {lvl.reward_text && (
+                            <>
+                              <Text span c="dimmed"> hoặc </Text>
+                              <Text span c="yellow.5" fs="italic">{lvl.reward_text}</Text>
+                            </>
+                          )}
+                        </Text>
+                      </Stack>
                     </Group>
                   }
                 >
-                  <Stack gap={4} mt={4}>
-                    <Text size="md" c={isCompleted ? 'white' : 'dimmed'}>
-                      {fmt(lvl.lot_volume)} lots thưởng{' '}
-                      <Text span fw={700} c={isCompleted ? 'grape.4' : 'dimmed'}>
-                        ${fmt(lvl.reward_usd)}
-                      </Text>
-                      {lvl.reward_text && (
-                        <Text span c="yellow.5" fs="italic"> hoặc {lvl.reward_text}</Text>
-                      )}
-                    </Text>
-                  </Stack>
+                  {null}
                 </Timeline.Item>
               );
             })}
@@ -281,6 +299,7 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
           </Group>
         )}
       </Paper>
+
 
     </div>
   );

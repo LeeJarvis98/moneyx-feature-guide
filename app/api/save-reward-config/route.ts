@@ -6,6 +6,7 @@ interface LevelPayload {
   lot_volume: number;
   reward_usd: number;
   reward_text?: string | null;
+  avatar_url?: string | null;
   is_active: boolean;
 }
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       lot_volume: lvl.lot_volume,
       reward_usd: lvl.reward_usd,
       reward_text: lvl.reward_text ?? null,
+      avatar_url: lvl.avatar_url ?? null,
       is_active: lvl.is_active,
     }));
 

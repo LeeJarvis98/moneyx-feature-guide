@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
         lot_volume: Number(c.lot_volume),
         reward_usd: Number(c.reward_usd),
         reward_text: c.reward_text,
+        avatar_url: c.avatar_url ?? null,
         is_active: c.is_active,
       })),
       currentLots: totalLots,
