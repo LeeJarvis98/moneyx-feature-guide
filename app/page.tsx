@@ -38,6 +38,7 @@ export default function HomePage() {
   const [manageAccountsSection, setManageAccountsSection] = useState<'license' | 'get-bot'>('license');
   const [manageAccountsAside, setManageAccountsAside] = useState<React.ReactNode>(null);
   const [rewardNavbar, setRewardNavbar] = useState<React.ReactNode>(null);
+  const [rewardAside, setRewardAside] = useState<React.ReactNode>(null);
   const [selectedArticle, setSelectedArticle] = useState<string>('guide-1');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('exness');
   const [isPartnerAuthenticated, setIsPartnerAuthenticated] = useState(false);
@@ -244,7 +245,8 @@ export default function HomePage() {
     (navigationSection === 'features' && activeTab === 'feature-guide' && featureGuideAside !== null) ||
     (navigationSection === 'features' && activeTab === 'partner' && partnerAside !== null) ||
     (navigationSection === 'library' && activeTab === 'get-bot' && getBotAside !== null) ||
-    (navigationSection === 'library' && activeTab === 'manage-accounts' && manageAccountsAside !== null)
+    (navigationSection === 'library' && activeTab === 'manage-accounts' && manageAccountsAside !== null) ||
+    (navigationSection === 'reward' && rewardAside !== null)
   );
 
   // Handle loading completion
@@ -1015,7 +1017,7 @@ export default function HomePage() {
               {/* Reward System Section */}
               {navigationSection === 'reward' && isUserLoggedIn && (
                 <Tabs.Panel value="reward">
-                  <RewardSystemTab onNavbarContentChange={setRewardNavbar} />
+                  <RewardSystemTab onNavbarContentChange={setRewardNavbar} onAsideContentChange={setRewardAside} />
                 </Tabs.Panel>
               )}
             </Tabs>
@@ -1034,6 +1036,7 @@ export default function HomePage() {
             {navigationSection === 'library' && activeTab === 'manage-accounts' && (
               manageAccountsAside
             )}
+            {navigationSection === 'reward' && rewardAside}
           </AppShell.Aside>
 
           <AppShell.Footer style={{

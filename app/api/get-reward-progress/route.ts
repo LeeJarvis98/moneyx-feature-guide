@@ -84,21 +84,19 @@ export async function POST(request: NextRequest) {
     const platformConfigs = configs.filter((c) => c.platform === selectedPlatform);
 
     // 4. Get user's total lot volume on that platform
-    const { data: accountRows, error: accountError } = await supabase
-      .from('licensed_accounts')
-      .select('lot_volume')
+    const { data: partnerDetail, error: accountError } = await supabase
+      .from('partner_detail')
+      .select('total_client_lots')
       .eq('id', userId)
-      .eq('platform', selectedPlatform);
+      .eq('platform', selectedPlatform)
+      .maybeSingle();
 
     if (accountError) {
       console.error('[get-reward-progress] accounts error:', accountError);
       return NextResponse.json({ error: 'Failed to fetch trading volume' }, { status: 500 });
     }
 
-    const totalLots = (accountRows ?? []).reduce(
-      (sum, row) => sum + (Number(row.lot_volume) || 0),
-      0,
-    );
+    const totalLots = Number(partnerDetail?.total_client_lots) || 0;
 
     // 5. Determine current level (highest level where totalLots >= lot_volume AND is_active or level=0)
     const activeLevels = platformConfigs.filter((c) => c.is_active || c.level === 0);

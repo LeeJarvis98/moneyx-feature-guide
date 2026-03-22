@@ -1,6 +1,8 @@
 ﻿'use client';
 
 import { useState, useEffect, type ReactNode } from 'react';
+import RewardAside from '@/components/partner/RewardAside';
+import { RewardClaimsTable } from '@/components/tabs/RewardClaimsTable';
 import {
   Timeline,
   Text,
@@ -44,17 +46,28 @@ const PLATFORM_LABEL: Record<string, string> = {
 
 interface RewardSystemTabProps {
   onNavbarContentChange?: (content: ReactNode) => void;
+  onAsideContentChange?: (content: ReactNode) => void;
 }
 
-export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps) {
+export function RewardSystemTab({ onNavbarContentChange, onAsideContentChange }: RewardSystemTabProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<RewardProgress | null>(null);
   const [softError, setSoftError] = useState<string | null>(null);
   const [hardError, setHardError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProgress();
   }, []);
+
+  // Push bank info aside when the tab mounts, clear on unmount
+  useEffect(() => {
+    if (!onAsideContentChange) return;
+    onAsideContentChange(<RewardAside />);
+    return () => {
+      onAsideContentChange(null);
+    };
+  }, [onAsideContentChange]);
 
   // Sync the reward timeline into the AppShell navbar
   useEffect(() => {
@@ -153,6 +166,7 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
       setLoading(false);
       return;
     }
+    setUserId(userId);
 
     try {
       const res = await fetch('/api/get-reward-progress', {
@@ -224,12 +238,17 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
 
   if (!data) return null;
 
-  const { levels, currentLots, currentLevel, platform } = data;
+  const { levels, currentLots, currentLevel, platform, partnerId } = data;
 
   // Include level 0 always as baseline + all active levels
   const displayLevels = levels
     .filter((l) => l.level === 0 || l.is_active)
     .sort((a, b) => a.level - b.level);
+
+  // Levels the user has already unlocked — used for the claims table
+  const unlockedLevels = levels
+    .filter((l) => l.is_active && l.level > 0 && l.level <= currentLevel)
+    .map((l) => ({ level: l.level, reward_usd: l.reward_usd, reward_text: l.reward_text }));
 
   const nextLevel = displayLevels.find((l) => l.level > currentLevel && l.is_active);
   const progressPct = nextLevel
@@ -299,6 +318,16 @@ export function RewardSystemTab({ onNavbarContentChange }: RewardSystemTabProps)
           </Group>
         )}
       </Paper>
+      {/* Reward claims table */}
+      {userId && (
+        <RewardClaimsTable
+          userId={userId}
+          platform={platform}
+          partnerId={partnerId}
+          currentLevel={currentLevel}
+          unlockedLevels={unlockedLevels}
+        />
+      )}
 
 
     </div>

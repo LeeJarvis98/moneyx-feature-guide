@@ -1,0 +1,50 @@
+﻿.tablePaper {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  overflow-x: auto;
+}
+
+.sectionLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.table :global(thead tr th) {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.table :global(tbody tr td) {
+  padding: 12px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  vertical-align: middle !important;
+}
+
+.table :global(tbody tr:last-child td) {
+  border-bottom: none !important;
+}
+
+.table :global(tbody tr:hover td) {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.statusCell {
+  min-width: 120px;
+}
