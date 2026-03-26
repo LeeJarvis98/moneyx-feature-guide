@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mail, CheckCircle, RefreshCw, Clock } from 'lucide-react';
 import styles from './PartnerAgreement.module.css';
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 interface PartnerAgreementProps {
   onAccept: () => void;
@@ -16,11 +18,7 @@ interface PartnerAgreementProps {
 }
 
 export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatformSelect, userId, isPartner = false, onRegistrationSuccess, partnerStatus, tokenExpiresAt }: PartnerAgreementProps) {
-  const [hasRead, setHasRead] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
-  const [hasConfirmed, setHasConfirmed] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [hasClickedTerms, setHasClickedTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -28,20 +26,28 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
+  const [registrationDone, setRegistrationDone] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCooldown = () => {
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
   const isTokenExpired = tokenExpiresAt ? new Date(tokenExpiresAt) < new Date() : false;
 
-  // No referrer check needed - single partner type system
-
-  const canProceed = hasConfirmed;
-  const canConfirm = hasRead && hasAgreed;
-
-  const handleConfirm = () => {
-    if (canConfirm) {
-      setHasConfirmed(true);
-      setShowTermsModal(false);
-    }
-  };
+  const canProceed = hasAgreed;
 
   const handleRegisterAsPartner = async () => {
     if (!canProceed || isRegistering) return;
@@ -91,6 +97,8 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       // Registration requires email confirmation before partner access
       if (data.requiresEmailConfirmation) {
         setShowEmailModal(true);
+        setRegistrationDone(true);
+        startCooldown();
         // Notify parent that the partner record now exists but is inactive
         onRegistrationSuccess();
         return;
@@ -113,9 +121,10 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
   };
 
   const handleResendEmail = async () => {
-    if (isResending) return;
+    if (isResending || resendCooldown > 0) return;
     setIsResending(true);
     setResendError(null);
+    setResendSuccess(false);
     try {
       const res = await fetch('/api/resend-agreement-email', {
         method: 'POST',
@@ -125,6 +134,7 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gửi email thất bại');
       setResendSuccess(true);
+      startCooldown();
     } catch (err) {
       setResendError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
@@ -153,73 +163,10 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
         <div className={styles.mainContent}>
           <h1 className={styles.title}>HOA HỒNG ĐỐI TÁC</h1>
 
-          {/* Buttons */}
-          {!isPartner && (
-            <div className={styles.buttonContainer}>
-              {registrationError && (
-                <div className={styles.errorMessage}>
-                  {registrationError}
-                </div>
-              )}
-              <div className={styles.buttonGrid}>
-                <button
-                  className={`${styles.termsButton} ${styles.termsButtonFilled} ${!hasClickedTerms ? styles.breathing : ''}`}
-                  onClick={() => {
-                    setShowTermsModal(true);
-                    setHasClickedTerms(true);
-                  }}
-                >
-                  Điều khoản hợp tác & bảo mật
-                </button>
-                <button
-                  className={styles.partnerButton}
-                  onClick={handleRegisterAsPartner}
-                  disabled={!canProceed || isRegistering}
-                >
-                  {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
-                </button>
-              </div>
-            </div>
-          )}
-          {isPartner && (
-            <div className={styles.buttonContainer}>
-              <button
-                className={`${styles.termsButton} ${styles.termsButtonFilled}`}
-                onClick={() => setShowTermsModal(true)}
-              >
-                Xem điều khoản hợp tác & bảo mật
-              </button>
-            </div>
-          )}
-
-          {/* Inactive partner notice */}
-          {isPartner && partnerStatus === 'inactive' && (
-            <div className={styles.inactiveNotice}>
-              <Mail size={20} className={styles.inactiveNoticeIcon} />
-              <div>
-                <p className={styles.inactiveNoticeTitle}>Tài khoản chờ xác nhận</p>
-                <p className={styles.inactiveNoticeText}>
-                  Vui lòng kiểm tra email và nhấn nút &ldquo;Tôi đã đọc và xác nhận&rdquo; trong thư hợp đồng để kích hoạt tài khoản đối tác.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Terms Modal */}
-      {showTermsModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowTermsModal(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button
-              className={styles.modalClose}
-              onClick={() => setShowTermsModal(false)}
-            >
-              ✕
-            </button>
-
-            <div className={styles.termsSection}>
-              {/* Modal Header */}
+          {/* Inline Terms & Agreement */}
+          <div className={styles.termsWrapper}>
+          <div className={styles.inlineTermsPanel}>            <div className={styles.termsSection}>
+              {/* Header */}
               <div className={styles.termsHeader}>
                 <h3 className={styles.termsTitle}>HỢP ĐỒNG ĐỐI TÁC TRADI</h3>
                 <p className={styles.termsSubtitle}>Vui lòng đọc kỹ trước khi xác nhận tham gia</p>
@@ -263,8 +210,6 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     <li>Công thức phân chia: <strong className={styles.termsStrong}>5%</strong> cho Tradi · <strong className={styles.termsStrong}>50%</strong> cho người giới thiệu trực tiếp · <strong className={styles.termsStrong}>50%</strong> còn lại chia đều cho upline gián tiếp trong chuỗi.</li>
                     <li>Cấp bậc đối tác tăng dần dựa vào tổng khối lượng giao dịch tích lũy của toàn mạng lưới bên dưới.</li>
                   </ol>
-
-
                 </div>
 
                 {/* Section IV */}
@@ -289,55 +234,57 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                 </div>
 
               </div>
-
-              {/* Checkboxes - only shown for non-partners */}
-              {!isPartner && (
-                <div className={styles.checkboxContainer}>
-                  <div className={styles.checkboxWrapper}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={hasRead}
-                        onChange={(e) => {
-                          setHasRead(e.target.checked);
-                          if (!e.target.checked) {
-                            setHasConfirmed(false);
-                          }
-                        }}
-                        className={styles.checkbox}
-                      />
-                      <span>Tôi đã đọc và hiểu</span>
-                    </label>
-
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={hasAgreed}
-                        onChange={(e) => {
-                          setHasAgreed(e.target.checked);
-                          if (!e.target.checked) {
-                            setHasConfirmed(false);
-                          }
-                        }}
-                        className={styles.checkbox}
-                      />
-                      <span>Tôi đồng ý với các điều khoản trên</span>
-                    </label>
-                  </div>
-
-                  <button
-                    className={styles.confirmButton}
-                    onClick={handleConfirm}
-                    disabled={!canConfirm}
-                  >
-                    Xác nhận
-                  </button>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Checkboxes & Register Button - below the scrollable panel, same width */}
+          {!isPartner && (
+            <div className={styles.inlineActionsBar}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={hasAgreed}
+                  onChange={(e) => setHasAgreed(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>Tôi đã đọc hiểu, và đồng ý với các điều khoản trên</span>
+              </label>
+              <div className={styles.registerButtonWrapper}>
+                {registrationError && (
+                  <div className={styles.errorMessage}>{registrationError}</div>
+                )}
+                <button
+                  className={styles.partnerButton}
+                  onClick={handleRegisterAsPartner}
+                  disabled={!canProceed || isRegistering}
+                >
+                  {isRegistering ? 'Đang đăng ký...' : 'ĐĂNG KÝ ĐẠI LÝ TRADI'}
+                </button>
+                <p className={styles.registerHint}>
+                  <Mail size={12} />
+                  Sau khi đăng ký, bạn sẽ nhận được email xác nhận hợp đồng trước khi tài khoản được kích hoạt.
+                </p>
+            </div>
+            </div>
+          )}
+          </div>
+
+          {/* Inactive partner notice */}
+          {isPartner && partnerStatus === 'inactive' && (
+            <div className={styles.inactiveNotice}>
+              <Mail size={20} className={styles.inactiveNoticeIcon} />
+              <div>
+                <p className={styles.inactiveNoticeTitle}>Tài khoản chờ xác nhận</p>
+                <p className={styles.inactiveNoticeText}>
+                  Vui lòng kiểm tra email và nhấn nút &ldquo;Tôi đã đọc và xác nhận&rdquo; trong thư hợp đồng để kích hoạt tài khoản đối tác.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+
 
       {/* Pending Confirmation Modal */}
       {showPendingModal && (
@@ -375,6 +322,30 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                     <Clock size={14} />
                     <span>Liên kết xác nhận hết hạn sau <strong>72 giờ</strong> kể từ khi nhận được email.</span>
                   </div>
+                  <div className={styles.pendingResendRow}>
+                    {resendError && (
+                      <div className={styles.pendingResendError}>{resendError}</div>
+                    )}
+                    {resendSuccess ? (
+                      <div className={styles.pendingResendSuccess}>
+                        <CheckCircle size={16} />
+                        <span>Email mới đã được gửi! Vui lòng kiểm tra hộp thư.</span>
+                      </div>
+                    ) : (
+                      <button
+                        className={styles.pendingResendButtonSecondary}
+                        onClick={handleResendEmail}
+                        disabled={isResending || resendCooldown > 0}
+                      >
+                        <RefreshCw size={13} className={isResending ? styles.spinning : ''} />
+                        {isResending
+                          ? 'Đang gửi...'
+                          : resendCooldown > 0
+                          ? `Gửi lại sau ${resendCooldown}s`
+                          : 'Không nhận được email? Gửi lại'}
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -391,10 +362,14 @@ export default function PartnerAgreement({ onAccept, selectedPlatform, onPlatfor
                       <button
                         className={styles.pendingResendButton}
                         onClick={handleResendEmail}
-                        disabled={isResending}
+                        disabled={isResending || resendCooldown > 0}
                       >
                         <RefreshCw size={16} className={isResending ? styles.spinning : ''} />
-                        {isResending ? 'Đang gửi...' : 'Gửi lại email xác nhận'}
+                        {isResending
+                          ? 'Đang gửi...'
+                          : resendCooldown > 0
+                          ? `Gửi lại sau ${resendCooldown}s`
+                          : 'Gửi lại email xác nhận'}
                       </button>
                     </>
                   ) : (

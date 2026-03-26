@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       await resend.emails.send({
         from: 'VNCLC <no-reply@vnclc.com>',
         to: user.email,
-        subject: '[Tradi] Xác nhận Hợp Đồng Đối Tác — Liên kết mới',
+        subject: 'Xác nhận Hợp Đồng Đối Tác Tradi — Kích hoạt tài khoản của bạn',
         html: buildAgreementEmailHtml(confirmUrl),
       });
       console.log('[resend-agreement-email] Resent to:', user.email);

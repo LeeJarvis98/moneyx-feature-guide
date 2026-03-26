@@ -214,7 +214,7 @@ export async function GET(request: NextRequest) {
           await resend.emails.send({
             from: 'VNCLC <no-reply@vnclc.com>',
             to: getAdminEmail(),
-            subject: `[Tradi] Đối tác xác nhận hợp đồng — ${userInfo.email}`,
+            subject: `Đối tác xác nhận hợp đồng — ${userInfo.email}`,
             html: buildAdminNotificationHtml({
               partnerId: partner.id,
               partnerEmail: userInfo.email,

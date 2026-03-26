@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Việt Nam Chất Lượng Cao',
-  description: 'Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất',
+  description: 'Hệ thống Bot 1000 chiến lược + AI lớn nhất Việt Nam!',
   icons: {
     icon: '/vnclc-small-logo.png',
     shortcut: '/vnclc-small-logo.png',

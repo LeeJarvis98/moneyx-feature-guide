@@ -365,7 +365,7 @@ export default function HomePage() {
                     </Title>
                     <Group gap="xs" onClick={(e) => e.stopPropagation()} visibleFrom="sm">
                       {/* Partner status badge */}
-                      {isUserLoggedIn && !isActivePartner && (
+                      {isUserLoggedIn && !isPartner && (
                         <Badge
                           variant="outline"
                           color="gray"
@@ -380,7 +380,7 @@ export default function HomePage() {
                           Chưa là đối tác
                         </Badge>
                       )}
-                      {isUserLoggedIn && isActivePartner && (
+                      {isUserLoggedIn && isPartner && (
                         <Badge
                           size="lg"
                           className={classes.partnerBadge}
@@ -1140,7 +1140,7 @@ export default function HomePage() {
             {/* Referral ID at top */}
             {isUserLoggedIn && (
               <Stack gap="sm" mb="md">
-                {!isActivePartner && (
+                {!isPartner && (
                   <Badge
                     variant="outline"
                     color="gray"
@@ -1151,7 +1151,7 @@ export default function HomePage() {
                     Chưa là đối tác
                   </Badge>
                 )}
-                {isActivePartner && (
+                {isPartner && (
                   <Badge
                     size="lg"
                     className={classes.partnerBadge}

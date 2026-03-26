@@ -615,21 +615,21 @@
   padding: 0.75rem;
   font-size: 1rem;
   font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #000;
+  background: linear-gradient(135deg, #FFB81C, #ffbb00);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
 }
 
 .partnerButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
+  background: linear-gradient(135deg, #FFC84A, #FF8C00);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.6);
 }
 
 .partnerButton:disabled {
@@ -1052,6 +1052,39 @@
   font-size: 12px;
 }
 
+.pendingResendRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.pendingResendButtonSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFB81C;
+  background: rgba(255, 184, 28, 0.08);
+  border: 1px solid rgba(255, 184, 28, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pendingResendButtonSecondary:hover:not(:disabled) {
+  background: rgba(255, 184, 28, 0.18);
+  border-color: rgba(255, 184, 28, 0.55);
+}
+
+.pendingResendButtonSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .pendingResendButton {
   display: inline-flex;
   align-items: center;
@@ -1109,4 +1142,148 @@
 
 .spinning {
   animation: spin 0.8s linear infinite;
+}
+
+/* ─── Inline Terms Panel (main screen) ─────────────────── */
+.termsWrapper {
+  width: 100%;
+  max-width: 860px;
+  margin: 1.5rem auto 0;
+}
+
+.inlineTermsPanel {
+  width: 100%;
+  background: rgba(14, 14, 14, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 184, 28, 0.25);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.inlineTermsPanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inlineTermsPanel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+
+.inlineTermsPanel::-webkit-scrollbar-thumb {
+  background: rgba(255, 184, 28, 0.3);
+  border-radius: 3px;
+}
+
+.inlineTermsPanel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 184, 28, 0.55);
+}
+
+/* ─── Inline Actions Bar (checkboxes + register button) ── */
+.inlineActionsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.registerButtonWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 220px;
+}
+
+/* ─── Register hint text ─────────────────────────────── */
+.registerHint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Post-registration resend section ───────────────── */
+.resendEmailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.resendEmailSent {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #FFB81C;
+  line-height: 1.5;
+}
+
+.resendEmailSent svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.resendEmailError {
+  font-size: 0.75rem;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.resendEmailSuccessMsg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #86efac;
+}
+
+.resendEmailButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #FFB81C;
+  background: rgba(255, 184, 28, 0.08);
+  border: 1px solid rgba(255, 184, 28, 0.3);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.resendEmailButton:hover:not(:disabled) {
+  background: rgba(255, 184, 28, 0.18);
+  border-color: rgba(255, 184, 28, 0.55);
+}
+
+.resendEmailButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .inlineTermsPanel {
+    padding: 1rem;
+    max-height: 50vh;
+  }
+
+  .inlineActionsBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .registerButtonWrapper {
+    min-width: unset;
+  }
 }
