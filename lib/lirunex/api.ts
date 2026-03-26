@@ -2,8 +2,8 @@ import type {
   LirunexAuthCredentials,
   LirunexAuthResponse,
   LirunexApiError,
-  LirunexRebateEarnedParams,
-  LirunexRebateEarnedResponse,
+  LirunexDownlineParams,
+  LirunexDownlineResponse,
 } from '@/types/lirunex';
 
 // Use Next.js API routes
@@ -137,25 +137,23 @@ class LirunexApiClient {
     }
   }
 
-  // === PARTNER / REBATE ENDPOINTS ===
+  // === PARTNER / NETWORK ENDPOINTS ===
 
-  // Get rebate earned details (GET /api/Rebate/GetRebateEarned)
-  async getRebateEarned(
-    params?: LirunexRebateEarnedParams
-  ): Promise<LirunexRebateEarnedResponse> {
-    let endpoint = '/api/Rebate/GetRebateEarned';
+  // Get partner downline trading accounts (GET /api/Contact/GetIntroducingBrokerTradingAccountNetwork)
+  async getDownlineTradingAccounts(
+    params?: LirunexDownlineParams
+  ): Promise<LirunexDownlineResponse> {
+    let endpoint = '/api/Contact/GetIntroducingBrokerTradingAccountNetwork';
 
     if (params && Object.keys(params).length > 0) {
       const query = new URLSearchParams();
       if (params.mt4Id !== undefined) query.append('mt4Id', String(params.mt4Id));
       if (params.email) query.append('email', params.email);
-      if (params.fromDate) query.append('fromDate', params.fromDate);
-      if (params.toDate) query.append('toDate', params.toDate);
       const qs = query.toString();
       if (qs) endpoint += `?${qs}`;
     }
 
-    return this.request<LirunexRebateEarnedResponse>(endpoint, { method: 'GET' });
+    return this.request<LirunexDownlineResponse>(endpoint, { method: 'GET' });
   }
 }
 

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase
       .from("users")
-      .update({ bank_info: sanitized })
+      .update({ bank_info: sanitized as unknown as Record<string, string> })
       .eq("id", userId);
 
     if (error) {

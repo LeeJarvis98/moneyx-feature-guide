@@ -4,40 +4,40 @@
 
 ## FxCRM Login Authentication using JWT Authorization Framework
 
-The JWT (JSON Web Token) Authorization Framework plays a crucial role in managing user authentication for the FxCRM platform.
+The JWT (JSON Web Token) Authorization Framework plays a crucial role in managing user authentication for the FxCRM platform. 
 
-* When users log in, they receive a JWT, which is a compact, URL-safe token that contains encoded information about the user.
-* This token is then used to authenticate the user's identity on subsequent requests, eliminating the need for users to repeatedly enter their login credentials.
-* By including the JWT in the headers of API requests, the framework ensures that only authenticated users can access protected resources and perform sensitive operations.
-* This stateless token system enhances security and scalability for the FxCRM platform.
-* JWTs are digitally signed, making them tamper-proof and ensuring the integrity of the data they carry.
-* As a result, the server can trust the information within the token without needing to store session data, thus reducing server load and improving performance.
+* When users log in, they receive a JWT, which is a compact, URL-safe token that contains encoded information about the user. 
+* This token is then used to authenticate the user's identity on subsequent requests, eliminating the need for users to repeatedly enter their login credentials. 
+* By including the JWT in the headers of API requests, the framework ensures that only authenticated users can access protected resources and perform sensitive operations. 
+* This stateless token system enhances security and scalability for the FxCRM platform. 
+* JWTs are digitally signed, making them tamper-proof and ensuring the integrity of the data they carry. 
+* As a result, the server can trust the information within the token without needing to store session data, thus reducing server load and improving performance. 
 * Additionally, the JWT Authorization Framework supports various security measures, such as token expiration and refresh mechanisms, further safeguarding the FxCRM system against unauthorized access and potential security threats.
 
 ---
 
 ## Access Token Request
 
-**Endpoint:** `POST http://{SERVER}/api/Token`
+**Endpoint:** `POST http://{SERVER}/api/Token` 
 
-FxCRM makes an HTTP POST request to the Token endpoint with the following request header and body parameters (using “application/json; charset=utf-8” format) to obtain a SSO Token.
+FxCRM makes an HTTP POST request to the Token endpoint with the following request header and body parameters (using “application/json; charset=utf-8” format) in the following table to obtain a SSO Token. 
 
-* The Access Token will only be valid for 20 minutes.
-* After the token expires, the client will need to re-login.
+* The Access Token will only be valid for 20 minutes. 
+* After the token expires, the client will need to re-login. 
 * **Note:** The Access Token is used to access FxCRM External Partner Web API.
 
 ### Request Header Parameters
 
 | Name | Data Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| Content-Type | String | Yes | Value MUST be “application/json; charset=utf-8” |
+| Content-Type | String | Yes | Value MUST be “application/json; charset=utf-8”  |
 
 ### Request Body Parameters
 
 | Name | Data Type | Required | Description | Example |
 | :--- | :--- | :--- | :--- | :--- |
-| username | String | Yes | Username of client | username |
-| password | String | Yes | Password of client | Abcd@1234 |
+| username | String | Yes | Username of client  | username  |
+| password | String | Yes | Password of client  | Abcd@1234  |
 
 ---
 
@@ -49,10 +49,10 @@ If the Access Token request is valid and authorized, FxCRM issues an Access Toke
 
 | Name | Data Type | Description | Example |
 | :--- | :--- | :--- | :--- |
-| token | Token Mapping Object | Access Token Mapping Object | `{"access_token": "eyJhbGciOiJIUzI...mjSoinTLrGcM", "token_type": "bearer", "refresh_token": "pKHkcCskdo9...F7PGhWOTr/9VyWA==", "expires_in": "01/Aug/2024 04:19:11 PM", "refresh_expires_in": "31/Aug/2024 03:59:11 PM", "token_generated_date": "2025-05-08T07:55:52.8437261Z"}` |
-| roles | Array of Integer | Array list of user’s roles id | 1 = New Client Sign Up, 2 = Member with MT4 Account, 3 = Member with Introducing Broker, 4 = Member with Money Manager, 7 = New IB Sign Up. Example: `[1.2]` |
-| memberTypeId | Integer | User’s member type id | 1: Individual, 2: Corporate |
-| userId | Integer | Used’s Id | 4 |
+| token | Token Mapping Object | Access Token Mapping Object  | `{"access_token": "eyJhbGciOiJIUzI...mjSoinTLrGcM", "token_type": "bearer", "refresh_token": "pKHkcCskdo9...F7PGhWOTr/9VyWA==", "expires_in": "01/Aug/2024 04:19:11 PM", "refresh_expires_in": "31/Aug/2024 03:59:11 PM", "token_generated_date": "2025-05-08T07:55:52.8437261Z"}`  |
+| roles | Array of Integer | Array list of user’s roles id  | 1 = New Client Sign Up, 2 = Member with MT4 Account, 3 = Member with Introducing Broker, 4 = Member with Money Manager, 7 = New IB Sign Up. Example: `[1.2]`  |
+| memberTypeId | Integer | User’s member type id  | 1: Individual, 2: Corporate  |
+| userId | Integer | Used’s Id  | 4  |
 
 ### Error Response
 
@@ -60,8 +60,8 @@ FxCRM responds with a success value of “false” and includes the following pa
 
 | Name | Data Type | Description | Example |
 | :--- | :--- | :--- | :--- |
-| success | Bool | Indicate whether the execution is successful or fail | false |
-| message | String | Error Message | "Login failed." |
+| success | Bool | Indicate whether the execution is successful or fail  | false  |
+| message | String | Error Message  | "Login failed."  |
 
 ---
 
@@ -69,7 +69,7 @@ FxCRM responds with a success value of “false” and includes the following pa
 
 ### Get Partner Rebate Earned Details
 
-**Endpoint:** `GET http://{SERVER}/api/Rebate/GetRebateEarned`
+**Endpoint:** `GET http://{SERVER}/api/Rebate/GetRebateEarned` 
 
 To retrieve detailed partner’s rebate earned information from the system.
 
@@ -77,25 +77,53 @@ To retrieve detailed partner’s rebate earned information from the system.
 
 | Name | Data Type | Required | Description | Example |
 | :--- | :--- | :--- | :--- | :--- |
-| Authorization | String | Yes | The value must start with “Bearer ” followed by the access token generated by the Access Token Request API. | Appendix A – Request Header Authentication Example |
-| Content-Type | String | Yes | Value MUST be “application/json; charset=utf-8” | N/A |
+| Authorization | String | Yes | The value must start with “Bearer ” followed by the access token generated by the Access Token Request API.  | Appendix A – Request Header Authentication Example  |
+| Content-Type | String | Yes | Value MUST be “application/json; charset=utf-8”  | N/A |
 
 #### Request Body Parameters
 
 | Name | Data Type | Required | Description | Example |
 | :--- | :--- | :--- | :--- | :--- |
-| mt4Id | Integer | No | MT4/MT5 ID of client | 12345678 |
-| email | String | No | Email of client | <Abcd@gamil.com> |
-| fromDate | Date | No | Closed Trade Date From | 2025-01-01 |
-| toDate | Date | No | Closed Trade Date To | 2026-01-01 |
+| mt4Id | Integer | No | MT4/MT5 ID of client  | 12345678  |
+| email | String | No | Email of client  | Abcd@gamil.com  |
+| fromDate | Date | No | Closed Trade Date From  | 2025-01-01  |
+| toDate | Date | No | Closed Trade Date To  | 2026-01-01  |
 
 #### Successful Response (200) Parameters
 
 | Name | Data Type | Description | Example |
 | :--- | :--- | :--- | :--- |
-| success | Bool | Indicate whether the execution is successful or fail | true |
-| message | String | No using for this API | null |
-| data | Dynamic | List of Rebate Earned | `[{"clientMt4Id": 369299900, "clientEmail": "abc@gmail.coms", "settledRebate": 0.1200, "settledLotSize": 0.02}, {"clientMt4Id": 369299901, "clientEmail": "abcd@gmail.coms", "settledRebate": 0.3200, "settledLotSize": 0.12}]` |
+| success | Bool | Indicate whether the execution is successful or fail  | true  |
+| message | String | No using for this API  | null  |
+| data | Dynamic | List of Rebate Earned  | `[{"clientMt4Id": 369299900, "clientEmail": "abc@gmail.coms", "settledRebate": 0.1200, "settledLotSize": 0.02}, {"clientMt4Id": 369299901, "clientEmail": "abcd@gmail.coms", "settledRebate": 0.3200, "settledLotSize": 0.12}]`  |
+
+### Get Partner Downline Trading Account
+
+**Endpoint:** `GET http://{SERVER}/api/Contact/GetIntroducingBrokerTradingAccountNetwork` 
+
+To retrieve detailed partner’s downline trading account information from the system.
+
+#### Request Header Parameters
+
+| Name | Data Type | Required | Description | Example |
+| :--- | :--- | :--- | :--- | :--- |
+| Authorization | String | Yes | The value must start with “Bearer ” followed by the access token generated by the Access Token Request API.  | Appendix A – Request Header Authentication Example  |
+| Content-Type | String | Yes | Value MUST be “application/json; charset=utf-8”  | N/A |
+
+#### Request Body Parameters
+
+| Name | Data Type | Required | Description | Example |
+| :--- | :--- | :--- | :--- | :--- |
+| mt4Id | Integer | No | MT4/MT5 ID of client  | 12345678  |
+| email | String | No | Email of client  | Abcd@gamil.com  |
+
+#### Successful Response (200) Parameters
+
+| Name | Data Type | Description | Example |
+| :--- | :--- | :--- | :--- |
+| success | Bool | Indicate whether the execution is successful or fail  | true  |
+| message | String | No using for this API  | null  |
+| data | Dynamic | List of Trading Account Downline  | `[{"Mt4Id": 369299900, "Email": "abc@gmail.coms", "OnboardingStage": "Approved ", "ClientStage": "Trading", "PartnerId": 1234}, {"Mt4Id": 369299901, "Email": "abcd@gmail.coms", "OnboardingStage": " KYC", "ClientStage": "Idle", "PartnerId ": 5678}]`  |
 
 ---
 
@@ -104,4 +132,4 @@ To retrieve detailed partner’s rebate earned information from the system.
 ### Appendix A – Request Header Authentication Example
 
 **Bearer**
-`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDU0IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvb mFtZSI6ImtqcyIsIk1lbWJlcklkIjoiMzQ0MiIsIkVtYWlsIjoiamFja3lrb2hzdG9uZWlubm9AZ21haWwuY29tIiwiVG9rZW5HZW5lcmF0ZWREYXRlIjoiMTIvMTEvMjAyN SAxMjo0ODo0OCBQTSIsImV4cCI6MTc2NTQ0NzcyOCwiaXNzIjoiVGVzdC5jb20iLCJhdWQiOiJUZXN0LmNvbSJ9.537LB9m8wBmaiyg8jwAt3zxhIvMMaQK6quI5kT Z1Ac4`
+`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDU0IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6ImtqcyIsIk1lbWJlcklkIjoiMzQ0MiIsIkVtYWlsIjoiamFja3lrb2hzdG9uZWlubm9AZ21haWwuY29tIiwiVG9rZW5HZW5lcmF0ZWREYXRlIjoiMTIvMTEvMjAyNSAxMjo0ODo0OCBQTSIsImV4cCI6MTc2NTQ0NzcyOCwiaXNzIjoiVGVzdC5jb20iLCJhdWQiOiJUZXN0LmNvbSJ9.537LB9m8wBmaiyg8jwAt3zxhIvMMaQK6quI5kTZ1Ac4` 

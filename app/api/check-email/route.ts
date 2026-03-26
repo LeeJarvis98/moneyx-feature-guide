@@ -553,10 +553,10 @@ export async function POST(request: NextRequest) {
       let clientData: { affiliation: boolean; accounts: string[]; client_uid: string | null };
 
       if (platform.toLowerCase() === 'lirunex') {
-        // ── Lirunex: GET /api/Rebate/GetRebateEarned?email=… ──────────────────
-        console.log('[CHECK-EMAIL] Calling Lirunex GetRebateEarned for:', email);
+        // ── Lirunex: GET /api/Contact/GetIntroducingBrokerTradingAccountNetwork?email=… ──
+        console.log('[CHECK-EMAIL] Calling Lirunex GetIntroducingBrokerTradingAccountNetwork for:', email);
         const lirunexResponse = await fetch(
-          `${LIRUNEX_API_BASE}/api/Rebate/GetRebateEarned?email=${encodeURIComponent(email)}`,
+          `${LIRUNEX_API_BASE}/api/Contact/GetIntroducingBrokerTradingAccountNetwork?email=${encodeURIComponent(email)}`,
           {
             method: 'GET',
             headers: {
@@ -570,19 +570,19 @@ export async function POST(request: NextRequest) {
         if (!lirunexResponse.ok) {
           const errorText = await lirunexResponse.text();
           console.error('[CHECK-EMAIL] Lirunex API error:', lirunexResponse.status, errorText);
-          throw new Error('Failed to fetch client rebate data from Lirunex');
+          throw new Error('Failed to fetch client downline data from Lirunex');
         }
 
         const lirunexData = await lirunexResponse.json();
         console.log('[CHECK-EMAIL] Lirunex API response received, success:', lirunexData);
         console.log('[CHECK-EMAIL] Lirunex API response received, success:', lirunexData.success);
 
-        const rebateRows: { clientMt4Id: number; clientEmail: string }[] =
+        const downlineRows: { mt4Id: number; email: string }[] =
           Array.isArray(lirunexData.data) ? lirunexData.data : [];
 
         clientData = {
-          affiliation: rebateRows.length > 0,
-          accounts: rebateRows.map((row) => String(row.clientMt4Id)),
+          affiliation: downlineRows.length > 0,
+          accounts: downlineRows.map((row) => String(row.mt4Id)),
           client_uid: email.toLowerCase(), // Lirunex has no UID field
         };
       } else {

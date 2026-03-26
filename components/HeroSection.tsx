@@ -45,7 +45,7 @@ export function HeroSection({ onGetStarted, isExiting = false }: HeroSectionProp
           </Title>
 
           <Text className={classes.description} mt={15}>
-            Bot AI mạnh mẽ kết hợp các tính năng tài chính tối ưu nhất!
+            Hệ thống Bot 1000 chiến lược + AI lớn nhất Việt Nam!
           </Text>
 
           <Button

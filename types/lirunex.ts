@@ -27,23 +27,22 @@ export interface LirunexApiError {
   status: number;
 }
 
-// Rebate Earned Types
-export interface LirunexRebateItem {
-  clientMt4Id: number;
-  clientEmail: string;
-  settledRebate: number;
-  settledLotSize: number;
+// Downline Trading Account Types
+export interface LirunexDownlineAccount {
+  mt4Id: number;
+  email: string;
+  onboardingStage: string;
+  clientStage: string;
+  partnerId: string | number;
 }
 
-export interface LirunexRebateEarnedParams {
+export interface LirunexDownlineParams {
   mt4Id?: number;
   email?: string;
-  fromDate?: string; // YYYY-MM-DD
-  toDate?: string;   // YYYY-MM-DD
 }
 
-export interface LirunexRebateEarnedResponse {
+export interface LirunexDownlineResponse {
   success: boolean;
   message: string | null;
-  data: LirunexRebateItem[];
+  data: LirunexDownlineAccount[];
 }
